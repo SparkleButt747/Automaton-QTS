@@ -355,6 +355,16 @@ class LLMSettings(BaseSettings):
         populate_by_name=True,
     )
 
+    # ── Backend selection ──────────────────────────────────────────────────────
+
+    backend: str = Field(
+        default="ollama",
+        alias="LLM_BACKEND",
+        description="LLM backend to use: 'ollama' (local) or 'anthropic' (Claude API)",
+    )
+
+    # ── Anthropic / Claude settings ────────────────────────────────────────────
+
     anthropic_api_key: str = Field(
         default="",
         alias="ANTHROPIC_API_KEY",
@@ -365,6 +375,22 @@ class LLMSettings(BaseSettings):
         alias="ANTHROPIC_MODEL",
         description="Anthropic model ID to use",
     )
+
+    # ── Ollama settings ────────────────────────────────────────────────────────
+
+    ollama_model: str = Field(
+        default="glm-5:cloud",
+        alias="OLLAMA_MODEL",
+        description="Ollama model tag to use (e.g. 'glm-5:cloud')",
+    )
+    ollama_base_url: str = Field(
+        default="http://localhost:11434",
+        alias="OLLAMA_BASE_URL",
+        description="Base URL for the local Ollama API server",
+    )
+
+    # ── Shared settings ────────────────────────────────────────────────────────
+
     llm_max_tokens: int = Field(
         default=4096,
         alias="LLM_MAX_TOKENS",
@@ -380,8 +406,15 @@ class LLMSettings(BaseSettings):
 
     @property
     def configured(self) -> bool:
-        """Return True if Anthropic API key is set."""
-        return bool(self.anthropic_api_key)
+        """Return True if the active backend has the required credentials/config.
+
+        - ``"anthropic"``: requires ``ANTHROPIC_API_KEY`` to be set.
+        - ``"ollama"``: always considered configured (no API key needed).
+        """
+        if self.backend == "anthropic":
+            return bool(self.anthropic_api_key)
+        # Ollama requires no credentials
+        return True
 
 
 # ── App Settings (Master) ─────────────────────────────────────────────────────
@@ -503,7 +536,10 @@ class AppSettings(BaseSettings):
             issues.append("Binance API credentials not configured (BINANCE_API_KEY/SECRET)")
 
         if not self.llm.configured:
-            issues.append("Anthropic API key not configured (ANTHROPIC_API_KEY)")
+            issues.append(
+                "LLM backend not fully configured "
+                "(set ANTHROPIC_API_KEY for 'anthropic' backend, or use LLM_BACKEND=ollama)"
+            )
 
         if self.database.is_sqlite and self.is_production:
             issues.append(

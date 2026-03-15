@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "weights": {
+    "w_rsi": 0.20,
+    "w_macd": 0.20,
+    "w_bb": 0.15,
+    "w_mom": 0.15,
+    "w_sentiment": 0.30
+  },
+  "entry_threshold": 0.25,
+  "exit_threshold": -0.10,
+  "max_hold_bars": 48,
+  "sentiment_fusion_weights": {
+    "news": 0.40,
+    "social": 0.30,
+    "geopolitical": 0.30
+  }
+}

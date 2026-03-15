@@ -1,0 +1,95 @@
+version: "3.9"
+
+services:
+  # ---- TimescaleDB (PostgreSQL + time-series extension) ----
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: qts-timescaledb
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: qts
+      POSTGRES_PASSWORD: qts_dev_password
+      POSTGRES_DB: trading
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qts -d trading"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---- Redis (Celery broker + result backend + cache) ----
+  redis:
+    image: redis:7-alpine
+    container_name: qts-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---- QTS Application ----
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: runtime
+    container_name: qts-app
+    restart: unless-stopped
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://qts:qts_dev_password@timescaledb:5432/trading
+      REDIS_URL: redis://redis:6379/0
+      QTS_ENV: development
+      QTS_LOG_LEVEL: INFO
+    env_file:
+      - ../.env
+    volumes:
+      - ../data:/app/data
+      - ../config:/app/config:ro
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import qts; print('ok')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ---- Celery Worker ----
+  celery-worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: runtime
+    container_name: qts-celery-worker
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - timescaledb
+    environment:
+      DATABASE_URL: postgresql+asyncpg://qts:qts_dev_password@timescaledb:5432/trading
+      REDIS_URL: redis://redis:6379/0
+    env_file:
+      - ../.env
+    volumes:
+      - ../data:/app/data
+      - ../config:/app/config:ro
+    command: celery -A qts.tasks worker --loglevel=info --concurrency=2
+
+volumes:
+  timescaledb_data:
+    driver: local
+  redis_data:
+    driver: local

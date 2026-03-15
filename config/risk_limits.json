@@ -1,0 +1,8 @@
+{
+  "_comment": "IMMUTABLE RISK LIMITS - Changes require --force flag and manual review. See .pre-commit-hooks/protect-risk-limits.sh",
+  "max_daily_drawdown_pct": 0.02,
+  "max_position_size_pct": 0.05,
+  "max_open_positions": 5,
+  "circuit_breaker_cooldown_seconds": 3600,
+  "sentiment_signal_max_scalar": 2.0
+}

@@ -1,0 +1,52 @@
+{
+  "version": "1.0.0",
+  "market_data": {
+    "primary": {
+      "provider": "binance",
+      "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT"],
+      "intervals": ["1h", "4h", "1d"],
+      "lookback_days": 365
+    },
+    "secondary": {
+      "provider": "alpha_vantage",
+      "symbols": ["SPY", "QQQ", "GLD"],
+      "intervals": ["1d"]
+    }
+  },
+  "news_data": {
+    "sources": [
+      {
+        "name": "cryptopanic",
+        "url": "https://cryptopanic.com/api/v1/",
+        "enabled": true
+      },
+      {
+        "name": "newsapi",
+        "url": "https://newsapi.org/v2/",
+        "enabled": false
+      }
+    ],
+    "keywords": ["bitcoin", "ethereum", "crypto", "defi", "blockchain"]
+  },
+  "social_data": {
+    "reddit": {
+      "subreddits": ["CryptoCurrency", "Bitcoin", "ethfinance", "wallstreetbets"],
+      "post_limit": 100,
+      "comment_depth": 3
+    },
+    "twitter": {
+      "enabled": false,
+      "hashtags": ["#BTC", "#ETH", "#crypto"]
+    }
+  },
+  "geopolitical_data": {
+    "sources": [
+      {
+        "name": "gdelt",
+        "url": "https://api.gdeltproject.org/api/v2/",
+        "enabled": true
+      }
+    ],
+    "themes": ["ECON_TRADE", "ECON_CURRENCY", "ECON_BANKINTER"]
+  }
+}

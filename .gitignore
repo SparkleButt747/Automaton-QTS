@@ -38,7 +38,7 @@ venv.bak/
 *.db
 *.sqlite
 *.sqlite3
-data/
+/data/
 
 # Jupyter Notebooks
 .ipynb_checkpoints

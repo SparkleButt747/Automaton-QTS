@@ -1,6 +1,8 @@
 """Database engine factory and session management."""
+
 from __future__ import annotations
 
+import logging
 from collections.abc import AsyncGenerator
 
 from sqlalchemy import MetaData
@@ -10,6 +12,8 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+
+logger = logging.getLogger(__name__)
 
 # Naming convention for constraints
 convention = {
@@ -78,6 +82,29 @@ async def get_session(
         except Exception:
             await session.rollback()
             raise
+
+
+async def ensure_tables() -> AsyncEngine:
+    """Create the engine from settings and ensure all tables exist.
+
+    Converts bare ``sqlite:///`` URLs to ``sqlite+aiosqlite:///`` so that the
+    async driver is used automatically.
+
+    Returns:
+        The configured :class:`AsyncEngine` with tables guaranteed to exist.
+    """
+    from qts.config import get_settings
+
+    url = get_settings().database.database_url
+
+    # Ensure async driver for SQLite URLs
+    if url.startswith("sqlite:///") and "+aiosqlite" not in url:
+        url = url.replace("sqlite:///", "sqlite+aiosqlite:///", 1)
+
+    engine = create_engine(url)
+    await init_db(engine)
+    logger.info("Database tables ensured at %s", url.split("?")[0])
+    return engine
 
 
 async def init_db(engine: AsyncEngine) -> None:

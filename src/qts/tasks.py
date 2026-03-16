@@ -68,7 +68,7 @@ app.conf.beat_schedule = {
 # ── Tasks ─────────────────────────────────────────────────────────────────────
 
 
-@app.task(bind=True, name="qts.tasks.refresh_news_sentiment")  # type: ignore[misc]
+@app.task(bind=True, name="qts.tasks.refresh_news_sentiment")  # type: ignore[untyped-decorator]
 def refresh_news_sentiment(self: Any, symbol: str) -> dict[str, Any]:
     """Fetch recent news headlines and update sentiment for a symbol using FinBERT.
 
@@ -119,7 +119,7 @@ def refresh_news_sentiment(self: Any, symbol: str) -> dict[str, Any]:
         return {"symbol": symbol, "error": str(exc)}
 
 
-@app.task(bind=True, name="qts.tasks.refresh_social_sentiment")  # type: ignore[misc]
+@app.task(bind=True, name="qts.tasks.refresh_social_sentiment")  # type: ignore[untyped-decorator]
 def refresh_social_sentiment(self: Any, symbol: str) -> dict[str, Any]:
     """Fetch recent Reddit/StockTwits posts and update sentiment using VADER.
 
@@ -169,7 +169,7 @@ def refresh_social_sentiment(self: Any, symbol: str) -> dict[str, Any]:
         return {"symbol": symbol, "error": str(exc)}
 
 
-@app.task(bind=True, name="qts.tasks.poll_gdelt_events")  # type: ignore[misc]
+@app.task(bind=True, name="qts.tasks.poll_gdelt_events")  # type: ignore[untyped-decorator]
 def poll_gdelt_events(self: Any) -> dict[str, Any]:
     """Fetch recent GDELT events and process them with GDELTProcessor.
 
@@ -204,7 +204,7 @@ def poll_gdelt_events(self: Any) -> dict[str, Any]:
         return {"error": str(exc)}
 
 
-@app.task(bind=True, name="qts.tasks.run_nightly_attribution")  # type: ignore[misc]
+@app.task(bind=True, name="qts.tasks.run_nightly_attribution")  # type: ignore[untyped-decorator]
 def run_nightly_attribution(self: Any) -> dict[str, Any]:
     """Load today's completed trades and run the AttributionEngine.
 
@@ -242,7 +242,7 @@ def run_nightly_attribution(self: Any) -> dict[str, Any]:
         return {"error": str(exc)}
 
 
-@app.task(bind=True, name="qts.tasks.run_debrief")  # type: ignore[misc]
+@app.task(bind=True, name="qts.tasks.run_debrief")  # type: ignore[untyped-decorator]
 def run_debrief(self: Any, session_date: str) -> dict[str, Any]:
     """Construct a SessionSummary and run the DebriefEngine for LLM analysis.
 
@@ -301,7 +301,7 @@ def run_debrief(self: Any, session_date: str) -> dict[str, Any]:
         return {"session_date": session_date, "error": str(exc)}
 
 
-@app.task(bind=True, name="qts.tasks.health_check")  # type: ignore[misc]
+@app.task(bind=True, name="qts.tasks.health_check")  # type: ignore[untyped-decorator]
 def health_check(self: Any) -> dict[str, Any]:
     """Run the HealthChecker and log results for all components.
 

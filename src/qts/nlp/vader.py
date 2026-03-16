@@ -71,7 +71,7 @@ class VaderAnalyzer:
             return self._available
 
         try:
-            from vaderSentiment.vaderSentiment import (  # type: ignore[import]
+            from vaderSentiment.vaderSentiment import (
                 SentimentIntensityAnalyzer,
             )
 
@@ -97,7 +97,7 @@ class VaderAnalyzer:
         Returns:
             Dict with keys 'neg', 'neu', 'pos', 'compound'.
         """
-        return self._sia.polarity_scores(text)  # type: ignore[union-attr]
+        return self._sia.polarity_scores(text)  # type: ignore[union-attr, no-any-return]
 
     # ── Public API ────────────────────────────────────────────────────────────
 

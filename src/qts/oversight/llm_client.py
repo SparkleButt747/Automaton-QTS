@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 import anthropic
 import httpx
@@ -174,7 +174,7 @@ class LLMClient:
                 f"LLM returned valid JSON but not a dict (got {type(result).__name__}): {raw[:200]}"
             )
 
-        return result  # type: ignore[return-value]
+        return result
 
 
 class OllamaClient:
@@ -338,10 +338,10 @@ class OllamaClient:
                 f"Ollama returned valid JSON but not a dict (got {type(result).__name__}): {raw[:200]}"
             )
 
-        return result  # type: ignore[return-value]
+        return result
 
 
-def create_llm_client(backend: str = "ollama", **kwargs) -> LLMClientProtocol:  # type: ignore[type-arg]
+def create_llm_client(backend: str = "ollama", **kwargs: Any) -> LLMClientProtocol:
     """Create an LLM client based on the chosen backend.
 
     Args:

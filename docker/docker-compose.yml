@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   # ---- TimescaleDB (PostgreSQL + time-series extension) ----
   timescaledb:
@@ -54,6 +52,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       QTS_ENV: development
       QTS_LOG_LEVEL: INFO
+      QTS_METRICS_PORT: "8080"
     env_file:
       - ../.env
     volumes:
@@ -62,10 +61,11 @@ services:
     ports:
       - "8080:8080"
     healthcheck:
-      test: ["CMD", "python", "-c", "import qts; print('ok')"]
+      test: ["CMD", "python", "-c", "from qts.config import get_settings; s = get_settings(); print('OK')"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 30s
 
   # ---- Celery Worker ----
   celery-worker:
@@ -91,10 +91,11 @@ services:
   # ---- Prometheus ----
   prometheus:
     image: prom/prometheus:latest
+    container_name: qts-prometheus
     ports:
       - "9091:9090"
     volumes:
-      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     depends_on:
       - app
@@ -102,6 +103,7 @@ services:
   # ---- Grafana ----
   grafana:
     image: grafana/grafana:latest
+    container_name: qts-grafana
     ports:
       - "3000:3000"
     environment:

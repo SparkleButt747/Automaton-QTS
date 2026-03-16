@@ -1,3 +1,4 @@
+import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -19,10 +20,13 @@ from qts.db.tables import Base  # noqa: E402
 
 target_metadata = Base.metadata
 
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
+# Override sqlalchemy.url from DATABASE_URL env var if set.
+# Convert async drivers (asyncpg) to sync equivalents (psycopg2) for Alembic.
+database_url = os.environ.get("DATABASE_URL")
+if database_url:
+    # Alembic uses synchronous engines — swap async drivers for sync ones
+    sync_url = database_url.replace("+asyncpg", "").replace("+aiosqlite", "")
+    config.set_main_option("sqlalchemy.url", sync_url)
 
 
 def run_migrations_offline() -> None:

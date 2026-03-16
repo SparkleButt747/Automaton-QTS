@@ -356,7 +356,7 @@ class TradingDashboard:
             try:
                 while True:
                     if state_callback is not None and callable(state_callback):
-                        new_state = state_callback()  # type: ignore[operator]
+                        new_state = state_callback()
                         if isinstance(new_state, DashboardState):
                             self.update(new_state)
                     time.sleep(refresh_interval_seconds)

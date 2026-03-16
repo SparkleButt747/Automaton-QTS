@@ -6,12 +6,15 @@ backtests, live trading, debriefs, and managing proposals.
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import sys
 
 import click
 from rich.console import Console
 
 console = Console()
+logger = logging.getLogger(__name__)
 
 
 @click.group()
@@ -23,8 +26,14 @@ console = Console()
     type=click.Choice(["DEBUG", "INFO", "WARNING", "ERROR"], case_sensitive=False),
     help="Log level",
 )
+@click.option(
+    "--skip-db-init",
+    is_flag=True,
+    default=False,
+    help="Skip automatic database table creation on startup",
+)
 @click.pass_context
-def main(ctx: click.Context, dry_run: bool, log_level: str) -> None:
+def main(ctx: click.Context, dry_run: bool, log_level: str, skip_db_init: bool) -> None:
     """QTS - Quant Trading System CLI.
 
     A multi-signal crypto/equity strategy engine with sentiment fusion.
@@ -33,12 +42,19 @@ def main(ctx: click.Context, dry_run: bool, log_level: str) -> None:
     ctx.obj["dry_run"] = dry_run
     ctx.obj["log_level"] = log_level
 
-    import logging
-
     logging.basicConfig(
         level=getattr(logging, log_level.upper()),
         format="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
     )
+
+    if not skip_db_init:
+        from qts.db.engine import ensure_tables
+
+        try:
+            engine = asyncio.run(ensure_tables())
+            ctx.obj["engine"] = engine
+        except Exception:
+            logger.warning("Database init failed; continuing without DB", exc_info=True)
 
 
 @main.command()

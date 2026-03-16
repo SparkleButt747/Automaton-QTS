@@ -65,7 +65,7 @@ class RegimeDetector:
             random_state: Seed for reproducible HMM initialisation.
         """
         # Import here to keep the optional dependency isolated
-        from hmmlearn.hmm import GaussianHMM  # type: ignore[import]
+        from hmmlearn.hmm import GaussianHMM
 
         self.n_components: int = 2
         self._model = GaussianHMM(

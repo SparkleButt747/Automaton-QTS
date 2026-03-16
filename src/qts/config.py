@@ -345,6 +345,43 @@ class RedditSettings(BaseSettings):
 # ── LLM Settings ──────────────────────────────────────────────────────────────
 
 
+class AlpacaSettings(BaseSettings):
+    """Alpaca Markets API credentials for US equities data."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        populate_by_name=True,
+    )
+
+    alpaca_api_key: str = Field(
+        default="",
+        alias="ALPACA_API_KEY",
+        description="Alpaca API key ID",
+    )
+    alpaca_api_secret: str = Field(
+        default="",
+        alias="ALPACA_API_SECRET",
+        description="Alpaca API secret key",
+    )
+    alpaca_base_url: str = Field(
+        default="https://paper-api.alpaca.markets",
+        alias="ALPACA_BASE_URL",
+        description="Alpaca trading API base URL",
+    )
+    alpaca_data_url: str = Field(
+        default="https://data.alpaca.markets",
+        alias="ALPACA_DATA_URL",
+        description="Alpaca market data API base URL",
+    )
+
+    @property
+    def configured(self) -> bool:
+        """Return True if Alpaca API credentials are set."""
+        return bool(self.alpaca_api_key and self.alpaca_api_secret)
+
+
 class LLMSettings(BaseSettings):
     """LLM provider settings for AI-assisted analysis."""
 
@@ -472,6 +509,7 @@ class AppSettings(BaseSettings):
     _database: DatabaseSettings | None = None
     _reddit: RedditSettings | None = None
     _llm: LLMSettings | None = None
+    _alpaca: AlpacaSettings | None = None
 
     @property
     def risk(self) -> RiskLimits:
@@ -516,6 +554,13 @@ class AppSettings(BaseSettings):
         return self._llm
 
     @property
+    def alpaca(self) -> AlpacaSettings:
+        """Alpaca Markets API credentials (from environment)."""
+        if self._alpaca is None:
+            self._alpaca = AlpacaSettings()
+        return self._alpaca
+
+    @property
     def is_production(self) -> bool:
         """Return True if running in a production environment."""
         return self.qts_env.lower() == "production"
@@ -539,6 +584,11 @@ class AppSettings(BaseSettings):
             issues.append(
                 "LLM backend not fully configured "
                 "(set ANTHROPIC_API_KEY for 'anthropic' backend, or use LLM_BACKEND=ollama)"
+            )
+
+        if not self.alpaca.configured:
+            issues.append(
+                "Alpaca API credentials not configured (ALPACA_API_KEY/ALPACA_API_SECRET)"
             )
 
         if self.database.is_sqlite and self.is_production:

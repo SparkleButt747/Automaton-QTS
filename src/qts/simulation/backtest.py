@@ -83,6 +83,79 @@ class BacktestResult:
     total_return: float = 0.0
 
 
+# ── Statistics (standalone) ───────────────────────────────────────────────────
+
+
+def compute_backtest_statistics(
+    result: BacktestResult, initial_capital: float
+) -> None:
+    """Compute and populate performance statistics on a BacktestResult in-place.
+
+    This is the shared statistics computation used by both the custom
+    BacktestEngine and the NautilusBacktestAdapter.
+
+    Args:
+        result: BacktestResult to populate in-place.
+        initial_capital: Starting capital for return calculation.
+    """
+    equity = np.array(result.equity_curve, dtype=np.float64)
+    if len(equity) < 2:
+        return
+
+    # Total return
+    result.total_return = float((equity[-1] - initial_capital) / initial_capital)
+
+    # Daily returns (assumes each bar = 1 step)
+    returns = np.diff(equity) / equity[:-1]
+    returns = returns[np.isfinite(returns)]
+
+    if len(returns) == 0:
+        return
+
+    mean_ret = float(np.mean(returns))
+    std_ret = float(np.std(returns, ddof=1)) if len(returns) > 1 else 0.0
+
+    # Sharpe (annualised assuming 252 trading days)
+    bars_per_year = 252
+    if std_ret > 0:
+        result.sharpe_ratio = float(mean_ret / std_ret * np.sqrt(bars_per_year))
+
+    # Sortino (downside deviation)
+    downside = returns[returns < 0]
+    if len(downside) > 0:
+        downside_std = float(np.std(downside, ddof=1))
+        if downside_std > 0:
+            result.sortino_ratio = float(
+                mean_ret / downside_std * np.sqrt(bars_per_year)
+            )
+
+    # Maximum drawdown
+    peak = np.maximum.accumulate(equity)
+    drawdown = (peak - equity) / peak
+    result.max_drawdown = float(np.max(drawdown))
+
+    # Calmar
+    ann_return = mean_ret * bars_per_year
+    if result.max_drawdown > 0:
+        result.calmar_ratio = float(ann_return / result.max_drawdown)
+
+    # Win rate and profit factor
+    trades = result.trades
+    if trades:
+        wins = [t for t in trades if t.outcome == TradeOutcome.WIN]
+        losses = [t for t in trades if t.outcome == TradeOutcome.LOSS]
+        result.win_rate = float(len(wins) / len(trades))
+
+        gross_profit = sum(t.pnl_usd for t in wins)
+        gross_loss = abs(sum(t.pnl_usd for t in losses))
+        if gross_loss > 0:
+            result.profit_factor = float(gross_profit / gross_loss)
+        elif gross_profit > 0:
+            result.profit_factor = float("inf")
+        else:
+            result.profit_factor = 0.0
+
+
 # ── Engine ────────────────────────────────────────────────────────────────────
 
 
@@ -199,7 +272,7 @@ class BacktestEngine:
                     pos,
                     last_bar.close,
                     last_bar,
-                    snapshot,  # type: ignore[possibly-undefined]
+                    snapshot,  # type: ignore[arg-type]
                     ExitReason.MANUAL,
                 )
                 completed_trades.append(trade)
@@ -390,64 +463,7 @@ class BacktestEngine:
             result: BacktestResult to populate in-place.
             initial_capital: Starting capital for return calculation.
         """
-        equity = np.array(result.equity_curve, dtype=np.float64)
-        if len(equity) < 2:
-            return
-
-        # Total return
-        result.total_return = float((equity[-1] - initial_capital) / initial_capital)
-
-        # Daily returns (assumes each bar = 1 step)
-        returns = np.diff(equity) / equity[:-1]
-        returns = returns[np.isfinite(returns)]
-
-        if len(returns) == 0:
-            return
-
-        mean_ret = float(np.mean(returns))
-        std_ret = float(np.std(returns, ddof=1)) if len(returns) > 1 else 0.0
-
-        # Sharpe (annualised assuming 252 trading days)
-        bars_per_year = 252
-        if std_ret > 0:
-            result.sharpe_ratio = float(
-                mean_ret / std_ret * np.sqrt(bars_per_year)
-            )
-
-        # Sortino (downside deviation)
-        downside = returns[returns < 0]
-        if len(downside) > 0:
-            downside_std = float(np.std(downside, ddof=1))
-            if downside_std > 0:
-                result.sortino_ratio = float(
-                    mean_ret / downside_std * np.sqrt(bars_per_year)
-                )
-
-        # Maximum drawdown
-        peak = np.maximum.accumulate(equity)
-        drawdown = (peak - equity) / peak
-        result.max_drawdown = float(np.max(drawdown))
-
-        # Calmar
-        ann_return = mean_ret * bars_per_year
-        if result.max_drawdown > 0:
-            result.calmar_ratio = float(ann_return / result.max_drawdown)
-
-        # Win rate and profit factor
-        trades = result.trades
-        if trades:
-            wins = [t for t in trades if t.outcome == TradeOutcome.WIN]
-            losses = [t for t in trades if t.outcome == TradeOutcome.LOSS]
-            result.win_rate = float(len(wins) / len(trades))
-
-            gross_profit = sum(t.pnl_usd for t in wins)
-            gross_loss = abs(sum(t.pnl_usd for t in losses))
-            if gross_loss > 0:
-                result.profit_factor = float(gross_profit / gross_loss)
-            elif gross_profit > 0:
-                result.profit_factor = float("inf")
-            else:
-                result.profit_factor = 0.0
+        compute_backtest_statistics(result, initial_capital)
 
     # ------------------------------------------------------------------
     # Helpers

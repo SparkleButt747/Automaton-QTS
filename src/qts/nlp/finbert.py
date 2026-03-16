@@ -107,7 +107,7 @@ class FinBERTAnalyzer:
             return self._available
 
         try:
-            from transformers import pipeline  # type: ignore[import]
+            from transformers import pipeline
 
             self._pipeline = pipeline(
                 "text-classification",
@@ -158,7 +158,7 @@ class FinBERTAnalyzer:
             # Find the label with the highest score
             best = max(scores, key=lambda s: float(s["score"]))  # type: ignore[arg-type]
             label = str(best["label"]).upper()
-            score = float(best["score"])
+            score = float(best["score"])  # type: ignore[arg-type]
             confidence = score  # highest softmax probability
 
             results.append(

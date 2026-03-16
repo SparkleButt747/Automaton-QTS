@@ -67,7 +67,7 @@ class ProposalManager:
             return []
         with self._history_path.open("r", encoding="utf-8") as fh:
             data = json.load(fh)
-        return data if isinstance(data, list) else []  # type: ignore[return-value]
+        return data if isinstance(data, list) else []
 
     def _write_history(self, history: list[dict]) -> None:  # type: ignore[type-arg]
         """Write the proposals history file."""

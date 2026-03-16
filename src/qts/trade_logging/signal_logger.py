@@ -88,7 +88,7 @@ class SignalLogger:
         """
         if self._repository is not None:
             try:
-                return self._repository.get_snapshots(symbol, start, end)
+                return self._repository.get_snapshots(symbol, start, end)  # type: ignore[no-any-return]
             except Exception:  # noqa: BLE001
                 logger.exception(
                     "SignalLogger: repository get_snapshots failed, falling back to in-memory"

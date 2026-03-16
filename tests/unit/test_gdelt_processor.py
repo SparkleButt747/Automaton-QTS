@@ -8,6 +8,7 @@ Covers:
 - Normalisation: clamp to [0, 1]
 - Protocol conformance
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -15,13 +16,10 @@ from datetime import datetime
 import pytest
 
 from qts.nlp.gdelt import (
-    COUNTRY_SECTOR_MAP,
-    RELEVANT_CAMEO_CODES,
     GDELTProcessor,
     GDELTProtocol,
     GeopoliticalEvent,
 )
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 

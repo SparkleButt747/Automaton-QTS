@@ -1,11 +1,11 @@
 """Signal pipeline: computes all indicators, runs regime detection,
 and assembles a SignalSnapshot from a sequence of Bar objects.
 """
+
 from __future__ import annotations
 
 import logging
-from datetime import datetime
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -18,7 +18,6 @@ from qts.signals.indicators import (
     compute_macd,
     compute_momentum,
     compute_rsi,
-    normalise_rsi,
 )
 from qts.signals.regime import RegimeDetector
 
@@ -48,7 +47,7 @@ class SignalPipeline:
     def __init__(
         self,
         symbol: str,
-        regime_detector: Optional[RegimeDetector] = None,
+        regime_detector: RegimeDetector | None = None,
         sentiment_score: float = 0.0,
     ) -> None:
         """Initialise the signal pipeline.
@@ -68,9 +67,9 @@ class SignalPipeline:
     def compute(
         self,
         bars: Sequence[Bar],
-        sentiment_score: Optional[float] = None,
-        params: Optional[object] = None,
-    ) -> Optional[SignalSnapshot]:
+        sentiment_score: float | None = None,
+        params: object | None = None,
+    ) -> SignalSnapshot | None:
         """Compute all indicators and return a SignalSnapshot for the last bar.
 
         Returns None if insufficient bars are available.

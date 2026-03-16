@@ -7,17 +7,16 @@ Verifies:
 - Trades are recorded with valid data
 - SMA crossover generates trades on trending data
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
 
 import numpy as np
-import pytest
 
 from qts.models.base import Bar, TradeOutcome
 from qts.simulation.backtest import BacktestEngine, BacktestResult, BacktestSettings
 from qts.strategies.sma_crossover import SMACrossoverStrategy
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 

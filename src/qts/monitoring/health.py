@@ -1,12 +1,13 @@
 """System health monitoring."""
+
 from __future__ import annotations
 
 import enum
 import logging
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,7 @@ class HealthChecker:
     # Individual checks
     # ------------------------------------------------------------------
 
-    def check_database(self, engine: Optional[Any] = None) -> ComponentHealth:
+    def check_database(self, engine: Any | None = None) -> ComponentHealth:
         """Check database connectivity by executing a trivial query.
 
         Args:
@@ -77,7 +78,7 @@ class HealthChecker:
         """
         resolved_engine = engine or self._db_engine
         start = time.monotonic()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         if resolved_engine is None:
             return ComponentHealth(
@@ -112,7 +113,7 @@ class HealthChecker:
                 latency_ms=latency_ms,
             )
 
-    def check_market_feed(self, provider: Optional[Any] = None) -> ComponentHealth:
+    def check_market_feed(self, provider: Any | None = None) -> ComponentHealth:
         """Check that the market data feed is alive and responsive.
 
         The provider is expected to expose an ``is_connected()`` method or
@@ -127,7 +128,7 @@ class HealthChecker:
         """
         resolved_provider = provider or self._market_feed_provider
         start = time.monotonic()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         if resolved_provider is None:
             return ComponentHealth(
@@ -166,7 +167,7 @@ class HealthChecker:
                 latency_ms=latency_ms,
             )
 
-    def check_redis(self, url: Optional[str] = None) -> ComponentHealth:
+    def check_redis(self, url: str | None = None) -> ComponentHealth:
         """Ping a Redis instance to verify connectivity.
 
         Args:
@@ -178,7 +179,7 @@ class HealthChecker:
         """
         resolved_url = url or self._redis_url
         start = time.monotonic()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         if resolved_url is None:
             return ComponentHealth(

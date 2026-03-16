@@ -1,11 +1,11 @@
 """Core domain models for the trading system."""
+
 from __future__ import annotations
 
 import enum
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional
 
 
 class OrderSide(enum.StrEnum):
@@ -132,9 +132,9 @@ class Order:
     side: OrderSide
     order_type: OrderType
     quantity: float
-    price: Optional[float] = None
-    stop_price: Optional[float] = None
-    timestamp: Optional[datetime] = None
+    price: float | None = None
+    stop_price: float | None = None
+    timestamp: datetime | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -212,7 +212,7 @@ class TradeRecord:
     params_version: str
     outcome: TradeOutcome
     exit_reason: ExitReason
-    failure_mode: Optional[FailureMode] = None
+    failure_mode: FailureMode | None = None
 
     @staticmethod
     def generate_id() -> str:

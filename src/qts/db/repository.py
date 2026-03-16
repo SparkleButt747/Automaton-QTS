@@ -5,11 +5,11 @@ Provides typed async repositories for each major domain entity:
 - SignalRepository: Signal snapshots
 - TradeRepository: Trade records with attribution context
 """
+
 from __future__ import annotations
 
 import logging
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -234,7 +234,7 @@ class MarketDataRepository:
             for r in rows
         ]
 
-    async def get_latest_bar(self, symbol: str, interval: str = "1m") -> Optional[Bar]:
+    async def get_latest_bar(self, symbol: str, interval: str = "1m") -> Bar | None:
         """Retrieve the most recent bar for a symbol.
 
         Args:
@@ -401,7 +401,7 @@ class SignalRepository:
             for r in rows
         ]
 
-    async def get_latest_snapshot(self, symbol: str) -> Optional[SignalSnapshot]:
+    async def get_latest_snapshot(self, symbol: str) -> SignalSnapshot | None:
         """Retrieve the most recent signal snapshot for a symbol.
 
         Args:
@@ -546,7 +546,7 @@ class TradeRepository:
         logger.debug("Inserted %d trade records", len(rows))
         return rows
 
-    async def get_trade_by_id(self, trade_id: str) -> Optional[TradeRecord]:
+    async def get_trade_by_id(self, trade_id: str) -> TradeRecord | None:
         """Retrieve a single trade record by its unique ID.
 
         Args:
@@ -564,9 +564,9 @@ class TradeRepository:
 
     async def get_trades(
         self,
-        symbol: Optional[str] = None,
-        start: Optional[datetime] = None,
-        end: Optional[datetime] = None,
+        symbol: str | None = None,
+        start: datetime | None = None,
+        end: datetime | None = None,
         limit: int = 500,
     ) -> list[TradeRecord]:
         """Retrieve trade records with optional filtering.
@@ -596,7 +596,7 @@ class TradeRepository:
     async def get_trades_by_outcome(
         self,
         outcome: TradeOutcome,
-        symbol: Optional[str] = None,
+        symbol: str | None = None,
         limit: int = 500,
     ) -> list[TradeRecord]:
         """Retrieve trade records filtered by outcome.

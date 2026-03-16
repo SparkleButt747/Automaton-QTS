@@ -6,11 +6,12 @@ Tests:
 - Handles malformed LLM response gracefully
 - Proposals saved to file
 """
+
 from __future__ import annotations
 
 import json
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
@@ -27,10 +28,8 @@ from qts.models.base import (
 from qts.oversight.debrief import (
     DebriefEngine,
     DebriefReport,
-    Proposal,
     SessionSummary,
 )
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -39,8 +38,8 @@ def _make_trade_record() -> TradeRecord:
     return TradeRecord(
         trade_id=str(uuid.uuid4()),
         symbol="BTCUSDT",
-        entry_time=datetime(2024, 6, 1, 9, 0, tzinfo=timezone.utc),
-        exit_time=datetime(2024, 6, 1, 10, 0, tzinfo=timezone.utc),
+        entry_time=datetime(2024, 6, 1, 9, 0, tzinfo=UTC),
+        exit_time=datetime(2024, 6, 1, 10, 0, tzinfo=UTC),
         direction=TradeDirection.LONG,
         entry_price=65000.0,
         exit_price=64000.0,
@@ -92,7 +91,7 @@ def _make_session_summary() -> SessionSummary:
 def _make_valid_llm_response() -> str:
     return json.dumps(
         {
-            "analysis": "The session showed moderate performance with SENTIMENT_FADE as the primary failure mode.",
+            "analysis": "Moderate performance with SENTIMENT_FADE as primary failure mode.",
             "proposals": [
                 {
                     "parameter": "w_sentiment",
@@ -317,11 +316,13 @@ class TestDebriefEngineRunDebrief:
     @pytest.mark.asyncio
     async def test_run_debrief_with_empty_proposals(self, tmp_path: Path) -> None:
         """Should handle a response with no proposals gracefully."""
-        response = json.dumps({
-            "analysis": "Good session, no changes needed.",
-            "proposals": [],
-            "regime_alert": None,
-        })
+        response = json.dumps(
+            {
+                "analysis": "Good session, no changes needed.",
+                "proposals": [],
+                "regime_alert": None,
+            }
+        )
         llm = _make_llm_client_mock(response)
         engine = DebriefEngine(llm_client=llm, config_dir=tmp_path)
         report = await engine.run_debrief(_make_session_summary())

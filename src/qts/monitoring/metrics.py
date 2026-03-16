@@ -1,4 +1,5 @@
 """Prometheus metrics instrumentation for QTS."""
+
 from __future__ import annotations
 
 from prometheus_client import Counter, Gauge, Histogram, Info

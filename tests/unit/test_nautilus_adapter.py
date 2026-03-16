@@ -12,35 +12,30 @@ Covers:
 - T-NAUT-9: compute_backtest_statistics with too-short equity
 - T-NAUT-10: compute_backtest_statistics win_rate and profit_factor
 """
+
 from __future__ import annotations
 
-import sys
-from datetime import datetime, timezone
-from types import ModuleType
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
-import numpy as np
 import pytest
 
 from qts.models.base import (
     Bar,
     ExitReason,
-    Fill,
     OrderSide,
-    Position,
     TradeDirection,
     TradeOutcome,
     TradeRecord,
     VolRegime,
 )
-from qts.simulation.backtest import BacktestResult, BacktestSettings, compute_backtest_statistics
+from qts.simulation.backtest import BacktestResult, compute_backtest_statistics
 from qts.simulation.nautilus_adapter import (
     FILL_MODEL_IMMEDIATE,
     FILL_MODEL_REALISTIC,
     HAS_NAUTILUS,
     NautilusBacktestAdapter,
 )
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -65,9 +60,7 @@ def _make_bars(n: int = 100, base: float = 100.0) -> list[Bar]:
 
 def _make_trade(pnl: float) -> TradeRecord:
     outcome = (
-        TradeOutcome.WIN
-        if pnl > 0
-        else (TradeOutcome.LOSS if pnl < 0 else TradeOutcome.BREAKEVEN)
+        TradeOutcome.WIN if pnl > 0 else (TradeOutcome.LOSS if pnl < 0 else TradeOutcome.BREAKEVEN)
     )
     return TradeRecord(
         trade_id=TradeRecord.generate_id(),
@@ -194,7 +187,7 @@ def test_nautilus_fill_to_qts_conversion():
     event.last_px = 50000.0
     event.last_qty = 1.5
     event.commission.as_double.return_value = 5.0
-    event.ts_event = int(datetime(2024, 1, 1, tzinfo=timezone.utc).timestamp() * 1e9)
+    event.ts_event = int(datetime(2024, 1, 1, tzinfo=UTC).timestamp() * 1e9)
 
     fill = nautilus_fill_to_qts(event)
     assert fill.side == OrderSide.BUY
@@ -216,7 +209,7 @@ def test_nautilus_position_to_qts_conversion():
     pos.instrument_id = "BTCUSDT.BINANCE"
     pos.avg_px_open = 50000.0
     pos.quantity = 2.0
-    pos.ts_opened = int(datetime(2024, 1, 1, tzinfo=timezone.utc).timestamp() * 1e9)
+    pos.ts_opened = int(datetime(2024, 1, 1, tzinfo=UTC).timestamp() * 1e9)
     pos.unrealized_pnl = 100.0
 
     qts_pos = nautilus_position_to_qts(pos)

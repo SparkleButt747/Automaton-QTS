@@ -2,6 +2,7 @@
 
 Exports all key domain model classes and enumerations from the base module.
 """
+
 from __future__ import annotations
 
 from qts.models.base import (

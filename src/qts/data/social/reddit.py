@@ -1,9 +1,10 @@
 """Reddit social sentiment provider."""
+
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Protocol, runtime_checkable
 
 logger = logging.getLogger(__name__)
@@ -101,8 +102,7 @@ class RedditSentimentProvider:
                 import praw
             except ImportError as exc:
                 raise ImportError(
-                    "RedditSentimentProvider requires 'praw'. "
-                    "Install with: pip install praw"
+                    "RedditSentimentProvider requires 'praw'. " "Install with: pip install praw"
                 ) from exc
 
             self._reddit = praw.Reddit(
@@ -138,9 +138,7 @@ class RedditSentimentProvider:
         if hasattr(submission, "selftext") and submission.selftext:
             body = f"{submission.title} {submission.selftext}"
 
-        timestamp = datetime.fromtimestamp(
-            float(submission.created_utc), tz=timezone.utc
-        )
+        timestamp = datetime.fromtimestamp(float(submission.created_utc), tz=UTC)
 
         return SocialPost(
             text=body,

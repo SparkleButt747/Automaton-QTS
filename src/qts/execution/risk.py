@@ -4,11 +4,11 @@ Provides the RiskManager class that enforces position size limits,
 maximum open position counts, daily drawdown limits, and circuit breaker
 logic with configurable cooldown periods.
 """
+
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from qts.config import RiskLimits
 from qts.models.base import Position
@@ -40,16 +40,14 @@ class RiskManager:
             limits: Loaded RiskLimits configuration.
         """
         self.limits = limits
-        self._circuit_breaker_tripped_at: Optional[datetime] = None
+        self._circuit_breaker_tripped_at: datetime | None = None
         self._halted: bool = False
 
     # ------------------------------------------------------------------
     # Position size check
     # ------------------------------------------------------------------
 
-    def check_position_size(
-        self, proposed_size: float, portfolio_value: float
-    ) -> bool:
+    def check_position_size(self, proposed_size: float, portfolio_value: float) -> bool:
         """Return True if the proposed position size is within limits.
 
         Args:
@@ -99,9 +97,7 @@ class RiskManager:
     # Daily drawdown check
     # ------------------------------------------------------------------
 
-    def check_daily_drawdown(
-        self, daily_pnl: float, portfolio_value: float
-    ) -> bool:
+    def check_daily_drawdown(self, daily_pnl: float, portfolio_value: float) -> bool:
         """Return True if daily drawdown is within the allowed limit.
 
         If the drawdown exceeds the limit, the circuit breaker is tripped
@@ -133,7 +129,7 @@ class RiskManager:
 
     def _trip_circuit_breaker(self) -> None:
         """Trip the circuit breaker and halt trading."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         self._circuit_breaker_tripped_at = now
         self._halted = True
         logger.error(
@@ -142,7 +138,7 @@ class RiskManager:
             self.limits.circuit_breaker_cooldown_seconds,
         )
 
-    def is_halted(self, current_time: Optional[datetime] = None) -> bool:
+    def is_halted(self, current_time: datetime | None = None) -> bool:
         """Return True if trading is currently halted by the circuit breaker.
 
         Automatically lifts the halt after the cooldown period has elapsed.
@@ -157,7 +153,7 @@ class RiskManager:
         if not self._halted:
             return False
 
-        now = current_time or datetime.now(timezone.utc)
+        now = current_time or datetime.now(UTC)
         if self._circuit_breaker_tripped_at is None:
             self._halted = False
             return False
@@ -193,7 +189,7 @@ class RiskManager:
         portfolio_value: float,
         current_positions: list[Position],
         daily_pnl: float,
-        current_time: Optional[datetime] = None,
+        current_time: datetime | None = None,
     ) -> bool:
         """Run all risk checks and return True only if all pass.
 

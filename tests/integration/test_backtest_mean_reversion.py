@@ -9,17 +9,16 @@ Verifies:
 - Oscillating data produces mean-reversion trades
 - Trending data behaves reasonably
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
 
 import numpy as np
-import pytest
 
 from qts.models.base import Bar, TradeOutcome
 from qts.simulation.backtest import BacktestEngine, BacktestResult, BacktestSettings
 from qts.strategies.mean_reversion import MeanReversionStrategy
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -172,12 +171,8 @@ class TestBacktestMeanReversionDeterminism:
         bars = _make_mean_reverting_bars(n=300, seed=99)
         settings = BacktestSettings()
 
-        r1 = BacktestEngine(
-            MeanReversionStrategy(position_size=0.03), bars, settings
-        ).run()
-        r2 = BacktestEngine(
-            MeanReversionStrategy(position_size=0.03), bars, settings
-        ).run()
+        r1 = BacktestEngine(MeanReversionStrategy(position_size=0.03), bars, settings).run()
+        r2 = BacktestEngine(MeanReversionStrategy(position_size=0.03), bars, settings).run()
 
         assert len(r1.trades) == len(r2.trades)
 

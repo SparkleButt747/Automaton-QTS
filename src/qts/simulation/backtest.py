@@ -4,19 +4,19 @@ Given a Strategy, a sequence of Bars, and BacktestSettings, iterates
 through each bar, computes signals via SignalPipeline, calls
 strategy.on_bar(), simulates fills, and tracks portfolio state.
 """
+
 from __future__ import annotations
 
 import logging
 import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass, field
-from typing import Sequence
 
 import numpy as np
 
 from qts.models.base import (
     Bar,
     ExitReason,
-    FailureMode,
     Fill,
     Order,
     OrderSide,
@@ -86,9 +86,7 @@ class BacktestResult:
 # ── Statistics (standalone) ───────────────────────────────────────────────────
 
 
-def compute_backtest_statistics(
-    result: BacktestResult, initial_capital: float
-) -> None:
+def compute_backtest_statistics(result: BacktestResult, initial_capital: float) -> None:
     """Compute and populate performance statistics on a BacktestResult in-place.
 
     This is the shared statistics computation used by both the custom
@@ -125,9 +123,7 @@ def compute_backtest_statistics(
     if len(downside) > 0:
         downside_std = float(np.std(downside, ddof=1))
         if downside_std > 0:
-            result.sortino_ratio = float(
-                mean_ret / downside_std * np.sqrt(bars_per_year)
-            )
+            result.sortino_ratio = float(mean_ret / downside_std * np.sqrt(bars_per_year))
 
     # Maximum drawdown
     peak = np.maximum.accumulate(equity)
@@ -454,9 +450,7 @@ class BacktestEngine:
     # Statistics
     # ------------------------------------------------------------------
 
-    def _compute_statistics(
-        self, result: BacktestResult, initial_capital: float
-    ) -> None:
+    def _compute_statistics(self, result: BacktestResult, initial_capital: float) -> None:
         """Compute and populate performance statistics on result.
 
         Args:

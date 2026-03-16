@@ -1,13 +1,11 @@
 """Unit tests for the system health checker."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from qts.monitoring.health import ComponentHealth, HealthChecker, HealthStatus
-
 
 # ── ComponentHealth dataclass ─────────────────────────────────────────────────
 
@@ -17,7 +15,7 @@ class TestComponentHealth:
         health = ComponentHealth(
             component="database",
             status=HealthStatus.HEALTHY,
-            last_check=datetime.now(timezone.utc),
+            last_check=datetime.now(UTC),
             message="OK",
             latency_ms=5.2,
         )
@@ -29,7 +27,7 @@ class TestComponentHealth:
         health = ComponentHealth(
             component="redis",
             status=HealthStatus.HEALTHY,
-            last_check=datetime.now(timezone.utc),
+            last_check=datetime.now(UTC),
             message="OK",
             latency_ms=1.0,
         )
@@ -143,16 +141,24 @@ class TestCheckRedis:
             with patch("qts.monitoring.health.redis_lib", mock_redis_class, create=True):
                 # Since the import is inside the method, patch at import level
                 import unittest.mock as um
-                with um.patch("builtins.__import__", side_effect=lambda name, *args, **kwargs: (
-                    mock_redis_class if name == "redis" else __import__(name, *args, **kwargs)
-                )):
-                    result = checker.check_redis("redis://localhost:6379/0")
+
+                with um.patch(
+                    "builtins.__import__",
+                    side_effect=lambda name, *args, **kwargs: (
+                        mock_redis_class if name == "redis" else __import__(name, *args, **kwargs)
+                    ),
+                ):
+                    _result = checker.check_redis("redis://localhost:6379/0")
 
         # Fallback: just check that a URL without an actual Redis instance fails gracefully
         checker2 = HealthChecker(redis_url="redis://nonexistent-host:6379/0")
         result2 = checker2.check_redis()
         # Should fail gracefully (either UNHEALTHY or exception-caught)
-        assert result2.status in (HealthStatus.UNHEALTHY, HealthStatus.HEALTHY, HealthStatus.DEGRADED)
+        assert result2.status in (
+            HealthStatus.UNHEALTHY,
+            HealthStatus.HEALTHY,
+            HealthStatus.DEGRADED,
+        )
         assert result2.component == "redis"
 
     def test_failed_ping(self) -> None:
@@ -188,7 +194,7 @@ class TestCheckAll:
         healthy = ComponentHealth(
             component="x",
             status=HealthStatus.HEALTHY,
-            last_check=datetime.now(timezone.utc),
+            last_check=datetime.now(UTC),
             message="OK",
             latency_ms=1.0,
         )
@@ -204,14 +210,14 @@ class TestCheckAll:
         healthy = ComponentHealth(
             component="x",
             status=HealthStatus.HEALTHY,
-            last_check=datetime.now(timezone.utc),
+            last_check=datetime.now(UTC),
             message="OK",
             latency_ms=1.0,
         )
         unhealthy = ComponentHealth(
             component="database",
             status=HealthStatus.UNHEALTHY,
-            last_check=datetime.now(timezone.utc),
+            last_check=datetime.now(UTC),
             message="failed",
             latency_ms=0.0,
         )

@@ -1,13 +1,15 @@
 """Tests for the hftbacktest adapter module."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import patch
 
 import numpy as np
 import pytest
 
 from qts.models.base import OrderSide, Tick
+from qts.simulation.backtest import BacktestResult
 from qts.simulation.hft_backtest import (
     BUY_SIDE,
     HAS_HFTBACKTEST,
@@ -19,8 +21,6 @@ from qts.simulation.hft_backtest import (
     convert_ticks_to_hft_format,
     load_hft_data,
 )
-from qts.simulation.backtest import BacktestResult
-
 
 # ── T-HFT-1: Module imports without hftbacktest installed ────────────────────
 
@@ -57,7 +57,7 @@ class TestConvertTicks:
         self, price: float = 100.0, qty: float = 1.0, side: OrderSide = OrderSide.BUY
     ) -> Tick:
         return Tick(
-            timestamp=datetime(2024, 1, 15, 10, 30, 0, tzinfo=timezone.utc),
+            timestamp=datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC),
             symbol="BTCUSDT",
             price=price,
             quantity=qty,

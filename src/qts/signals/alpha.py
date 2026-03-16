@@ -3,6 +3,7 @@
 Combines normalised technical indicators and sentiment into a single
 alpha score, scaled by the current volatility regime.
 """
+
 from __future__ import annotations
 
 import numpy as np

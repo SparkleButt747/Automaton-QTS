@@ -10,9 +10,10 @@ Verifies:
 - Doesn't double-enter same symbol
 - Protocol conformance (has on_bar, on_fill, name)
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import pytest

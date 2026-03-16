@@ -1,4 +1,5 @@
 """Async LLM client supporting Anthropic Claude and local Ollama backends."""
+
 from __future__ import annotations
 
 import asyncio
@@ -96,11 +97,7 @@ class LLMClient:
                     messages=[{"role": "user", "content": user_prompt}],
                 )
                 # Extract text from the first content block
-                text_blocks = [
-                    block.text
-                    for block in response.content
-                    if hasattr(block, "text")
-                ]
+                text_blocks = [block.text for block in response.content if hasattr(block, "text")]
                 return "\n".join(text_blocks)
 
             except (anthropic.APITimeoutError, anthropic.RateLimitError) as exc:
@@ -249,7 +246,7 @@ class OllamaClient:
                     )
                     response.raise_for_status()
                     data = response.json()
-                    # Ollama /api/chat response: {"message": {"role": "assistant", "content": "..."}}
+                    # Ollama response: {"message": {"content": "..."}}
                     content: str = data["message"]["content"]
                     return content
 
@@ -317,7 +314,7 @@ class OllamaClient:
         # the closing tag so json.loads sees clean JSON.
         if "<think>" in text and "</think>" in text:
             think_end = text.rfind("</think>")
-            text = text[think_end + len("</think>"):].strip()
+            text = text[think_end + len("</think>") :].strip()
 
         # As a last resort, extract the first {...} block from the text
         if not text.startswith("{"):
@@ -335,7 +332,8 @@ class OllamaClient:
 
         if not isinstance(result, dict):
             raise ValueError(
-                f"Ollama returned valid JSON but not a dict (got {type(result).__name__}): {raw[:200]}"
+                f"Ollama returned valid JSON but not a dict "
+                f"(got {type(result).__name__}): {raw[:200]}"
             )
 
         return result
@@ -375,6 +373,4 @@ def create_llm_client(backend: str = "ollama", **kwargs: Any) -> LLMClientProtoc
         return OllamaClient(**kwargs)
     if backend == "anthropic":
         return LLMClient(**kwargs)
-    raise ValueError(
-        f"Unknown LLM backend {backend!r}. Supported backends: 'ollama', 'anthropic'."
-    )
+    raise ValueError(f"Unknown LLM backend {backend!r}. Supported backends: 'ollama', 'anthropic'.")

@@ -3,14 +3,11 @@
 Provides methods to synthetically alter bar sequences and signal snapshots
 to simulate adverse market conditions.
 """
+
 from __future__ import annotations
 
-import copy
 import logging
-from datetime import timedelta
-from typing import Sequence
-
-import numpy as np
+from collections.abc import Sequence
 
 from qts.models.base import Bar, SignalSnapshot
 
@@ -66,7 +63,7 @@ class StressScenarioRunner:
 
         end_crash = min(start_index + duration_bars, n)
         end_recovery = min(end_crash + duration_bars, n)
-        baseline_close = result[start_index].close
+        _baseline_close = result[start_index].close
 
         # Decline phase
         for i in range(start_index, end_crash):

@@ -7,6 +7,7 @@ Covers:
 - StressScenarioRunner.data_gap (happy path, validation, gap-at-start edge case)
 - Originals are not mutated
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -15,7 +16,6 @@ import pytest
 
 from qts.models.base import Bar, SignalSnapshot, VolRegime
 from qts.simulation.scenario import StressScenarioRunner
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -100,9 +100,9 @@ class TestFlashCrash:
         end_crash = start + duration  # 10
         end_recovery = end_crash + duration  # 15
         for i in range(end_crash, end_recovery):
-            assert nadir <= result[i].close <= 100.0 + 1e-9, (
-                f"bar {i} close={result[i].close} not in recovery range [{nadir}, 100]"
-            )
+            assert (
+                nadir <= result[i].close <= 100.0 + 1e-9
+            ), f"bar {i} close={result[i].close} not in recovery range [{nadir}, 100]"
 
     def test_T_SCEN_5_bars_outside_window_unchanged(self) -> None:
         """Bars before crash window and after recovery window are unchanged."""
@@ -156,7 +156,7 @@ class TestFlashCrash:
         bars = _make_bars(20, base_close=100.0)
         original_closes = [b.close for b in bars]
         runner.flash_crash(bars, magnitude=-0.15, start_index=3)
-        for original, bar in zip(original_closes, bars):
+        for original, bar in zip(original_closes, bars, strict=True):
             assert bar.close == pytest.approx(original)
 
     def test_T_SCEN_12_volume_unchanged_in_crash_phase(self) -> None:
@@ -291,7 +291,7 @@ class TestDataGap:
         bars = _make_bars(15, base_close=100.0)
         original_closes = [b.close for b in bars]
         runner.data_gap(bars, gap_duration_bars=3, start_index=5)
-        for original, bar in zip(original_closes, bars):
+        for original, bar in zip(original_closes, bars, strict=True):
             assert bar.close == pytest.approx(original)
 
     def test_T_SCEN_28_timestamps_preserved_in_gap(self) -> None:

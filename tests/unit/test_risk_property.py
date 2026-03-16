@@ -1,7 +1,8 @@
 """Property-based tests for risk management."""
+
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st
@@ -32,7 +33,9 @@ def _position_strategy() -> st.SearchStrategy:  # type: ignore[type-arg]
     """Generate a valid Position object."""
     return st.builds(
         Position,
-        symbol=st.text(alphabet=st.characters(whitelist_categories=("Lu",)), min_size=1, max_size=6),
+        symbol=st.text(
+            alphabet=st.characters(whitelist_categories=("Lu",)), min_size=1, max_size=6
+        ),
         direction=st.sampled_from([TradeDirection.LONG, TradeDirection.SHORT]),
         entry_price=_POSITIVE_FLOAT,
         quantity=_POSITIVE_FLOAT,
@@ -146,9 +149,9 @@ class TestPositionSizeProperty:
         rm = RiskManager(limits)
         under_limit_size = portfolio_value * size_fraction
         result = rm.check_position_size(under_limit_size, portfolio_value)
-        assert result is True, (
-            f"Expected approval: size_frac={size_fraction}, limit={limits.max_position_size_pct}"
-        )
+        assert (
+            result is True
+        ), f"Expected approval: size_frac={size_fraction}, limit={limits.max_position_size_pct}"
 
     @given(limits=_risk_limits_strategy())
     @settings(max_examples=100)
@@ -174,9 +177,9 @@ class TestMaxPositionsProperty:
         assume(len(positions) >= limits.max_open_positions)
         rm = RiskManager(limits)
         result = rm.check_max_positions(positions)
-        assert result is False, (
-            f"Expected rejection: count={len(positions)}, max={limits.max_open_positions}"
-        )
+        assert (
+            result is False
+        ), f"Expected rejection: count={len(positions)}, max={limits.max_open_positions}"
 
     @given(
         limits=_risk_limits_strategy(),
@@ -192,9 +195,9 @@ class TestMaxPositionsProperty:
         assume(len(positions) < limits.max_open_positions)
         rm = RiskManager(limits)
         result = rm.check_max_positions(positions)
-        assert result is True, (
-            f"Expected approval: count={len(positions)}, max={limits.max_open_positions}"
-        )
+        assert (
+            result is True
+        ), f"Expected approval: count={len(positions)}, max={limits.max_open_positions}"
 
     @given(limits=_risk_limits_strategy())
     @settings(max_examples=100)

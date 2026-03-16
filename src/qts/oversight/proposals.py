@@ -1,9 +1,10 @@
 """Parse and manage LLM-generated strategy proposals."""
+
 from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from qts.oversight.debrief import Proposal
@@ -100,7 +101,7 @@ class ProposalManager:
         """
         self._config_dir.mkdir(parents=True, exist_ok=True)
         data = {
-            "generated_at": datetime.now(tz=timezone.utc).isoformat(),
+            "generated_at": datetime.now(tz=UTC).isoformat(),
             "proposals": [
                 {
                     "proposal_id": p.proposal_id,
@@ -115,7 +116,9 @@ class ProposalManager:
             ],
         }
         self._write_proposals_file(data)
-        logger.info("ProposalManager: saved %d proposals to %s", len(proposals), self._proposals_path)
+        logger.info(
+            "ProposalManager: saved %d proposals to %s", len(proposals), self._proposals_path
+        )
         return self._proposals_path
 
     def load_pending(self) -> list[Proposal]:
@@ -250,7 +253,7 @@ class ProposalManager:
             {
                 "status": "approved",
                 "approver": approver,
-                "actioned_at": datetime.now(tz=timezone.utc).isoformat(),
+                "actioned_at": datetime.now(tz=UTC).isoformat(),
             }
         )
         history = self._load_history()
@@ -293,7 +296,7 @@ class ProposalManager:
                 "status": "rejected",
                 "rejector": rejector,
                 "rejection_reason": reason,
-                "actioned_at": datetime.now(tz=timezone.utc).isoformat(),
+                "actioned_at": datetime.now(tz=UTC).isoformat(),
             }
         )
         history = self._load_history()

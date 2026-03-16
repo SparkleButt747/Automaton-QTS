@@ -12,6 +12,7 @@ Verifies:
 - fetch_sentiment passes access_token as query param when set
 - close() releases the HTTP client
 """
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -123,7 +124,12 @@ class TestFetchSentiment:
     async def test_sentiment_ratio_computed_correctly(self):
         """fetch_sentiment computes sentiment_ratio as bullish / (bullish + bearish)."""
         provider = StockTwitsSentimentProvider()
-        messages = [_make_msg("Bullish"), _make_msg("Bullish"), _make_msg("Bullish"), _make_msg("Bearish")]
+        messages = [
+            _make_msg("Bullish"),
+            _make_msg("Bullish"),
+            _make_msg("Bullish"),
+            _make_msg("Bearish"),
+        ]
         response = _mock_response({"messages": messages})
 
         with patch.object(provider, "_get_client") as mock_get:
@@ -195,7 +201,6 @@ class TestFetchSentiment:
             await provider.fetch_sentiment("AAPL")
 
         call_kwargs = mock_http.get.call_args
-        params = call_kwargs.kwargs.get("params", {}) or call_kwargs.args[1] if len(call_kwargs.args) > 1 else {}
         # access_token must appear in the call arguments
         assert "access_token" in str(call_kwargs)
 

@@ -5,17 +5,17 @@ Tests:
 - 100% of loss trades get classified (no None failure_mode for losses)
 - Attribution report aggregates correctly (counts, percentages, metrics)
 """
+
 from __future__ import annotations
 
 import math
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
 from qts.analytics.attribution import (
     AttributionEngine,
-    AttributionReport,
     FailureModeClassifier,
     FailureModeSummary,
 )
@@ -28,7 +28,6 @@ from qts.models.base import (
     TradeRecord,
     VolRegime,
 )
-
 
 # ── Helpers / Factories ───────────────────────────────────────────────────────
 
@@ -47,8 +46,8 @@ def _make_trade(
     return TradeRecord(
         trade_id=str(uuid.uuid4()),
         symbol="AAPL",
-        entry_time=datetime(2024, 1, 1, 10, 0, 0, tzinfo=timezone.utc),
-        exit_time=datetime(2024, 1, 1, 11, 0, 0, tzinfo=timezone.utc),
+        entry_time=datetime(2024, 1, 1, 10, 0, 0, tzinfo=UTC),
+        exit_time=datetime(2024, 1, 1, 11, 0, 0, tzinfo=UTC),
         direction=direction,
         entry_price=entry_price,
         exit_price=entry_price * (1.0 + pnl_usd / (entry_price * 1.0)),
@@ -81,7 +80,7 @@ def _make_snapshot(
 ) -> SignalSnapshot:
     """Create a minimal SignalSnapshot for testing."""
     return SignalSnapshot(
-        timestamp=datetime(2024, 1, 1, 11, 0, 0, tzinfo=timezone.utc),
+        timestamp=datetime(2024, 1, 1, 11, 0, 0, tzinfo=UTC),
         symbol="AAPL",
         rsi=50.0,
         macd_histogram=0.0,
@@ -270,7 +269,9 @@ class TestAllLossesClassified:
         classifier = FailureModeClassifier()
         losses = [
             _make_trade(outcome=TradeOutcome.LOSS, sentiment_at_entry=0.0, slippage_usd=0.0),
-            _make_trade(outcome=TradeOutcome.LOSS, sentiment_at_entry=0.8, vol_regime_at_entry=VolRegime.LOW),
+            _make_trade(
+                outcome=TradeOutcome.LOSS, sentiment_at_entry=0.8, vol_regime_at_entry=VolRegime.LOW
+            ),
             _make_trade(outcome=TradeOutcome.LOSS, slippage_usd=10.0),
         ]
         for trade in losses:

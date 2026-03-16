@@ -3,6 +3,7 @@
 Uses a 2-state Gaussian Hidden Markov Model fitted on ATR history to
 classify the current market into HIGH or LOW volatility regimes.
 """
+
 from __future__ import annotations
 
 import logging
@@ -28,9 +29,7 @@ class RegimeDetectorProtocol(Protocol):
         """
         ...
 
-    def predict(
-        self, atr_history: NDArray[np.float64]
-    ) -> tuple[VolRegime, float]:
+    def predict(self, atr_history: NDArray[np.float64]) -> tuple[VolRegime, float]:
         """Predict the current volatility regime.
 
         Args:
@@ -106,9 +105,7 @@ class RegimeDetector:
             means,
         )
 
-    def predict(
-        self, atr_history: NDArray[np.float64]
-    ) -> tuple[VolRegime, float]:
+    def predict(self, atr_history: NDArray[np.float64]) -> tuple[VolRegime, float]:
         """Predict the current volatility regime and confidence.
 
         Runs the Viterbi algorithm on the clean ATR history and reads the
@@ -126,9 +123,7 @@ class RegimeDetector:
             RuntimeError: If the detector has not been fitted yet.
         """
         if not self._fitted:
-            raise RuntimeError(
-                "RegimeDetector.predict() called before fit(). Call fit() first."
-            )
+            raise RuntimeError("RegimeDetector.predict() called before fit(). Call fit() first.")
         clean = atr_history[~np.isnan(atr_history)].reshape(-1, 1)
         if len(clean) == 0:
             # No data: fall back to LOW with low confidence

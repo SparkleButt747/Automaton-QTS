@@ -1,14 +1,14 @@
 """Unit tests for the monitoring dashboard and alert system."""
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
 from qts.models.base import VolRegime
 from qts.monitoring.alerts import Alert, AlertLevel, AlertManager
 from qts.monitoring.dashboard import DashboardState, SignalValues
-
 
 # ── DashboardState ────────────────────────────────────────────────────────────
 
@@ -42,18 +42,20 @@ class TestDashboardState:
 
     def test_signals_list(self) -> None:
         signals = [
-            SignalValues(symbol="BTCUSDT", rsi=72.5, macd=0.0012, sentiment=0.4, combined_alpha=0.3),
-            SignalValues(symbol="ETHUSDT", rsi=45.0, macd=-0.0005, sentiment=-0.1, combined_alpha=-0.05),
+            SignalValues(
+                symbol="BTCUSDT", rsi=72.5, macd=0.0012, sentiment=0.4, combined_alpha=0.3
+            ),
+            SignalValues(
+                symbol="ETHUSDT", rsi=45.0, macd=-0.0005, sentiment=-0.1, combined_alpha=-0.05
+            ),
         ]
         state = DashboardState(signals=signals)
         assert len(state.signals) == 2
         assert state.signals[0].symbol == "BTCUSDT"
 
     def test_data_timestamps(self) -> None:
-        now = datetime.now(timezone.utc)
-        state = DashboardState(
-            data_timestamps={"binance": now, "news": now}
-        )
+        now = datetime.now(UTC)
+        state = DashboardState(data_timestamps={"binance": now, "news": now})
         assert "binance" in state.data_timestamps
         assert "news" in state.data_timestamps
 
@@ -69,6 +71,7 @@ class TestDashboardState:
 class TestSignalValues:
     def test_default_nan_values(self) -> None:
         import math
+
         sig = SignalValues(symbol="AAPL")
         assert math.isnan(sig.rsi)
         assert math.isnan(sig.macd)
@@ -76,7 +79,9 @@ class TestSignalValues:
         assert math.isnan(sig.combined_alpha)
 
     def test_with_values(self) -> None:
-        sig = SignalValues(symbol="BTCUSDT", rsi=55.0, macd=0.002, sentiment=0.3, combined_alpha=0.2)
+        sig = SignalValues(
+            symbol="BTCUSDT", rsi=55.0, macd=0.002, sentiment=0.3, combined_alpha=0.2
+        )
         assert sig.symbol == "BTCUSDT"
         assert sig.rsi == 55.0
 
@@ -111,7 +116,7 @@ class TestAlertGeneration:
     def test_get_active_alerts_accumulates(self) -> None:
         mgr = AlertManager(drawdown_threshold=0.01)
         mgr.check_drawdown(0.015, 0.02)  # WARNING
-        mgr.check_drawdown(0.02, 0.02)   # CRITICAL
+        mgr.check_drawdown(0.02, 0.02)  # CRITICAL
         alerts = mgr.get_active_alerts()
         assert len(alerts) == 2
 
@@ -122,16 +127,14 @@ class TestAlertGeneration:
         assert mgr.get_active_alerts() == []
 
     def test_feed_staleness_no_alert_fresh(self) -> None:
-        from datetime import timedelta
         mgr = AlertManager()
-        recent = datetime.now(timezone.utc)
+        recent = datetime.now(UTC)
         alert = mgr.check_feed_staleness(last_tick_time=recent, max_age_seconds=60.0)
         assert alert is None
 
     def test_feed_staleness_critical_when_old(self) -> None:
-        from datetime import timedelta
         mgr = AlertManager()
-        old_ts = datetime(2000, 1, 1, tzinfo=timezone.utc)
+        old_ts = datetime(2000, 1, 1, tzinfo=UTC)
         alert = mgr.check_feed_staleness(last_tick_time=old_ts, max_age_seconds=60.0)
         assert alert is not None
         assert alert.level == AlertLevel.CRITICAL
@@ -159,7 +162,7 @@ class TestAlertGeneration:
         alert = Alert(
             level=AlertLevel.INFO,
             message="test",
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             component="test",
             value=0.0,
             threshold=0.0,

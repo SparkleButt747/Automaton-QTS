@@ -5,9 +5,9 @@ Verifies:
 - Regime scalar correctly dampens LOW regime signals
 - Sentiment and RSI contributions work as expected
 """
+
 from __future__ import annotations
 
-import math
 from datetime import datetime
 
 import numpy as np
@@ -16,7 +16,6 @@ import pytest
 from qts.config import SentimentFusionWeights, SignalWeights, StrategyParams
 from qts.models.base import SignalSnapshot, VolRegime
 from qts.signals.alpha import combined_alpha
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -36,9 +35,7 @@ def _make_params(
         entry_threshold=0.25,
         exit_threshold=-0.10,
         max_hold_bars=48,
-        sentiment_fusion_weights=SentimentFusionWeights(
-            news=0.40, social=0.30, geopolitical=0.30
-        ),
+        sentiment_fusion_weights=SentimentFusionWeights(news=0.40, social=0.30, geopolitical=0.30),
     )
 
 
@@ -125,12 +122,8 @@ class TestCombinedAlphaRange:
 class TestRegimeScalar:
     def test_low_regime_dampens_signal(self) -> None:
         """Same snapshot in LOW regime should produce half the alpha of HIGH."""
-        snap_high = _make_snapshot(
-            rsi=80.0, sentiment_score=0.8, vol_regime=VolRegime.HIGH
-        )
-        snap_low = _make_snapshot(
-            rsi=80.0, sentiment_score=0.8, vol_regime=VolRegime.LOW
-        )
+        snap_high = _make_snapshot(rsi=80.0, sentiment_score=0.8, vol_regime=VolRegime.HIGH)
+        snap_low = _make_snapshot(rsi=80.0, sentiment_score=0.8, vol_regime=VolRegime.LOW)
         params = _make_params()
         alpha_high = combined_alpha(snap_high, params)
         alpha_low = combined_alpha(snap_low, params)
@@ -150,8 +143,12 @@ class TestSentimentContribution:
     def test_pure_sentiment_positive(self) -> None:
         """With only sentiment weight, positive sentiment -> positive alpha."""
         snap = _make_snapshot(
-            rsi=50.0, macd_histogram=0.0, bb_position=0.5,
-            momentum_5=0.0, sentiment_score=1.0, vol_regime=VolRegime.HIGH
+            rsi=50.0,
+            macd_histogram=0.0,
+            bb_position=0.5,
+            momentum_5=0.0,
+            sentiment_score=1.0,
+            vol_regime=VolRegime.HIGH,
         )
         params = _make_params(w_rsi=0.0, w_macd=0.0, w_bb=0.0, w_mom=0.0, w_sentiment=1.0)
         result = combined_alpha(snap, params)
@@ -159,8 +156,12 @@ class TestSentimentContribution:
 
     def test_pure_sentiment_negative(self) -> None:
         snap = _make_snapshot(
-            rsi=50.0, macd_histogram=0.0, bb_position=0.5,
-            momentum_5=0.0, sentiment_score=-1.0, vol_regime=VolRegime.HIGH
+            rsi=50.0,
+            macd_histogram=0.0,
+            bb_position=0.5,
+            momentum_5=0.0,
+            sentiment_score=-1.0,
+            vol_regime=VolRegime.HIGH,
         )
         params = _make_params(w_rsi=0.0, w_macd=0.0, w_bb=0.0, w_mom=0.0, w_sentiment=1.0)
         result = combined_alpha(snap, params)

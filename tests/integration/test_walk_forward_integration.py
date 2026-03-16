@@ -7,6 +7,7 @@ Verifies:
 - Results are deterministic (same inputs -> identical results)
 - WalkForwardResult structure is valid
 """
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -97,9 +98,7 @@ class TestWalkForwardIntegration:
 
         result = engine.run(bars)
         for i, window in enumerate(result.windows):
-            assert window.train_result is not None, (
-                f"Window {i} has None train_result"
-            )
+            assert window.train_result is not None, f"Window {i} has None train_result"
 
     def test_each_window_has_non_none_validate_result(self) -> None:
         """Each walk-forward window has a non-None validate_result."""
@@ -110,9 +109,7 @@ class TestWalkForwardIntegration:
 
         result = engine.run(bars)
         for i, window in enumerate(result.windows):
-            assert window.validate_result is not None, (
-                f"Window {i} has None validate_result"
-            )
+            assert window.validate_result is not None, f"Window {i} has None validate_result"
 
     def test_each_window_has_non_none_test_result(self) -> None:
         """Each walk-forward window has a non-None test_result."""
@@ -123,9 +120,7 @@ class TestWalkForwardIntegration:
 
         result = engine.run(bars)
         for i, window in enumerate(result.windows):
-            assert window.test_result is not None, (
-                f"Window {i} has None test_result"
-            )
+            assert window.test_result is not None, f"Window {i} has None test_result"
 
     def test_deterministic_same_inputs_same_results(self) -> None:
         """Running twice with identical inputs produces identical results."""
@@ -153,6 +148,7 @@ class TestWalkForwardIntegration:
 
         result = engine.run(bars)
         import math
+
         assert math.isfinite(result.aggregate_test_sharpe)
 
     def test_aggregate_max_drawdown_non_negative(self) -> None:

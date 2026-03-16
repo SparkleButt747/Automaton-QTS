@@ -1,11 +1,12 @@
 """Alert management for threshold breaches and system events."""
+
 from __future__ import annotations
 
 import enum
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Optional, Protocol
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import Protocol
 
 logger = logging.getLogger(__name__)
 
@@ -42,19 +43,19 @@ class Alert:
 class AlertManagerProtocol(Protocol):
     """Protocol for dependency-injection of AlertManager."""
 
-    def check_drawdown(self, current_drawdown: float, limit: float) -> Optional[Alert]:
+    def check_drawdown(self, current_drawdown: float, limit: float) -> Alert | None:
         """Check if drawdown exceeds the configured limit."""
         ...
 
     def check_feed_staleness(
         self, last_tick_time: datetime, max_age_seconds: float
-    ) -> Optional[Alert]:
+    ) -> Alert | None:
         """Check if a market feed is stale."""
         ...
 
     def check_position_concentration(
         self, positions: dict[str, float], limit: float
-    ) -> Optional[Alert]:
+    ) -> Alert | None:
         """Check if any single position exceeds the concentration limit."""
         ...
 
@@ -89,7 +90,7 @@ class AlertManager:
     # Individual checks
     # ------------------------------------------------------------------
 
-    def check_drawdown(self, current_drawdown: float, limit: float) -> Optional[Alert]:
+    def check_drawdown(self, current_drawdown: float, limit: float) -> Alert | None:
         """Check if daily drawdown has breached the configured limit.
 
         Args:
@@ -106,7 +107,7 @@ class AlertManager:
                     f"Daily drawdown {current_drawdown:.2%} has reached "
                     f"the {limit:.2%} circuit-breaker limit."
                 ),
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 component="risk_manager",
                 value=current_drawdown,
                 threshold=limit,
@@ -122,7 +123,7 @@ class AlertManager:
                     f"Daily drawdown {current_drawdown:.2%} is approaching "
                     f"the {limit:.2%} limit."
                 ),
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 component="risk_manager",
                 value=current_drawdown,
                 threshold=self.drawdown_threshold,
@@ -135,7 +136,7 @@ class AlertManager:
 
     def check_feed_staleness(
         self, last_tick_time: datetime, max_age_seconds: float
-    ) -> Optional[Alert]:
+    ) -> Alert | None:
         """Check whether a market data feed has gone stale.
 
         Args:
@@ -145,7 +146,7 @@ class AlertManager:
         Returns:
             An Alert if the feed is stale, else None.
         """
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         age_seconds = (now - last_tick_time).total_seconds()
 
         if age_seconds >= max_age_seconds:
@@ -184,7 +185,7 @@ class AlertManager:
 
     def check_position_concentration(
         self, positions: dict[str, float], limit: float
-    ) -> Optional[Alert]:
+    ) -> Alert | None:
         """Check whether any single position exceeds the concentration limit.
 
         Args:
@@ -198,7 +199,7 @@ class AlertManager:
         if total <= 0.0:
             return None
 
-        worst_alert: Optional[Alert] = None
+        worst_alert: Alert | None = None
         for symbol, value in positions.items():
             fraction = value / total
             if fraction >= limit:
@@ -208,7 +209,7 @@ class AlertManager:
                         f"Position {symbol} represents {fraction:.2%} of portfolio "
                         f"(limit {limit:.2%})."
                     ),
-                    timestamp=datetime.now(timezone.utc),
+                    timestamp=datetime.now(UTC),
                     component="position_manager",
                     value=fraction,
                     threshold=limit,

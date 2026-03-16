@@ -3,6 +3,7 @@
 Implements BarProvider, TickProvider, and OrderBookProvider protocols using
 the Binance REST and WebSocket APIs. No API key required (public endpoints only).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -357,9 +358,7 @@ class BinanceOrderBookAdapter:
                 asks=(),
             )
 
-    async def subscribe(
-        self, symbol: str, depth: int = 20
-    ) -> AsyncIterator[OrderBookSnapshot]:
+    async def subscribe(self, symbol: str, depth: int = 20) -> AsyncIterator[OrderBookSnapshot]:
         """Subscribe to real-time partial depth updates via Binance WebSocket."""
         import websockets
 

@@ -1,4 +1,5 @@
 """Market data provider protocols for dependency injection."""
+
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
@@ -80,9 +81,7 @@ class OrderBookProvider(Protocol):
         """
         ...
 
-    async def subscribe(
-        self, symbol: str, depth: int = 20
-    ) -> AsyncIterator[OrderBookSnapshot]:
+    async def subscribe(self, symbol: str, depth: int = 20) -> AsyncIterator[OrderBookSnapshot]:
         """Subscribe to real-time order book updates for a symbol.
 
         Args:

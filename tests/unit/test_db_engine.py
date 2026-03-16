@@ -8,7 +8,10 @@ Verifies:
 - init_db creates all tables in an in-memory database
 - ensure_tables rewrites bare sqlite:/// URLs to use aiosqlite driver
 """
+
 from __future__ import annotations
+
+from datetime import UTC
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
@@ -19,7 +22,6 @@ from qts.db.engine import (
     get_session,
     init_db,
 )
-
 
 # ── T-DBENG-1 ─────────────────────────────────────────────────────────────────
 
@@ -68,7 +70,7 @@ class TestInitDb:
     @pytest.mark.asyncio
     async def test_init_db_creates_tables(self):
         """init_db creates all ORM-mapped tables in an in-memory SQLite database."""
-        from sqlalchemy import inspect, text
+        from sqlalchemy import inspect
 
         engine = create_engine("sqlite+aiosqlite://")
         await init_db(engine)
@@ -112,8 +114,9 @@ class TestGetSession:
     @pytest.mark.asyncio
     async def test_get_session_commits_on_clean_exit(self):
         """get_session commits the transaction when no exception is raised."""
+        from datetime import datetime
+
         from qts.db.tables import TickRow
-        from datetime import datetime, timezone
 
         engine = create_engine("sqlite+aiosqlite://")
         await init_db(engine)
@@ -122,7 +125,7 @@ class TestGetSession:
         async with factory() as session:
             async with session.begin():
                 row = TickRow(
-                    timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
+                    timestamp=datetime(2024, 1, 1, tzinfo=UTC),
                     symbol="BTCUSDT",
                     price=42000.0,
                     quantity=1.0,
@@ -141,9 +144,11 @@ class TestGetSession:
     @pytest.mark.asyncio
     async def test_get_session_rolls_back_on_exception(self):
         """get_session rolls back when the body raises an exception."""
-        from qts.db.tables import TickRow
-        from datetime import datetime, timezone
+        from datetime import datetime
+
         from sqlalchemy import select
+
+        from qts.db.tables import TickRow
 
         engine = create_engine("sqlite+aiosqlite://")
         await init_db(engine)
@@ -152,7 +157,7 @@ class TestGetSession:
         with pytest.raises(ValueError):
             async for session in get_session(factory):
                 row = TickRow(
-                    timestamp=datetime(2024, 1, 1, tzinfo=timezone.utc),
+                    timestamp=datetime(2024, 1, 1, tzinfo=UTC),
                     symbol="AAPL",
                     price=150.0,
                     quantity=10.0,
@@ -176,6 +181,7 @@ class TestEnsureTables:
     async def test_ensure_tables_rewrites_sqlite_url(self, monkeypatch):
         """ensure_tables converts bare sqlite:/// to sqlite+aiosqlite:///."""
         from unittest.mock import AsyncMock, MagicMock, patch
+
         from qts.db import engine as engine_module
 
         captured_url = []
@@ -201,6 +207,7 @@ class TestEnsureTables:
     async def test_ensure_tables_skips_rewrite_for_aiosqlite_url(self, monkeypatch):
         """ensure_tables leaves sqlite+aiosqlite:/// URLs unchanged."""
         from unittest.mock import AsyncMock, MagicMock, patch
+
         from qts.db import engine as engine_module
 
         captured_url = []

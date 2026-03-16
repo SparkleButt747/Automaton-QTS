@@ -6,6 +6,7 @@ Usage::
     python scripts/convert_ticks_to_hft.py --input ticks.csv --output ticks.npz --symbol BTCUSDT
     python scripts/convert_ticks_to_hft.py --input ticks.parquet --output ticks.npz
 """
+
 from __future__ import annotations
 
 import logging
@@ -69,8 +70,16 @@ def _convert_dataframe(df: pd.DataFrame) -> np.ndarray:
 
 
 @click.command()
-@click.option("--input", "input_path", required=True, type=click.Path(exists=True), help="Input CSV/Parquet tick file.")
-@click.option("--output", "output_path", required=True, type=click.Path(), help="Output .npz file path.")
+@click.option(
+    "--input",
+    "input_path",
+    required=True,
+    type=click.Path(exists=True),
+    help="Input CSV/Parquet tick file.",
+)
+@click.option(
+    "--output", "output_path", required=True, type=click.Path(), help="Output .npz file path."
+)
 @click.option("--symbol", default="UNKNOWN", help="Symbol name (metadata only, stored in npz).")
 def main(input_path: str, output_path: str, symbol: str) -> None:
     """Convert tick data to hftbacktest NumPy format."""

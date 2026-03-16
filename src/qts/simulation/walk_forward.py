@@ -1,4 +1,5 @@
 """Walk-forward validation engine for out-of-sample strategy testing."""
+
 from __future__ import annotations
 
 import logging

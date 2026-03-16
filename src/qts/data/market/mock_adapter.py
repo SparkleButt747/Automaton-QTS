@@ -10,13 +10,13 @@ Synthetic data model:
 - Volume is drawn from a log-normal distribution.
 - Order book spreads are proportional to price.
 """
+
 from __future__ import annotations
 
 import asyncio
 import logging
-import uuid
 from collections.abc import AsyncIterator
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import numpy as np
 
@@ -95,7 +95,7 @@ class MockTickAdapter:
         """
         rng = _make_rng(self._seed)
         price = self._initial_price
-        start_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        start_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
 
         for i in range(self._n_ticks):
             if self._closed:
@@ -176,7 +176,7 @@ class MockBarAdapter:
         """
         rng = _make_rng(self._seed)
         price = self._initial_price
-        start_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        start_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
         bars: list[Bar] = []
 
         for i in range(n):
@@ -192,9 +192,7 @@ class MockBarAdapter:
             low_price = min(open_price, close_price) * (1.0 - intra_noise)
 
             # Volume: log-normal
-            volume = float(
-                np.exp(rng.normal(_DEFAULT_VOLUME_MEAN, _DEFAULT_VOLUME_STD)) * 10.0
-            )
+            volume = float(np.exp(rng.normal(_DEFAULT_VOLUME_MEAN, _DEFAULT_VOLUME_STD)) * 10.0)
 
             timestamp = start_time + timedelta(seconds=i * self._bar_interval_seconds)
 
@@ -237,9 +235,7 @@ class MockBarAdapter:
             List of synthetic Bar objects.
         """
         bars = self._generate_bars(symbol, self._n_bars)
-        logger.debug(
-            "MockBarAdapter: returning %d historical bars for %s", len(bars), symbol
-        )
+        logger.debug("MockBarAdapter: returning %d historical bars for %s", len(bars), symbol)
         return bars
 
     async def subscribe(self, symbol: str, interval: str = "1m") -> AsyncIterator[Bar]:
@@ -253,9 +249,7 @@ class MockBarAdapter:
             Deterministic Bar objects in chronological order.
         """
         bars = self._generate_bars(symbol, self._n_bars)
-        logger.info(
-            "MockBarAdapter: subscribing to %d bars for symbol %s", len(bars), symbol
-        )
+        logger.info("MockBarAdapter: subscribing to %d bars for symbol %s", len(bars), symbol)
         for bar in bars:
             if self._closed:
                 break
@@ -357,16 +351,12 @@ class MockOrderBookAdapter:
             A deterministic OrderBookSnapshot.
         """
         rng = _make_rng(self._seed)
-        timestamp = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        timestamp = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
         snapshot = self._make_snapshot(symbol, self._initial_price, depth, rng, timestamp)
-        logger.debug(
-            "MockOrderBookAdapter: snapshot for %s, mid=%.2f", symbol, self._initial_price
-        )
+        logger.debug("MockOrderBookAdapter: snapshot for %s, mid=%.2f", symbol, self._initial_price)
         return snapshot
 
-    async def subscribe(
-        self, symbol: str, depth: int = 20
-    ) -> AsyncIterator[OrderBookSnapshot]:
+    async def subscribe(self, symbol: str, depth: int = 20) -> AsyncIterator[OrderBookSnapshot]:
         """Yield synthetic order book snapshots as an async stream.
 
         Args:
@@ -378,7 +368,7 @@ class MockOrderBookAdapter:
         """
         rng = _make_rng(self._seed)
         price = self._initial_price
-        start_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        start_time = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
 
         logger.info(
             "MockOrderBookAdapter: subscribing to %d snapshots for %s",

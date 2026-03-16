@@ -1,4 +1,5 @@
 """GDELT Global Knowledge Graph event processing."""
+
 from __future__ import annotations
 
 import logging
@@ -94,9 +95,7 @@ class GeopoliticalEvent:
 class GDELTProtocol(Protocol):
     """Dependency-injection interface for GDELT-style event processors."""
 
-    def compute_conflict_intensity(
-        self, events: list[GeopoliticalEvent], symbol: str
-    ) -> float:
+    def compute_conflict_intensity(self, events: list[GeopoliticalEvent], symbol: str) -> float:
         """Compute a normalised conflict intensity score for a given symbol.
 
         Args:
@@ -181,9 +180,7 @@ class GDELTProcessor:
             return 0.6
         return 0.0  # irrelevant event type
 
-    def compute_conflict_intensity(
-        self, events: list[GeopoliticalEvent], symbol: str
-    ) -> float:
+    def compute_conflict_intensity(self, events: list[GeopoliticalEvent], symbol: str) -> float:
         """Compute a normalised conflict intensity score for *symbol*.
 
         Steps:

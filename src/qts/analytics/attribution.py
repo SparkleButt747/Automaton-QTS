@@ -1,10 +1,10 @@
 """Trade attribution and failure-mode analysis engine."""
+
 from __future__ import annotations
 
 import logging
 import math
 from dataclasses import dataclass
-from typing import Optional
 
 from qts.models.base import (
     FailureMode,
@@ -92,8 +92,8 @@ class FailureModeClassifier:
     def classify(
         self,
         trade: TradeRecord,
-        exit_snapshot: Optional[SignalSnapshot] = None,
-    ) -> Optional[FailureMode]:
+        exit_snapshot: SignalSnapshot | None = None,
+    ) -> FailureMode | None:
         """Classify the failure mode for a trade.
 
         Args:
@@ -179,7 +179,7 @@ class AttributionEngine:
             classification.  Defaults to a fresh instance.
     """
 
-    def __init__(self, classifier: Optional[FailureModeClassifier] = None) -> None:
+    def __init__(self, classifier: FailureModeClassifier | None = None) -> None:
         self._classifier = classifier or FailureModeClassifier()
 
     # ── Internal helpers ──────────────────────────────────────────────────────

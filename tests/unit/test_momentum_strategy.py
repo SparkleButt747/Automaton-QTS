@@ -8,6 +8,7 @@ Covers:
 - _kelly_quantity: sizing, zero-price guard
 - on_fill: accepts fill notifications
 """
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -26,7 +27,6 @@ from qts.models.base import (
     VolRegime,
 )
 from qts.strategies.momentum import MomentumStrategy
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 

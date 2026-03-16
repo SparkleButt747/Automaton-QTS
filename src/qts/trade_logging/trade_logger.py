@@ -1,4 +1,5 @@
 """Trade and signal logger for persisting execution records."""
+
 from __future__ import annotations
 
 import logging
@@ -66,9 +67,7 @@ class TradeLogger:
                     session.commit()
                 return
             except Exception:  # noqa: BLE001
-                logger.exception(
-                    "TradeLogger: session save failed for trade %s", trade.trade_id
-                )
+                logger.exception("TradeLogger: session save failed for trade %s", trade.trade_id)
 
         # Fall back to in-memory store
         self._in_memory_trades.append(trade)

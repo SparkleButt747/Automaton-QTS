@@ -14,11 +14,11 @@ Verifies:
 - status command: prints environment and config info
 - status command: prints configuration warnings when issues exist
 """
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
 from click.testing import CliRunner
 
 from qts.cli.main import main
@@ -71,7 +71,9 @@ class TestMainGroup:
 class TestBacktestCommand:
     def test_prints_symbol_and_dates(self):
         """backtest prints the symbol and date range."""
-        result = _run_no_db("backtest", "--symbol", "ETHUSDT", "--start", "2024-01-01", "--end", "2024-03-01")
+        result = _run_no_db(
+            "backtest", "--symbol", "ETHUSDT", "--start", "2024-01-01", "--end", "2024-03-01"
+        )
         assert result.exit_code == 0
         assert "ETHUSDT" in result.output
         assert "2024-01-01" in result.output
@@ -150,7 +152,10 @@ class TestStatusCommand:
         mock_settings.qts_log_level = "INFO"
         mock_settings.database.database_url = "sqlite:///test.db"
         mock_settings.redis_url = "redis://localhost:6379/0"
-        mock_settings.validate_production_readiness.return_value = ["API key missing", "DB not reachable"]
+        mock_settings.validate_production_readiness.return_value = [
+            "API key missing",
+            "DB not reachable",
+        ]
 
         with patch("qts.config.get_settings", return_value=mock_settings):
             result = _run_no_db("status")

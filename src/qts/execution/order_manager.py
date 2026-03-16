@@ -1,12 +1,12 @@
 """Order lifecycle management."""
+
 from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
-from qts.models.base import Fill, Order, OrderSide, OrderStatus, OrderType
+from qts.models.base import Fill, Order, OrderStatus
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ class OrderManager:
             price=fill_price,
             quantity=order.quantity,
             commission=commission,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             slippage=0.0,
         )
 
@@ -124,9 +124,7 @@ class OrderManager:
 
         cancellable = {OrderStatus.PENDING, OrderStatus.SUBMITTED, OrderStatus.PARTIALLY_FILLED}
         if status not in cancellable:
-            logger.info(
-                "OrderManager: cannot cancel order %s in status %s", order_id, status
-            )
+            logger.info("OrderManager: cannot cancel order %s in status %s", order_id, status)
             return False
 
         self._statuses[order_id] = OrderStatus.CANCELLED

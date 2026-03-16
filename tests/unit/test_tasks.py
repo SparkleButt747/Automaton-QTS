@@ -7,6 +7,7 @@ Tests:
 - Tasks handle missing dependencies gracefully (mocked)
 - Tasks do not actually start Celery or Redis
 """
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
@@ -245,7 +246,9 @@ class TestTaskExecutionWithMocks:
         mock_result.score = 0.8
 
         with (
-            patch("qts.tasks._fetch_news_headlines", return_value=["Apple rises on strong earnings"]),
+            patch(
+                "qts.tasks._fetch_news_headlines", return_value=["Apple rises on strong earnings"]
+            ),
             patch("qts.nlp.finbert.FinBERTAnalyzer.analyze", return_value=[mock_result]),
         ):
             result = refresh_news_sentiment.run("AAPL")
@@ -258,7 +261,9 @@ class TestTaskExecutionWithMocks:
         """Task should return dict with 'error' key on failure."""
         from qts.tasks import refresh_news_sentiment
 
-        with patch("qts.tasks._fetch_news_headlines", side_effect=RuntimeError("connection refused")):
+        with patch(
+            "qts.tasks._fetch_news_headlines", side_effect=RuntimeError("connection refused")
+        ):
             result = refresh_news_sentiment.run("AAPL")
 
         assert isinstance(result, dict)
@@ -295,7 +300,9 @@ class TestTaskExecutionWithMocks:
     def test_poll_gdelt_events_handles_exception(self) -> None:
         from qts.tasks import poll_gdelt_events
 
-        with patch("qts.tasks._fetch_gdelt_events", side_effect=ConnectionError("GDELT unavailable")):
+        with patch(
+            "qts.tasks._fetch_gdelt_events", side_effect=ConnectionError("GDELT unavailable")
+        ):
             result = poll_gdelt_events.run()
 
         assert isinstance(result, dict)

@@ -1,10 +1,10 @@
 """Property-based tests for technical indicators using Hypothesis."""
+
 from __future__ import annotations
 
 import math
 
 import numpy as np
-import pytest
 from hypothesis import HealthCheck, assume, given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.numpy import arrays
@@ -21,15 +21,20 @@ from qts.signals.indicators import (
 
 # ── Strategies ────────────────────────────────────────────────────────────────
 
-_PRICE_STRATEGY = st.floats(min_value=1.0, max_value=100_000.0, allow_nan=False, allow_infinity=False)
+_PRICE_STRATEGY = st.floats(
+    min_value=1.0, max_value=100_000.0, allow_nan=False, allow_infinity=False
+)
 _PERIOD_STRATEGY = st.integers(min_value=2, max_value=50)
+
 
 # A valid positive price series of length n
 def _price_array_strategy(min_size: int = 2, max_size: int = 300) -> st.SearchStrategy:  # type: ignore[type-arg]
     return arrays(
         dtype=np.float64,
         shape=st.integers(min_value=min_size, max_value=max_size),
-        elements=st.floats(min_value=1.0, max_value=100_000.0, allow_nan=False, allow_infinity=False),
+        elements=st.floats(
+            min_value=1.0, max_value=100_000.0, allow_nan=False, allow_infinity=False
+        ),
     )
 
 
@@ -95,7 +100,9 @@ class TestMACDProperty:
     ) -> None:
         """MACD histogram must equal macd_line - signal_line within float tolerance."""
         assume(fast < slow)
-        macd_line, signal_line, histogram = compute_macd(prices, fast=fast, slow=slow, signal=signal)
+        macd_line, signal_line, histogram = compute_macd(
+            prices, fast=fast, slow=slow, signal=signal
+        )
         valid = ~(np.isnan(macd_line) | np.isnan(signal_line) | np.isnan(histogram))
         if valid.any():
             expected = macd_line[valid] - signal_line[valid]
@@ -184,7 +191,9 @@ class TestATRProperty:
         n=st.integers(min_value=20, max_value=200),
         period=st.integers(min_value=2, max_value=14),
         base=st.floats(min_value=10.0, max_value=10_000.0, allow_nan=False, allow_infinity=False),
-        range_size=st.floats(min_value=0.01, max_value=100.0, allow_nan=False, allow_infinity=False),
+        range_size=st.floats(
+            min_value=0.01, max_value=100.0, allow_nan=False, allow_infinity=False
+        ),
         seed=st.integers(min_value=0, max_value=2**31 - 1),
     )
     @settings(max_examples=200)
@@ -276,9 +285,9 @@ class TestNormaliseRSIProperty:
         if rsi + delta <= 100.0:
             result_lo = normalise_rsi(rsi)
             result_hi = normalise_rsi(rsi + delta)
-            assert result_hi >= result_lo - 1e-12, (
-                f"normalise_rsi not monotone: f({rsi})={result_lo} > f({rsi+delta})={result_hi}"
-            )
+            assert (
+                result_hi >= result_lo - 1e-12
+            ), f"normalise_rsi not monotone: f({rsi})={result_lo} > f({rsi+delta})={result_hi}"
 
     def test_normalise_rsi_nan_returns_nan(self) -> None:
         """normalise_rsi(NaN) must return NaN."""

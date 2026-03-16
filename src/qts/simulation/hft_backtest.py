@@ -7,13 +7,13 @@ BacktestResult format as the bar-level BacktestEngine.
 The module is importable without hftbacktest installed; actual usage raises
 ImportError with install instructions.
 """
+
 from __future__ import annotations
 
 import logging
-import uuid
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -21,7 +21,6 @@ import numpy as np
 
 from qts.models.base import (
     ExitReason,
-    Fill,
     OrderSide,
     Tick,
     TradeDirection,
@@ -135,9 +134,7 @@ def load_hft_data(path: Path) -> np.ndarray:
         data = np.load(path).astype(np.float64)
 
     if data.ndim != 2 or data.shape[1] != NUM_COLUMNS:
-        raise ValueError(
-            f"Expected array with {NUM_COLUMNS} columns, got shape {data.shape}"
-        )
+        raise ValueError(f"Expected array with {NUM_COLUMNS} columns, got shape {data.shape}")
 
     return data  # type: ignore[no-any-return]
 
@@ -176,9 +173,7 @@ def _compute_statistics(result: BacktestResult, initial_capital: float) -> None:
     if len(downside) > 0:
         downside_std = float(np.std(downside, ddof=1))
         if downside_std > 0:
-            result.sortino_ratio = float(
-                mean_ret / downside_std * np.sqrt(bars_per_year)
-            )
+            result.sortino_ratio = float(mean_ret / downside_std * np.sqrt(bars_per_year))
 
     peak = np.maximum.accumulate(equity)
     drawdown = (peak - equity) / peak
@@ -221,7 +216,7 @@ class _OpenPosition:
 
 def _ns_to_datetime(ts_ns: float) -> datetime:
     """Convert nanosecond timestamp to datetime (UTC)."""
-    return datetime.fromtimestamp(ts_ns / 1_000_000_000, tz=timezone.utc)
+    return datetime.fromtimestamp(ts_ns / 1_000_000_000, tz=UTC)
 
 
 # ── Adapter ───────────────────────────────────────────────────────────────────
@@ -286,9 +281,7 @@ class HFTBacktestAdapter:
         hft = _require_hftbacktest()
 
         data = load_hft_data(self._tick_data_path)
-        logger.info(
-            f"Loaded {len(data)} ticks from {self._tick_data_path}"
-        )
+        logger.info(f"Loaded {len(data)} ticks from {self._tick_data_path}")
 
         asset = hft.BacktestAsset()
         asset.data = data

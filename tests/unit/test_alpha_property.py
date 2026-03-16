@@ -1,4 +1,5 @@
 """Property-based tests for combined alpha signal."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -22,14 +23,26 @@ def _signal_snapshot_strategy() -> st.SearchStrategy:  # type: ignore[type-arg]
         timestamp=st.just(datetime(2024, 1, 1)),
         symbol=st.just("PROP"),
         rsi=st.floats(min_value=0.0, max_value=100.0, allow_nan=False),
-        macd_histogram=st.floats(min_value=-1000.0, max_value=1000.0, allow_nan=False, allow_infinity=False),
-        macd_line=st.floats(min_value=-1000.0, max_value=1000.0, allow_nan=False, allow_infinity=False),
-        macd_signal=st.floats(min_value=-1000.0, max_value=1000.0, allow_nan=False, allow_infinity=False),
+        macd_histogram=st.floats(
+            min_value=-1000.0, max_value=1000.0, allow_nan=False, allow_infinity=False
+        ),
+        macd_line=st.floats(
+            min_value=-1000.0, max_value=1000.0, allow_nan=False, allow_infinity=False
+        ),
+        macd_signal=st.floats(
+            min_value=-1000.0, max_value=1000.0, allow_nan=False, allow_infinity=False
+        ),
         bb_position=st.floats(min_value=0.0, max_value=1.0, allow_nan=False),
-        bb_upper=st.floats(min_value=1.0, max_value=200_000.0, allow_nan=False, allow_infinity=False),
-        bb_lower=st.floats(min_value=1.0, max_value=200_000.0, allow_nan=False, allow_infinity=False),
+        bb_upper=st.floats(
+            min_value=1.0, max_value=200_000.0, allow_nan=False, allow_infinity=False
+        ),
+        bb_lower=st.floats(
+            min_value=1.0, max_value=200_000.0, allow_nan=False, allow_infinity=False
+        ),
         atr=st.floats(min_value=0.0, max_value=10_000.0, allow_nan=False, allow_infinity=False),
-        momentum_5=st.floats(min_value=-10.0, max_value=10.0, allow_nan=False, allow_infinity=False),
+        momentum_5=st.floats(
+            min_value=-10.0, max_value=10.0, allow_nan=False, allow_infinity=False
+        ),
         vol_regime=_vol_regime_st,
         vol_regime_confidence=st.floats(min_value=0.0, max_value=1.0, allow_nan=False),
         sentiment_score=st.floats(min_value=-1.0, max_value=1.0, allow_nan=False),
@@ -39,6 +52,7 @@ def _signal_snapshot_strategy() -> st.SearchStrategy:  # type: ignore[type-arg]
 
 def _weights_strategy() -> st.SearchStrategy:  # type: ignore[type-arg]
     """Generate random SignalWeights with all weights summing to 1.0."""
+
     # Draw 5 non-negative floats, then normalize them to sum to 1.
     def build_weights(raw: list[float]) -> SignalWeights:
         total = sum(raw)
@@ -73,9 +87,7 @@ def _strategy_params_strategy() -> st.SearchStrategy:  # type: ignore[type-arg]
             entry_threshold=0.25,
             exit_threshold=-0.10,
             max_hold_bars=48,
-            sentiment_fusion_weights=SentimentFusionWeights(
-                news=0.4, social=0.3, geopolitical=0.3
-            ),
+            sentiment_fusion_weights=SentimentFusionWeights(news=0.4, social=0.3, geopolitical=0.3),
         ),
         weights=_weights_strategy(),
     )
@@ -111,6 +123,7 @@ class TestCombinedAlphaProperty:
     ) -> None:
         """combined_alpha must always return a finite (not NaN, not inf) value."""
         import math
+
         result = combined_alpha(snapshot, params)
         assert math.isfinite(result), f"combined_alpha returned non-finite: {result}"
 
@@ -186,6 +199,6 @@ class TestCombinedAlphaProperty:
         alpha_high = combined_alpha(snap_high, params)
         alpha_low = combined_alpha(snap_low, params)
         # LOW regime uses 0.5 scalar, HIGH uses 1.0, so |alpha_low| <= |alpha_high|
-        assert abs(alpha_low) <= abs(alpha_high) + 1e-9, (
-            f"|alpha_low|={abs(alpha_low)} > |alpha_high|={abs(alpha_high)}"
-        )
+        assert (
+            abs(alpha_low) <= abs(alpha_high) + 1e-9
+        ), f"|alpha_low|={abs(alpha_low)} > |alpha_high|={abs(alpha_high)}"

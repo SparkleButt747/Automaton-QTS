@@ -17,7 +17,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Annotated, Any
 
-from pydantic import BaseModel, Field, HttpUrl, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 logger = logging.getLogger(__name__)
@@ -75,7 +75,7 @@ class RiskLimits(BaseModel):
     ]
 
     @classmethod
-    def from_file(cls, path: Path | None = None) -> "RiskLimits":
+    def from_file(cls, path: Path | None = None) -> RiskLimits:
         """Load risk limits from the JSON config file."""
         resolved = path or (_CONFIG_DIR / "risk_limits.json")
         raw = _load_json(resolved)
@@ -105,7 +105,7 @@ class SentimentFusionWeights(BaseModel):
     geopolitical: Annotated[float, Field(ge=0.0, le=1.0)]
 
     @model_validator(mode="after")
-    def weights_must_sum_to_one(self) -> "SentimentFusionWeights":
+    def weights_must_sum_to_one(self) -> SentimentFusionWeights:
         """Validate that all fusion weights sum to 1.0 (within floating point tolerance)."""
         total = self.news + self.social + self.geopolitical
         if abs(total - 1.0) > 1e-6:
@@ -141,7 +141,7 @@ class SignalWeights(BaseModel):
     w_sentiment: Annotated[float, Field(ge=0.0, le=1.0, description="Sentiment signal weight")]
 
     @model_validator(mode="after")
-    def weights_must_sum_to_one(self) -> "SignalWeights":
+    def weights_must_sum_to_one(self) -> SignalWeights:
         """Validate that all signal weights sum to 1.0 (within floating point tolerance)."""
         total = self.w_rsi + self.w_macd + self.w_bb + self.w_mom + self.w_sentiment
         if abs(total - 1.0) > 1e-6:
@@ -190,7 +190,7 @@ class StrategyParams(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def exit_below_entry(self) -> "StrategyParams":
+    def exit_below_entry(self) -> StrategyParams:
         """Exit threshold must be strictly less than entry threshold."""
         if self.exit_threshold >= self.entry_threshold:
             raise ValueError(
@@ -200,7 +200,7 @@ class StrategyParams(BaseModel):
         return self
 
     @classmethod
-    def from_file(cls, path: Path | None = None) -> "StrategyParams":
+    def from_file(cls, path: Path | None = None) -> StrategyParams:
         """Load strategy parameters from the JSON config file."""
         resolved = path or (_CONFIG_DIR / "params.json")
         raw = _load_json(resolved)

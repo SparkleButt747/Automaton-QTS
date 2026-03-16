@@ -7,15 +7,15 @@ Verifies:
 - TradeRepository: insert/get trades, filter by outcome, get_trade_by_id,
   None result when unknown ID, failure_mode nullable roundtrip
 """
+
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
-from sqlalchemy.ext.asyncio import async_sessionmaker
 
-from qts.db.engine import create_engine, init_db, create_session_factory
+from qts.db.engine import create_engine, create_session_factory, init_db
 from qts.db.repository import MarketDataRepository, SignalRepository, TradeRepository
 from qts.models.base import (
     Bar,
@@ -32,9 +32,9 @@ from qts.models.base import (
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
-_T0 = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
-_T1 = datetime(2024, 1, 1, 0, 1, 0, tzinfo=timezone.utc)
-_T2 = datetime(2024, 1, 1, 0, 2, 0, tzinfo=timezone.utc)
+_T0 = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
+_T1 = datetime(2024, 1, 1, 0, 1, 0, tzinfo=UTC)
+_T2 = datetime(2024, 1, 1, 0, 2, 0, tzinfo=UTC)
 
 
 @pytest.fixture()
@@ -333,10 +333,12 @@ class TestSignalRepository:
         """get_latest_snapshot returns the snapshot with the most recent timestamp."""
         async with session_factory() as session:
             repo = SignalRepository(session)
-            await repo.insert_snapshots([
-                _make_snapshot(ts=_T0, alpha=0.1),
-                _make_snapshot(ts=_T2, alpha=0.99),
-            ])
+            await repo.insert_snapshots(
+                [
+                    _make_snapshot(ts=_T0, alpha=0.1),
+                    _make_snapshot(ts=_T2, alpha=0.99),
+                ]
+            )
             await session.flush()
 
             snap = await repo.get_latest_snapshot("BTCUSDT")

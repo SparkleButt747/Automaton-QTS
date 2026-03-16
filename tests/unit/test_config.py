@@ -7,7 +7,6 @@ risk limits, settings loading, and production readiness checks.
 from __future__ import annotations
 
 import json
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -21,7 +20,6 @@ from qts.config import (
     SignalWeights,
     StrategyParams,
 )
-
 
 # ── SignalWeights ────────────────────────────────────────────────────────────
 
@@ -213,9 +211,7 @@ class TestAppSettings:
         assert settings.is_production
         assert settings.qts_dry_run is False
 
-    def test_production_readiness_dry_run_warning(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_production_readiness_dry_run_warning(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("QTS_ENV", "production")
         monkeypatch.setenv("QTS_DRY_RUN", "true")
         settings = AppSettings()

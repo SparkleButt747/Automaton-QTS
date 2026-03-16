@@ -1,4 +1,5 @@
 """VADER sentiment analysis for social media text."""
+
 from __future__ import annotations
 
 import logging
@@ -117,8 +118,7 @@ class VaderAnalyzer:
 
         if not self._ensure_loaded() or self._sia is None:
             return [
-                SentimentResult(text=t, label="NEUTRAL", score=0.0, confidence=0.0)
-                for t in texts
+                SentimentResult(text=t, label="NEUTRAL", score=0.0, confidence=0.0) for t in texts
             ]
 
         results: list[SentimentResult] = []

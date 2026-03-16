@@ -3,6 +3,7 @@
 Used as an integration-test reference strategy that exercises the
 full pipeline without any complex signal logic.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -49,9 +50,7 @@ class SMACrossoverStrategy:
             quantity: Fixed quantity for each order (default 1.0).
         """
         if fast_period >= slow_period:
-            raise ValueError(
-                f"fast_period ({fast_period}) must be < slow_period ({slow_period})"
-            )
+            raise ValueError(f"fast_period ({fast_period}) must be < slow_period ({slow_period})")
         self.fast_period = fast_period
         self.slow_period = slow_period
         self.quantity = quantity

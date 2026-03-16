@@ -12,9 +12,10 @@ Verifies:
 - AlphaVantageClient.close releases the HTTP client
 - AlphaVantageClient._get_client is lazily created and reused
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -65,17 +66,17 @@ class TestParseAvDatetime:
         assert dt.day == 15
         assert dt.hour == 9
         assert dt.minute == 30
-        assert dt.tzinfo == timezone.utc
+        assert dt.tzinfo == UTC
 
     def test_returns_epoch_on_bad_input(self):
         """_parse_av_datetime returns epoch UTC for malformed strings."""
         dt = _parse_av_datetime("not-a-date")
-        assert dt == datetime.fromtimestamp(0, tz=timezone.utc)
+        assert dt == datetime.fromtimestamp(0, tz=UTC)
 
     def test_returns_epoch_on_empty_string(self):
         """_parse_av_datetime returns epoch UTC for an empty string."""
         dt = _parse_av_datetime("")
-        assert dt == datetime.fromtimestamp(0, tz=timezone.utc)
+        assert dt == datetime.fromtimestamp(0, tz=UTC)
 
 
 # ── T-AV-2 ────────────────────────────────────────────────────────────────────
@@ -94,7 +95,7 @@ class TestParseArticle:
         assert article.source == "Reuters"
         assert article.url == "https://example.com/article"
         assert len(article.ticker_sentiment) == 1
-        assert article.published_at.tzinfo == timezone.utc
+        assert article.published_at.tzinfo == UTC
 
     def test_handles_missing_optional_fields(self):
         """_parse_article uses sensible defaults when optional fields are absent."""

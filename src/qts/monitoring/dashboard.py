@@ -1,13 +1,12 @@
 """Real-time trading monitoring dashboard using Rich."""
+
 from __future__ import annotations
 
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
-from rich.columns import Columns
 from rich.console import Console
 from rich.layout import Layout
 from rich.live import Live
@@ -78,7 +77,7 @@ class DashboardState:
     db_connected: bool = True
     pending_proposals: int = 0
     active_alerts: list[Alert] = field(default_factory=list)
-    last_updated: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    last_updated: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 # ── Dashboard renderer ────────────────────────────────────────────────────────
@@ -100,7 +99,7 @@ class TradingDashboard:
     def __init__(
         self,
         refresh_per_second: float = 1.0,
-        console: Optional[Console] = None,
+        console: Console | None = None,
     ) -> None:
         self.refresh_per_second = refresh_per_second
         self._console = console or Console()
@@ -229,15 +228,13 @@ class TradingDashboard:
         table.add_column("Alpha", justify="right", width=10)
 
         for sig in state.signals:
-            rsi_color = (
-                "red" if sig.rsi > 70 else ("green" if sig.rsi < 30 else "white")
+            rsi_color = "red" if sig.rsi > 70 else ("green" if sig.rsi < 30 else "white")
+            alpha_color = (
+                "green"
+                if sig.combined_alpha > 0
+                else ("red" if sig.combined_alpha < 0 else "white")
             )
-            alpha_color = "green" if sig.combined_alpha > 0 else (
-                "red" if sig.combined_alpha < 0 else "white"
-            )
-            sent_color = "green" if sig.sentiment > 0 else (
-                "red" if sig.sentiment < 0 else "white"
-            )
+            sent_color = "green" if sig.sentiment > 0 else ("red" if sig.sentiment < 0 else "white")
             table.add_row(
                 sig.symbol,
                 Text(f"{sig.rsi:.1f}", style=rsi_color),
@@ -263,7 +260,7 @@ class TradingDashboard:
         table.add_column("Last Update", width=22)
         table.add_column("Status", width=10)
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         for source, ts in state.data_timestamps.items():
             age_s = (now - ts).total_seconds()
             if age_s < 60:
@@ -329,7 +326,7 @@ class TradingDashboard:
 
     def run(
         self,
-        state_callback: Optional[object] = None,
+        state_callback: object | None = None,
         refresh_interval_seconds: float = 1.0,
     ) -> None:
         """Start the live dashboard loop.
@@ -352,7 +349,7 @@ class TradingDashboard:
             console=self._console,
             refresh_per_second=max(1, int(1 / refresh_interval_seconds)),
             screen=True,
-        ) as live:
+        ) as _live:
             try:
                 while True:
                     if state_callback is not None and callable(state_callback):

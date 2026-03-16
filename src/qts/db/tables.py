@@ -8,10 +8,10 @@ Defines mapped tables for:
 - news_articles: Ingested news articles for sentiment analysis
 - geopolitical_events: Geopolitical events from GDELT and similar sources
 """
+
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import DateTime, Float, Index, Integer, String, Text
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -140,7 +140,7 @@ class TradeRecordRow(Base):
     params_version: Mapped[str] = mapped_column(String(64), nullable=False)
     outcome: Mapped[str] = mapped_column(String(16), nullable=False)  # WIN | LOSS | BREAKEVEN
     exit_reason: Mapped[str] = mapped_column(String(32), nullable=False)
-    failure_mode: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    failure_mode: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
 
 class NewsArticleRow(Base):
@@ -160,15 +160,13 @@ class NewsArticleRow(Base):
     article_id: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
     published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     source: Mapped[str] = mapped_column(String(128), nullable=False)
-    symbol: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    symbol: Mapped[str | None] = mapped_column(String(32), nullable=True)
     headline: Mapped[str] = mapped_column(String(512), nullable=False)
-    body: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    url: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
-    sentiment_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    relevance_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    processed_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    body: Mapped[str | None] = mapped_column(Text, nullable=True)
+    url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    sentiment_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    relevance_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class GeopoliticalEventRow(Base):
@@ -188,14 +186,12 @@ class GeopoliticalEventRow(Base):
     event_id: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
     event_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     source: Mapped[str] = mapped_column(String(128), nullable=False, default="GDELT")
-    country_code: Mapped[Optional[str]] = mapped_column(String(8), nullable=True)
-    event_type: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
-    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    country_code: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    event_type: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
     intensity: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     sentiment_score: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
-    goldstein_scale: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    goldstein_scale: Mapped[float | None] = mapped_column(Float, nullable=True)
     num_mentions: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     num_sources: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    processed_at: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

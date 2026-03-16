@@ -10,10 +10,11 @@ Verifies:
 - fetch_mentions raises ImportError when praw is not installed
 - _get_reddit raises ImportError when praw is not installed
 """
+
 from __future__ import annotations
 
 import sys
-from datetime import datetime, timezone
+from datetime import UTC
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -22,7 +23,7 @@ from qts.data.social.reddit import RedditSentimentProvider, SocialPost
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-_UTC = timezone.utc
+_UTC = UTC
 
 
 def _make_submission(

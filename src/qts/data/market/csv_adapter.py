@@ -9,14 +9,13 @@ Expected CSV format (columns, case-insensitive):
 
 The timestamp column must be parseable by pandas (ISO 8601 recommended).
 """
+
 from __future__ import annotations
 
 import asyncio
 import logging
 from collections.abc import AsyncIterator
-from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 
@@ -208,9 +207,7 @@ class CSVBarAdapter:
             FileNotFoundError: If no CSV file exists for the symbol.
         """
         df = self._load_symbol(symbol)
-        logger.info(
-            "CSVBarAdapter: subscribing to %d bars for symbol %s", len(df), symbol
-        )
+        logger.info("CSVBarAdapter: subscribing to %d bars for symbol %s", len(df), symbol)
         for row in df.itertuples(index=False):
             yield Bar(
                 timestamp=row.timestamp.to_pydatetime(),

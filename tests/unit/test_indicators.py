@@ -5,6 +5,7 @@ Known-answer tests for each indicator, verifying:
 - Numeric accuracy against reference values
 - Boundary and edge cases
 """
+
 from __future__ import annotations
 
 import math
@@ -22,7 +23,6 @@ from qts.signals.indicators import (
     compute_rsi,
     normalise_rsi,
 )
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -208,9 +208,7 @@ class TestBollingerBands:
 
 
 class TestATR:
-    def _make_bars(
-        self, n: int = 50
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def _make_bars(self, n: int = 50) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         closes = _linspace_prices(n=n)
         highs = closes + 1.0
         lows = closes - 1.0

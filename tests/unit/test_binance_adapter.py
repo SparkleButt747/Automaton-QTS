@@ -9,6 +9,7 @@ Verifies:
 - Pagination logic
 - Rate-limit backoff (429 handling)
 """
+
 from __future__ import annotations
 
 from datetime import UTC, datetime
@@ -343,9 +344,7 @@ class TestBinanceBarAdapterHistorical:
     async def test_network_error_returns_empty_list(self, adapter):
         with patch.object(adapter, "_get_client") as mock_get:
             mock_http = AsyncMock()
-            mock_http.get = AsyncMock(
-                side_effect=httpx.ConnectError("Connection refused")
-            )
+            mock_http.get = AsyncMock(side_effect=httpx.ConnectError("Connection refused"))
             mock_get.return_value = mock_http
 
             bars = await adapter.get_historical_bars(
@@ -399,9 +398,7 @@ class TestBinanceOrderBookAdapterSnapshot:
     async def test_network_error_returns_empty_snapshot(self, adapter):
         with patch.object(adapter, "_get_client") as mock_get:
             mock_http = AsyncMock()
-            mock_http.get = AsyncMock(
-                side_effect=httpx.ConnectError("Connection refused")
-            )
+            mock_http.get = AsyncMock(side_effect=httpx.ConnectError("Connection refused"))
             mock_get.return_value = mock_http
 
             snapshot = await adapter.get_snapshot("BTCUSDT")

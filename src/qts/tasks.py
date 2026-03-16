@@ -1,7 +1,9 @@
 """Celery task definitions for async background jobs."""
+
 from __future__ import annotations
 
 import logging
+from datetime import UTC
 from typing import Any
 
 from celery import Celery
@@ -254,16 +256,16 @@ def run_debrief(self: Any, session_date: str) -> dict[str, Any]:
         Dict with session_date, proposal count, and analysis excerpt.
     """
     import asyncio  # noqa: PLC0415
-    from datetime import datetime, timezone  # noqa: PLC0415
+    from datetime import datetime  # noqa: PLC0415
 
     if session_date == "auto":
-        session_date = datetime.now(tz=timezone.utc).date().isoformat()
+        session_date = datetime.now(tz=UTC).date().isoformat()
 
     logger.info("run_debrief: starting for session_date=%s", session_date)
     try:
         from pathlib import Path  # noqa: PLC0415
 
-        from qts.oversight.debrief import DebriefEngine, SessionSummary  # noqa: PLC0415
+        from qts.oversight.debrief import DebriefEngine  # noqa: PLC0415
 
         settings = get_settings()
         llm_settings = settings.llm

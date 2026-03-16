@@ -3,6 +3,7 @@
 All functions return NaN at positions where insufficient data exists
 (warm-up period). Functions are stateless and have no side effects.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -41,9 +42,7 @@ def _ema(data: NDArray[np.float64], period: int) -> NDArray[np.float64]:
     return out
 
 
-def compute_rsi(
-    prices: NDArray[np.float64], period: int = 14
-) -> NDArray[np.float64]:
+def compute_rsi(prices: NDArray[np.float64], period: int = 14) -> NDArray[np.float64]:
     """Compute the Relative Strength Index (RSI).
 
     Formula:
@@ -245,9 +244,7 @@ def compute_atr(
     return out
 
 
-def compute_momentum(
-    prices: NDArray[np.float64], period: int = 5
-) -> NDArray[np.float64]:
+def compute_momentum(prices: NDArray[np.float64], period: int = 5) -> NDArray[np.float64]:
     """Compute price momentum as rate of change.
 
     Formula:

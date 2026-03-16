@@ -1,9 +1,10 @@
 """StockTwits social sentiment provider."""
+
 from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any, Protocol, runtime_checkable
 
 logger = logging.getLogger(__name__)
@@ -168,7 +169,7 @@ class StockTwitsSentimentProvider:
             bullish_count=bullish_count,
             bearish_count=bearish_count,
             sentiment_ratio=sentiment_ratio,
-            timestamp=datetime.now(tz=timezone.utc),
+            timestamp=datetime.now(tz=UTC),
         )
 
     async def close(self) -> None:

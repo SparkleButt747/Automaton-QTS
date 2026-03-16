@@ -6,6 +6,7 @@ Verifies:
 - Fit/predict lifecycle works correctly
 - Edge cases (insufficient data, unfitted model)
 """
+
 from __future__ import annotations
 
 import numpy as np

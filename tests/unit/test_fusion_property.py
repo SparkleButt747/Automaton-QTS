@@ -1,4 +1,5 @@
 """Property-based tests for sentiment fusion."""
+
 from __future__ import annotations
 
 from hypothesis import given, settings
@@ -14,6 +15,7 @@ _SCORE_STRATEGY = st.floats(min_value=-1.0, max_value=1.0, allow_nan=False, allo
 
 def _fusion_weights_strategy() -> st.SearchStrategy:  # type: ignore[type-arg]
     """Generate valid SentimentFusionWeights (summing to 1.0)."""
+
     def build_weights(raw: list[float]) -> SentimentFusionWeights:
         total = sum(raw)
         if total < 1e-9:
@@ -93,9 +95,9 @@ class TestSentimentFusionProperty:
         """Fusion(-score, -score, -score) must equal -fusion(score, score, score)."""
         pos = fusion.fuse(score, score, score)
         neg = fusion.fuse(-score, -score, -score)
-        assert abs(pos + neg) < 1e-9, (
-            f"Fusion not symmetric: fuse({score})={pos}, fuse({-score})={neg}"
-        )
+        assert (
+            abs(pos + neg) < 1e-9
+        ), f"Fusion not symmetric: fuse({score})={pos}, fuse({-score})={neg}"
 
     @given(
         news=_SCORE_STRATEGY,
@@ -113,6 +115,7 @@ class TestSentimentFusionProperty:
     ) -> None:
         """Fused result must always be a finite number."""
         import math
+
         result = fusion.fuse(news, social, geopolitical)
         assert math.isfinite(result), f"fuse returned non-finite: {result}"
 
@@ -128,6 +131,4 @@ class TestSentimentFusionProperty:
         """Default SentimentFusion must return values in [-1, 1]."""
         fusion = SentimentFusion()
         result = fusion.fuse(news, social, geopolitical)
-        assert -1.0 <= result <= 1.0, (
-            f"Default fusion out of range: {result}"
-        )
+        assert -1.0 <= result <= 1.0, f"Default fusion out of range: {result}"

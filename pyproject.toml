@@ -121,13 +121,14 @@ select = [
   "S",   # flake8-bandit
 ]
 ignore = [
-  "ANN101",  # missing-type-self
-  "ANN102",  # missing-type-cls
+  "ANN101",  # missing-type-self (removed in ruff, kept for compat)
+  "ANN102",  # missing-type-cls (removed in ruff, kept for compat)
+  "ANN401",  # dynamically-typed Any — required for third-party interop
   "S101",    # assert (needed for tests)
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S", "ANN"]
+"tests/**/*.py" = ["S", "ANN", "N802"]
 "scripts/**/*.py" = ["ANN"]
 
 [tool.pytest.ini_options]

@@ -1,8 +1,9 @@
 """Multi-source sentiment score fusion engine."""
+
 from __future__ import annotations
 
-import math
 import logging
+import math
 from datetime import datetime
 from typing import Protocol, runtime_checkable
 

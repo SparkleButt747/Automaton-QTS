@@ -11,9 +11,10 @@ Verifies:
 - Intensity estimation (negative tone -> high intensity)
 - Country extraction
 """
+
 from __future__ import annotations
 
-from datetime import timezone
+from datetime import UTC
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -21,7 +22,6 @@ import pytest
 
 from qts.data.geopolitical.gdelt_client import GDELTClient, GDELTClientProtocol
 from qts.nlp.gdelt import GeopoliticalEvent
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -118,13 +118,12 @@ class TestParseValidArticles:
         assert event.cameo_code == "163"
         assert "RU" in event.countries
         assert event.timestamp.tzinfo is not None
-        assert event.timestamp.tzinfo == timezone.utc
+        assert event.timestamp.tzinfo == UTC
 
     @pytest.mark.asyncio
     async def test_parses_multiple_articles(self, client: GDELTClient) -> None:
         articles = [
-            _make_article(url=f"https://example.com/{i}", title=f"Event {i}")
-            for i in range(5)
+            _make_article(url=f"https://example.com/{i}", title=f"Event {i}") for i in range(5)
         ]
         response = _mock_httpx_response(_make_gdelt_response(articles))
 

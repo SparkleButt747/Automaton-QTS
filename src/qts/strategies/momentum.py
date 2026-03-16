@@ -3,13 +3,11 @@
 The main production strategy. Uses the combined_alpha signal for entry/exit
 decisions with Kelly-inspired position sizing and risk-limit enforcement.
 """
+
 from __future__ import annotations
 
 import logging
 import uuid
-from typing import Optional
-
-import numpy as np
 
 from qts.config import RiskLimits, StrategyParams
 from qts.models.base import (
@@ -115,10 +113,10 @@ class MomentumStrategy:
         alpha = snapshot.combined_alpha
         orders: list[Order] = []
 
-        existing_long: Optional[Position] = next(
+        existing_long: Position | None = next(
             (p for p in positions if p.direction == TradeDirection.LONG), None
         )
-        existing_short: Optional[Position] = next(
+        existing_short: Position | None = next(
             (p for p in positions if p.direction == TradeDirection.SHORT), None
         )
 

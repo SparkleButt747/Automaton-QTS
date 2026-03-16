@@ -1,4 +1,5 @@
 """FinBERT sentiment analysis for financial headlines."""
+
 from __future__ import annotations
 
 import logging
@@ -146,8 +147,7 @@ class FinBERTAnalyzer:
 
         if not self._ensure_loaded() or self._pipeline is None:
             return [
-                SentimentResult(text=t, label="NEUTRAL", score=0.0, confidence=0.0)
-                for t in texts
+                SentimentResult(text=t, label="NEUTRAL", score=0.0, confidence=0.0) for t in texts
             ]
 
         # The pipeline returns a list-of-lists when return_all_scores=True

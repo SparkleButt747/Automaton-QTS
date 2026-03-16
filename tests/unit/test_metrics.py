@@ -1,14 +1,14 @@
 """Unit tests for Prometheus metrics instrumentation."""
+
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 from prometheus_client import REGISTRY
 
-from qts.models.base import ExitReason, TradeDirection, TradeOutcome, VolRegime
-from qts.models.base import TradeRecord
+from qts.models.base import ExitReason, TradeDirection, TradeOutcome, TradeRecord, VolRegime
 from qts.monitoring.metrics import (
     ACTIVE_POSITIONS,
     CIRCUIT_BREAKER_TRIPS,
@@ -29,7 +29,6 @@ from qts.monitoring.metrics import (
     update_signal,
 )
 
-
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 
@@ -39,7 +38,7 @@ def _make_trade(
     outcome: TradeOutcome = TradeOutcome.WIN,
     pnl_usd: float = 250.0,
 ) -> TradeRecord:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return TradeRecord(
         trade_id=str(uuid.uuid4()),
         symbol=symbol,
@@ -119,7 +118,7 @@ class TestMetricDefinitions:
         registered_names = {m.name for m in REGISTRY.collect()}
         # Counters are registered under their base name (without _total)
         expected = {
-            "qts_trades",               # Counter — registered without _total
+            "qts_trades",  # Counter — registered without _total
             "qts_trade_pnl_usd",
             "qts_portfolio_value_usd",
             "qts_daily_drawdown_pct",
@@ -141,7 +140,9 @@ class TestMetricDefinitions:
 
 class TestRecordTrade:
     def test_increments_counter(self) -> None:
-        trade = _make_trade(symbol="ETH-USD", direction=TradeDirection.LONG, outcome=TradeOutcome.WIN)
+        trade = _make_trade(
+            symbol="ETH-USD", direction=TradeDirection.LONG, outcome=TradeOutcome.WIN
+        )
 
         before = TRADES_TOTAL.labels(
             symbol="ETH-USD",

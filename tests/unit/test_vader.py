@@ -6,13 +6,13 @@ Tests:
 - Protocol compliance
 - Graceful fallback when vaderSentiment is not available
 """
+
 from __future__ import annotations
 
 import pytest
 
 from qts.nlp.finbert import SentimentResult
 from qts.nlp.vader import VaderAnalyzer, VaderProtocol
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -171,9 +171,7 @@ class TestThresholds:
 
 
 class TestVaderUnavailable:
-    def test_returns_neutral_when_unavailable(
-        self, vader_unavailable: VaderAnalyzer
-    ) -> None:
+    def test_returns_neutral_when_unavailable(self, vader_unavailable: VaderAnalyzer) -> None:
         results = vader_unavailable.analyze(["Any text"])
         assert len(results) == 1
         assert results[0].label == "NEUTRAL"

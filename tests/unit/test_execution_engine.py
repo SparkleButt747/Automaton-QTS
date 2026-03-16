@@ -12,10 +12,11 @@ Verifies:
 - run_live_loop iterates over an iterable provider
 - reset_daily_state resets _daily_pnl and delegates to risk manager
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from unittest.mock import MagicMock, patch
+from datetime import UTC, datetime
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -24,7 +25,7 @@ from qts.models.base import Bar, Fill, Order, OrderSide, OrderType
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-_TS = datetime(2024, 1, 1, tzinfo=timezone.utc)
+_TS = datetime(2024, 1, 1, tzinfo=UTC)
 
 
 def _make_bar(close=42000.0, symbol="BTCUSDT") -> Bar:

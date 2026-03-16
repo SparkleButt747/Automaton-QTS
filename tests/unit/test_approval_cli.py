@@ -7,20 +7,20 @@ Covers:
 - _trigger_git_commit: success and failure paths
 - main() entry point doesn't crash when no proposals exist
 """
+
 from __future__ import annotations
 
 import json
 import subprocess
 import uuid
 from pathlib import Path
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from qts.oversight.approval_cli import _trigger_git_commit, run_approval_cli
 from qts.oversight.debrief import Proposal
 from qts.oversight.proposals import ProposalManager
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -223,9 +223,7 @@ class TestTriggerGitCommit:
             mock_run.side_effect = subprocess.CalledProcessError(1, "git")
             _trigger_git_commit(tmp_path, proposal)  # should not raise
 
-    def test_T_ACLI_12_commit_message_contains_proposal_id_prefix(
-        self, tmp_path: Path
-    ) -> None:
+    def test_T_ACLI_12_commit_message_contains_proposal_id_prefix(self, tmp_path: Path) -> None:
         proposal = _make_proposal()
         short_id = proposal.proposal_id[:8]
         captured_messages = []

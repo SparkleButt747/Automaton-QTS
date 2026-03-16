@@ -6,17 +6,17 @@ Tests:
 - Stale regime override returns None
 - Fresh regime override loaded correctly
 """
+
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from qts.oversight.regime_classifier import LLMRegimeAssessment, RegimeClassifierLLM
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -182,7 +182,7 @@ class TestLoadRegimeOverride:
         """Should return None if the override file is older than max_age_minutes."""
         output_path = tmp_path / "regime_override.json"
         # Write a stale timestamp (2 hours ago)
-        stale_time = datetime.now(tz=timezone.utc) - timedelta(hours=2)
+        stale_time = datetime.now(tz=UTC) - timedelta(hours=2)
         data = {
             "regime": "normal",
             "confidence": 0.7,
@@ -201,7 +201,7 @@ class TestLoadRegimeOverride:
         """Should return the assessment if the override is fresh (< max_age_minutes)."""
         output_path = tmp_path / "regime_override.json"
         # Write a fresh timestamp (5 minutes ago)
-        fresh_time = datetime.now(tz=timezone.utc) - timedelta(minutes=5)
+        fresh_time = datetime.now(tz=UTC) - timedelta(minutes=5)
         data = {
             "regime": "geopolitical_risk_off",
             "confidence": 0.85,
@@ -221,7 +221,7 @@ class TestLoadRegimeOverride:
     def test_fresh_override_regime_matches_file(self, tmp_path: Path) -> None:
         """Loaded assessment should have the regime from the file."""
         output_path = tmp_path / "regime_override.json"
-        fresh_time = datetime.now(tz=timezone.utc) - timedelta(minutes=5)
+        fresh_time = datetime.now(tz=UTC) - timedelta(minutes=5)
         data = {
             "regime": "risk_on",
             "confidence": 0.6,
@@ -243,7 +243,7 @@ class TestLoadRegimeOverride:
     def test_fresh_override_scalar_in_valid_range(self, tmp_path: Path) -> None:
         """Loaded scalar must be in [0.0, 1.0]."""
         output_path = tmp_path / "regime_override.json"
-        fresh_time = datetime.now(tz=timezone.utc) - timedelta(minutes=5)
+        fresh_time = datetime.now(tz=UTC) - timedelta(minutes=5)
         data = {
             "regime": "normal",
             "confidence": 0.5,
@@ -263,7 +263,7 @@ class TestLoadRegimeOverride:
     def test_returns_none_on_exactly_max_age(self, tmp_path: Path) -> None:
         """Override at exactly max_age_minutes old should be considered stale."""
         output_path = tmp_path / "regime_override.json"
-        exactly_at_limit = datetime.now(tz=timezone.utc) - timedelta(minutes=30, seconds=1)
+        exactly_at_limit = datetime.now(tz=UTC) - timedelta(minutes=30, seconds=1)
         data = {
             "regime": "normal",
             "confidence": 0.5,

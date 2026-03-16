@@ -6,6 +6,7 @@ Tests:
 - Parses valid JSON response
 - Raises ValueError on invalid JSON
 """
+
 from __future__ import annotations
 
 import json
@@ -15,7 +16,6 @@ import anthropic
 import pytest
 
 from qts.oversight.llm_client import LLMClient, LLMClientProtocol
-
 
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -40,12 +40,17 @@ class TestLLMClientProtocol:
 
     def test_protocol_is_runtime_checkable(self) -> None:
         """LLMClientProtocol must be runtime_checkable."""
+
         # An object that matches the protocol shape
         class FakeClient:
-            async def query(self, system_prompt: str, user_prompt: str, max_tokens: int = 4096) -> str:
+            async def query(
+                self, system_prompt: str, user_prompt: str, max_tokens: int = 4096
+            ) -> str:
                 return ""
 
-            async def query_json(self, system_prompt: str, user_prompt: str, max_tokens: int = 4096) -> dict:
+            async def query_json(
+                self, system_prompt: str, user_prompt: str, max_tokens: int = 4096
+            ) -> dict:
                 return {}
 
         assert isinstance(FakeClient(), LLMClientProtocol)

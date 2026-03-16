@@ -1,11 +1,12 @@
 """Daily trading session debrief via LLM analysis."""
+
 from __future__ import annotations
 
 import json
 import logging
 import uuid
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -45,7 +46,7 @@ class Proposal:
         proposed_value: float,
         reason: str,
         confidence: float,
-    ) -> "Proposal":
+    ) -> Proposal:
         """Create a new Proposal with an auto-generated UUID."""
         return cls(
             proposal_id=str(uuid.uuid4()),
@@ -110,7 +111,8 @@ class SessionSummary:
 # ── Debrief engine ─────────────────────────────────────────────────────────────
 
 _SYSTEM_PROMPT = """You are a quantitative trading system oversight AI.
-Your role is to analyze daily trading session performance and suggest evidence-based parameter adjustments.
+Your role is to analyze daily trading session performance and suggest \
+evidence-based parameter adjustments.
 
 You MUST respond with a JSON object with the following structure:
 {
@@ -180,7 +182,7 @@ class DebriefEngine:
         Returns:
             A (system_prompt, user_prompt) tuple.
         """
-        today = datetime.now(tz=timezone.utc).date().isoformat()
+        today = datetime.now(tz=UTC).date().isoformat()
 
         top_loss_info = []
         for t in summary.top_loss_trades:
@@ -234,7 +236,7 @@ class DebriefEngine:
         Returns:
             A DebriefReport instance.
         """
-        today = datetime.now(tz=timezone.utc).date().isoformat()
+        today = datetime.now(tz=UTC).date().isoformat()
 
         # Attempt to strip markdown fences
         text = response.strip()
@@ -297,7 +299,7 @@ class DebriefEngine:
 
         proposals_data = {
             "session_date": report.session_date,
-            "generated_at": datetime.now(tz=timezone.utc).isoformat(),
+            "generated_at": datetime.now(tz=UTC).isoformat(),
             "proposals": [
                 {
                     "proposal_id": p.proposal_id,

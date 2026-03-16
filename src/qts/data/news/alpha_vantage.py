@@ -1,9 +1,10 @@
 """Alpha Vantage news & sentiment client."""
+
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any, Protocol, runtime_checkable
 
 logger = logging.getLogger(__name__)
@@ -74,10 +75,10 @@ def _parse_av_datetime(raw: str) -> datetime:
         UTC-aware :class:`datetime` object.
     """
     try:
-        return datetime.strptime(raw, _AV_DT_FMT).replace(tzinfo=timezone.utc)
+        return datetime.strptime(raw, _AV_DT_FMT).replace(tzinfo=UTC)
     except (ValueError, TypeError):
         logger.warning("AlphaVantageClient: could not parse datetime %r, using epoch", raw)
-        return datetime.fromtimestamp(0, tz=timezone.utc)
+        return datetime.fromtimestamp(0, tz=UTC)
 
 
 class AlphaVantageClient:
@@ -151,7 +152,6 @@ class AlphaVantageClient:
             httpx.HTTPStatusError: If the API returns a non-2xx status code.
             httpx.RequestError: On network-level errors.
         """
-        import httpx
 
         client = self._get_client()
         params: dict[str, Any] = {
@@ -169,9 +169,7 @@ class AlphaVantageClient:
         feed: list[dict[str, Any]] = data.get("feed", [])
 
         articles = [self._parse_article(item) for item in feed[:limit]]
-        logger.info(
-            "AlphaVantageClient: received %d articles for %s", len(articles), symbol
-        )
+        logger.info("AlphaVantageClient: received %d articles for %s", len(articles), symbol)
         return articles
 
     async def close(self) -> None:

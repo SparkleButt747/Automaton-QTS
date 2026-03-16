@@ -1,9 +1,9 @@
 """Rich CLI for reviewing and approving LLM strategy proposals."""
+
 from __future__ import annotations
 
 import logging
 import subprocess
-import sys
 from pathlib import Path
 
 from rich.console import Console
@@ -27,8 +27,8 @@ def _trigger_git_commit(config_dir: Path, proposal: Proposal) -> None:
     """
     params_path = config_dir / "params.json"
     try:
-        subprocess.run(
-            ["git", "add", str(params_path)],
+        subprocess.run(  # noqa: S603
+            ["git", "add", str(params_path)],  # noqa: S607
             check=True,
             capture_output=True,
         )
@@ -39,17 +39,17 @@ def _trigger_git_commit(config_dir: Path, proposal: Proposal) -> None:
             f"Reason: {proposal.reason}\n"
             f"Confidence: {proposal.confidence:.2f}"
         )
-        subprocess.run(
-            ["git", "commit", "-m", commit_msg],
+        subprocess.run(  # noqa: S603
+            ["git", "commit", "-m", commit_msg],  # noqa: S607
             check=True,
             capture_output=True,
         )
-        console.print(f"[green]  Git commit created for proposal {proposal.proposal_id[:8]}[/green]")
+        console.print(
+            f"[green]  Git commit created for proposal {proposal.proposal_id[:8]}[/green]"
+        )
     except subprocess.CalledProcessError as exc:
         logger.warning("Failed to create git commit for proposal %s: %s", proposal.proposal_id, exc)
-        console.print(
-            f"[yellow]  Warning: git commit failed (non-fatal): {exc}[/yellow]"
-        )
+        console.print(f"[yellow]  Warning: git commit failed (non-fatal): {exc}[/yellow]")
 
 
 def run_approval_cli(
@@ -177,7 +177,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    settings = get_settings()
+    _settings = get_settings()
     config_dir = args.config_dir or (Path(__file__).parent.parent.parent.parent / "config")
 
     # Load risk limits fields from risk_limits.json

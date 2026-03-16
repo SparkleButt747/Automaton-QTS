@@ -8,14 +8,13 @@ NautilusTrader is an **optional** dependency (``pip install qts[trading]``).
 The module is importable without it; using the adapter raises a clear
 :class:`ImportError` at construction time.
 """
+
 from __future__ import annotations
 
 import logging
-import uuid
-from datetime import timezone
-from typing import TYPE_CHECKING, Any, Sequence
-
-import numpy as np
+from collections.abc import Sequence
+from datetime import UTC
+from typing import TYPE_CHECKING, Any
 
 from qts.models.base import (
     Bar,
@@ -99,7 +98,11 @@ def qts_bar_to_nautilus(
     _require_nautilus()
     from nautilus_trader.model.data import Bar as NtBar  # noqa: PLC0415
     from nautilus_trader.model.data import BarSpecification, BarType  # noqa: PLC0415
-    from nautilus_trader.model.enums import AggregationSource, BarAggregation, PriceType  # noqa: PLC0415
+    from nautilus_trader.model.enums import (  # noqa: PLC0415
+        AggregationSource,
+        BarAggregation,
+        PriceType,
+    )
     from nautilus_trader.model.objects import Price, Quantity  # noqa: PLC0415
 
     bar_spec = BarSpecification(
@@ -113,7 +116,7 @@ def qts_bar_to_nautilus(
         aggregation_source=AggregationSource.EXTERNAL,
     )
 
-    ts_ns = int(bar.timestamp.replace(tzinfo=timezone.utc).timestamp() * 1e9)
+    ts_ns = int(bar.timestamp.replace(tzinfo=UTC).timestamp() * 1e9)
 
     return NtBar(
         bar_type=bar_type,
@@ -142,7 +145,7 @@ def nautilus_fill_to_qts(event: OrderFilled) -> Fill:
     ts_seconds = event.ts_event / 1e9
     from datetime import datetime  # noqa: PLC0415
 
-    timestamp = datetime.fromtimestamp(ts_seconds, tz=timezone.utc)
+    timestamp = datetime.fromtimestamp(ts_seconds, tz=UTC)
 
     return Fill(
         order_id=str(event.client_order_id),
@@ -176,7 +179,7 @@ def nautilus_position_to_qts(position: NautilusPosition) -> Position:
     from datetime import datetime  # noqa: PLC0415
 
     ts_seconds = position.ts_opened / 1e9
-    entry_time = datetime.fromtimestamp(ts_seconds, tz=timezone.utc)
+    entry_time = datetime.fromtimestamp(ts_seconds, tz=UTC)
 
     return Position(
         symbol=str(position.instrument_id),
@@ -269,7 +272,9 @@ class NautilusBacktestAdapter:
         Returns:
             A :class:`BacktestResult` with equity curve, trades, and statistics.
         """
-        from nautilus_trader.backtest.engine import BacktestEngine as NtBacktestEngine  # noqa: PLC0415
+        from nautilus_trader.backtest.engine import (
+            BacktestEngine as NtBacktestEngine,  # noqa: PLC0415
+        )
         from nautilus_trader.backtest.models import FillModel  # noqa: PLC0415
         from nautilus_trader.config import BacktestEngineConfig  # noqa: PLC0415
         from nautilus_trader.model.currencies import USD  # noqa: PLC0415
@@ -347,8 +352,8 @@ class NautilusBacktestAdapter:
         try:
             # NautilusTrader provides account balance reports
             _venue_mod = __import__("nautilus_trader.model.identifiers", fromlist=["Venue"])
-            _Venue = getattr(_venue_mod, "Venue")
-            report = engine.trader.generate_account_report(_Venue(self._venue))
+            venue_cls = _venue_mod.Venue
+            report = engine.trader.generate_account_report(venue_cls(self._venue))
             if report is not None and len(report) > 0:
                 return [float(v) for v in report["total"].values]
         except Exception:  # noqa: BLE001

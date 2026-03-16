@@ -11,6 +11,7 @@ Tests:
 - Connection errors trigger retry-then-raise behaviour
 - create_llm_client() factory returns the correct type
 """
+
 from __future__ import annotations
 
 import json
@@ -25,7 +26,6 @@ from qts.oversight.llm_client import (
     create_llm_client,
 )
 
-
 # ── Helpers ────────────────────────────────────────────────────────────────────
 
 
@@ -33,9 +33,7 @@ def _mock_httpx_response(content: str, status_code: int = 200) -> MagicMock:
     """Return a mock httpx.Response whose .json() gives the Ollama chat structure."""
     mock_resp = MagicMock(spec=httpx.Response)
     mock_resp.status_code = status_code
-    mock_resp.json.return_value = {
-        "message": {"role": "assistant", "content": content}
-    }
+    mock_resp.json.return_value = {"message": {"role": "assistant", "content": content}}
     mock_resp.raise_for_status = MagicMock()  # no-op for 200
     return mock_resp
 

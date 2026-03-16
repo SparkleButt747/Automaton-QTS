@@ -7,16 +7,16 @@ Tests:
 - Model not available -> graceful fallback (NEUTRAL / 0.0)
 - Protocol satisfaction
 """
+
 from __future__ import annotations
 
 import math
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from qts.nlp.finbert import FinBERTAnalyzer, FinBERTProtocol, SentimentResult
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -128,9 +128,21 @@ class TestAnalyzeLabels:
         """All labels across a batch must be in the valid set."""
         texts = ["positive news", "neutral news", "negative news"]
         outputs = [
-            [{"label": "positive", "score": 0.9}, {"label": "neutral", "score": 0.05}, {"label": "negative", "score": 0.05}],
-            [{"label": "neutral", "score": 0.8}, {"label": "positive", "score": 0.1}, {"label": "negative", "score": 0.1}],
-            [{"label": "negative", "score": 0.7}, {"label": "neutral", "score": 0.2}, {"label": "positive", "score": 0.1}],
+            [
+                {"label": "positive", "score": 0.9},
+                {"label": "neutral", "score": 0.05},
+                {"label": "negative", "score": 0.05},
+            ],
+            [
+                {"label": "neutral", "score": 0.8},
+                {"label": "positive", "score": 0.1},
+                {"label": "negative", "score": 0.1},
+            ],
+            [
+                {"label": "negative", "score": 0.7},
+                {"label": "neutral", "score": 0.2},
+                {"label": "positive", "score": 0.1},
+            ],
         ]
         analyzer = FinBERTAnalyzer()
         analyzer._pipeline = _make_mock_pipeline(outputs)
@@ -164,9 +176,21 @@ class TestConfidence:
         """Confidence for every item in a batch should be in [0, 1]."""
         texts = ["text one", "text two", "text three"]
         outputs = [
-            [{"label": "positive", "score": 0.6}, {"label": "neutral", "score": 0.3}, {"label": "negative", "score": 0.1}],
-            [{"label": "neutral", "score": 0.5}, {"label": "positive", "score": 0.3}, {"label": "negative", "score": 0.2}],
-            [{"label": "negative", "score": 0.55}, {"label": "neutral", "score": 0.3}, {"label": "positive", "score": 0.15}],
+            [
+                {"label": "positive", "score": 0.6},
+                {"label": "neutral", "score": 0.3},
+                {"label": "negative", "score": 0.1},
+            ],
+            [
+                {"label": "neutral", "score": 0.5},
+                {"label": "positive", "score": 0.3},
+                {"label": "negative", "score": 0.2},
+            ],
+            [
+                {"label": "negative", "score": 0.55},
+                {"label": "neutral", "score": 0.3},
+                {"label": "positive", "score": 0.15},
+            ],
         ]
         analyzer = FinBERTAnalyzer()
         analyzer._pipeline = _make_mock_pipeline(outputs)
@@ -186,7 +210,7 @@ class TestDecayFunction:
     def test_decay_at_t_zero(self) -> None:
         """Decayed score should equal original score when elapsed time is 0."""
         analyzer = FinBERTAnalyzer()
-        now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
         decayed = analyzer.decayed_score(
             score=self._BASE_SCORE,
             t_published=now,
@@ -198,7 +222,7 @@ class TestDecayFunction:
     def test_decay_after_one_half_life(self) -> None:
         """Score should be 0.5 after one half-life."""
         analyzer = FinBERTAnalyzer()
-        now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
         published = now - timedelta(hours=self._HALF_LIFE)
         decayed = analyzer.decayed_score(
             score=self._BASE_SCORE,
@@ -209,9 +233,9 @@ class TestDecayFunction:
         assert math.isclose(decayed, 0.5, rel_tol=1e-6)
 
     def test_decay_after_three_half_lives_below_threshold(self) -> None:
-        """Score should be < 0.1 after 3 half-lives (= 2^-3 = 0.125, but must be < 0.1 * original)."""
+        """Score should be < 0.1 after 3 half-lives (2^-3 = 0.125)."""
         analyzer = FinBERTAnalyzer()
-        now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
         published = now - timedelta(hours=3 * self._HALF_LIFE)
         decayed = analyzer.decayed_score(
             score=self._BASE_SCORE,
@@ -227,7 +251,7 @@ class TestDecayFunction:
     def test_decay_strictly_decreasing(self) -> None:
         """Score should strictly decrease as time passes."""
         analyzer = FinBERTAnalyzer()
-        base_time = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        base_time = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
         scores = []
         for hours in [0, 1, 2, 4, 8]:
             published = base_time - timedelta(hours=hours)
@@ -245,7 +269,7 @@ class TestDecayFunction:
     def test_decay_negative_elapsed_returns_original(self) -> None:
         """When t_now < t_published (clock skew), return original score unchanged."""
         analyzer = FinBERTAnalyzer()
-        now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        now = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
         future = now + timedelta(hours=1)  # published in the future
         decayed = analyzer.decayed_score(
             score=self._BASE_SCORE,

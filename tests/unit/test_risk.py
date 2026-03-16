@@ -7,15 +7,16 @@ Verifies:
 - Cooldown expiry
 - approve_order combines all checks
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from qts.config import RiskLimits
 from qts.execution.risk import CircuitBreakerError, RiskManager
-from qts.models.base import Bar, Position, TradeDirection
+from qts.models.base import Position, TradeDirection
 
 
 def _make_limits(
@@ -133,14 +134,14 @@ class TestCircuitBreaker:
         rm.check_daily_drawdown(-3_000.0, 100_000.0)
         assert rm._halted is True
         # Simulate 61 seconds later
-        future = datetime.now(timezone.utc) + timedelta(seconds=61)
+        future = datetime.now(UTC) + timedelta(seconds=61)
         assert rm.is_halted(future) is False
 
     def test_cooldown_not_yet_expired(self) -> None:
         rm = RiskManager(_make_limits(max_drawdown=0.02, cooldown=3600))
         rm.check_daily_drawdown(-3_000.0, 100_000.0)
         # 10 seconds after trip
-        future = datetime.now(timezone.utc) + timedelta(seconds=10)
+        future = datetime.now(UTC) + timedelta(seconds=10)
         assert rm.is_halted(future) is True
 
     def test_reset_lifts_halt(self) -> None:

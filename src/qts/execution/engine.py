@@ -1,9 +1,10 @@
 """Trading execution engine."""
+
 from __future__ import annotations
 
 import logging
 import time
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
 
 from qts.models.base import Bar, Fill, Position
 from qts.trade_logging.signal_logger import SignalLogger
@@ -56,8 +57,8 @@ class ExecutionEngine:
     def __init__(
         self,
         risk_manager: Any,
-        trade_logger: Optional[TradeLogger] = None,
-        signal_logger: Optional[SignalLogger] = None,
+        trade_logger: TradeLogger | None = None,
+        signal_logger: SignalLogger | None = None,
         portfolio_value: float = 100_000.0,
         paper_mode: bool = True,
     ) -> None:
@@ -155,7 +156,6 @@ class ExecutionEngine:
             List containing a single simulated :class:`~qts.models.base.Fill`.
         """
         import uuid  # noqa: PLC0415
-        from datetime import timezone  # noqa: PLC0415
 
         from qts.models.base import Fill  # noqa: PLC0415
 

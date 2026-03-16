@@ -11,11 +11,11 @@ Exit rules:
 Position sizing:
     Fixed fraction of portfolio value, capped by risk limits.
 """
+
 from __future__ import annotations
 
 import logging
 import uuid
-from typing import Optional
 
 from qts.models.base import (
     Bar,
@@ -147,10 +147,10 @@ class MeanReversionStrategy:
         sentiment = snapshot.sentiment_score
         orders: list[Order] = []
 
-        existing_long: Optional[Position] = next(
+        existing_long: Position | None = next(
             (p for p in positions if p.direction == TradeDirection.LONG), None
         )
-        existing_short: Optional[Position] = next(
+        existing_short: Position | None = next(
             (p for p in positions if p.direction == TradeDirection.SHORT), None
         )
 

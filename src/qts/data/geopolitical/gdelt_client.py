@@ -1,8 +1,9 @@
 """GDELT Global Knowledge Graph HTTP client."""
+
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Protocol, runtime_checkable
 
 import httpx
@@ -18,9 +19,7 @@ _GDELT_DOC_API = "https://api.gdeltproject.org/api/v2/doc/doc"
 class GDELTClientProtocol(Protocol):
     """Protocol for GDELT data fetching."""
 
-    async def fetch_events(
-        self, query: str, max_records: int = 75
-    ) -> list[GeopoliticalEvent]: ...
+    async def fetch_events(self, query: str, max_records: int = 75) -> list[GeopoliticalEvent]: ...
 
     async def close(self) -> None: ...
 
@@ -90,9 +89,7 @@ class GDELTClient:
             logger.warning("GDELT fetch failed: %s", exc)
             return []
 
-    async def fetch_recent_conflict_events(
-        self, hours: int = 24
-    ) -> list[GeopoliticalEvent]:
+    async def fetch_recent_conflict_events(self, hours: int = 24) -> list[GeopoliticalEvent]:
         """Fetch recent conflict/sanctions/military events.
 
         Convenience method that builds a conflict-focused query and fetches up
@@ -127,7 +124,7 @@ class GDELTClient:
             try:
                 event = GeopoliticalEvent(
                     event_id=article.get("url", ""),
-                    timestamp=datetime.now(timezone.utc),
+                    timestamp=datetime.now(UTC),
                     cameo_code=article.get("eventcode", "190"),
                     description=article.get("title", ""),
                     countries=tuple(self._extract_countries(article)),

@@ -7,16 +7,14 @@ Covers:
 - get_snapshots: filtering by time range and symbol
 - clear()
 """
+
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from unittest.mock import MagicMock
-
-import pytest
 
 from qts.models.base import SignalSnapshot, VolRegime
 from qts.trade_logging.signal_logger import SignalLogger
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -74,9 +72,7 @@ class TestInMemoryMode:
     def test_T_SLOG_3_multiple_snapshots_accumulated(self) -> None:
         logger = SignalLogger()
         for i in range(5):
-            logger.log_snapshot(
-                _make_snapshot(timestamp=datetime(2024, 1, 1, i, 0))
-            )
+            logger.log_snapshot(_make_snapshot(timestamp=datetime(2024, 1, 1, i, 0)))
         result = logger.get_snapshots(
             "SYNTH",
             start=datetime(2024, 1, 1, 0, 0),
@@ -86,7 +82,7 @@ class TestInMemoryMode:
 
     def test_T_SLOG_4_get_snapshots_filters_by_time_range(self) -> None:
         logger = SignalLogger()
-        logger.log_snapshot(_make_snapshot(timestamp=datetime(2024, 1, 1, 8, 0)))   # outside
+        logger.log_snapshot(_make_snapshot(timestamp=datetime(2024, 1, 1, 8, 0)))  # outside
         logger.log_snapshot(_make_snapshot(timestamp=datetime(2024, 1, 1, 12, 0)))  # inside
         logger.log_snapshot(_make_snapshot(timestamp=datetime(2024, 1, 1, 20, 0)))  # outside
         result = logger.get_snapshots(

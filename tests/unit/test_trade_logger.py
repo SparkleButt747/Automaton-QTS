@@ -7,17 +7,15 @@ Covers:
 - TradeLogger with session_factory: delegates and falls back on exception
 - Public accessors: trades, snapshots
 """
+
 from __future__ import annotations
 
 from contextlib import contextmanager
 from datetime import datetime
 from unittest.mock import MagicMock
 
-import pytest
-
 from qts.models.base import (
     ExitReason,
-    FailureMode,
     SignalSnapshot,
     TradeDirection,
     TradeOutcome,
@@ -25,7 +23,6 @@ from qts.models.base import (
     VolRegime,
 )
 from qts.trade_logging.trade_logger import TradeLogger
-
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 

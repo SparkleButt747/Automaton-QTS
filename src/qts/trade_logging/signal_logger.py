@@ -1,4 +1,5 @@
 """Signal snapshot logger for capturing indicator state at trade time."""
+
 from __future__ import annotations
 
 import logging

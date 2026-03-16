@@ -1,10 +1,11 @@
 """LLM-powered geopolitical regime classification."""
+
 from __future__ import annotations
 
 import json
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from qts.oversight.llm_client import LLMClientProtocol
@@ -47,8 +48,8 @@ You MUST respond with a JSON object with the following structure:
 }
 
 Guidelines:
-- regime: Use "geopolitical_risk_off" for high geopolitical tension, "normal" for typical conditions,
-  "risk_on" for high growth/optimism conditions.
+- regime: Use "geopolitical_risk_off" for high geopolitical tension,
+  "normal" for typical conditions, "risk_on" for high growth/optimism.
 - confidence: How certain you are about the regime (0=not confident, 1=very confident).
 - recommended_position_scalar: 0.0 means do not trade, 1.0 means full position sizing.
   Use lower values during high uncertainty or risk-off conditions.
@@ -140,7 +141,7 @@ class RegimeClassifierLLM:
             confidence=confidence,
             recommended_position_scalar=scalar,
             reasoning=reasoning,
-            timestamp=datetime.now(tz=timezone.utc),
+            timestamp=datetime.now(tz=UTC),
         )
 
     def _write_override(self, assessment: LLMRegimeAssessment) -> None:
@@ -159,7 +160,9 @@ class RegimeClassifierLLM:
         }
         with self._output_path.open("w", encoding="utf-8") as fh:
             json.dump(data, fh, indent=2)
-        logger.info("Regime: wrote override to %s (regime=%s)", self._output_path, assessment.regime)
+        logger.info(
+            "Regime: wrote override to %s (regime=%s)", self._output_path, assessment.regime
+        )
 
     def load_regime_override(self, max_age_minutes: int = 30) -> LLMRegimeAssessment | None:
         """Load a cached regime override if it exists and is fresh.
@@ -188,9 +191,9 @@ class RegimeClassifierLLM:
 
         # Ensure timestamp is timezone-aware
         if timestamp.tzinfo is None:
-            timestamp = timestamp.replace(tzinfo=timezone.utc)
+            timestamp = timestamp.replace(tzinfo=UTC)
 
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         age = now - timestamp
         if age > timedelta(minutes=max_age_minutes):
             logger.debug(

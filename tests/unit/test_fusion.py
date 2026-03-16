@@ -6,16 +6,16 @@ Tests:
 - Exponential decay reduces influence of old scores
 - Protocol compliance
 """
+
 from __future__ import annotations
 
 import math
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
 from qts.config import SentimentFusionWeights
 from qts.nlp.fusion import SentimentFusion, SentimentFusionProtocol
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 
@@ -139,7 +139,7 @@ class TestWeightApplication:
 
 
 class TestDecayFusion:
-    _NOW = datetime(2024, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+    _NOW = datetime(2024, 6, 1, 12, 0, 0, tzinfo=UTC)
 
     def _make_record(
         self, news: float, social: float, geo: float, hours_ago: float
@@ -176,7 +176,7 @@ class TestDecayFusion:
     ) -> None:
         """The most recent record should have decay factor = 1.0."""
         # Fresh positive + stale negative -> result should be net positive (fresh dominates)
-        fresh_positive = self._make_record(1.0, 0.0, 0.0, 0.0)   # 0h ago
+        fresh_positive = self._make_record(1.0, 0.0, 0.0, 0.0)  # 0h ago
         stale_negative = self._make_record(-1.0, 0.0, 0.0, 100.0)  # 100h ago
 
         records = [fresh_positive, stale_negative]
@@ -196,7 +196,7 @@ class TestDecayFusion:
 
     def test_two_equal_records_different_ages(self, default_fusion: SentimentFusion) -> None:
         """When both records have the same scores, newer one gets more weight."""
-        newer = self._make_record(0.8, 0.0, 0.0, 1.0)   # 1h ago (decay ~0.707)
+        newer = self._make_record(0.8, 0.0, 0.0, 1.0)  # 1h ago (decay ~0.707)
         older = self._make_record(0.8, 0.0, 0.0, 10.0)  # 10h ago (heavily decayed)
         records = [newer, older]
         result = default_fusion.fuse_with_decay(records)

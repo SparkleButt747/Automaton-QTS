@@ -10,6 +10,7 @@ Exports the key objects needed to set up and interact with the database:
 - SignalRepository: Repository for signal snapshot data
 - TradeRepository: Repository for trade records
 """
+
 from __future__ import annotations
 
 from qts.db.engine import create_engine, create_session_factory, get_session, metadata

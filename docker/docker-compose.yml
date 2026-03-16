@@ -88,8 +88,33 @@ services:
       - ../config:/app/config:ro
     command: celery -A qts.tasks worker --loglevel=info --concurrency=2
 
+  # ---- Prometheus ----
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    depends_on:
+      - app
+
+  # ---- Grafana ----
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
 volumes:
   timescaledb_data:
     driver: local
   redis_data:
     driver: local
+  prometheus_data:
+  grafana_data:

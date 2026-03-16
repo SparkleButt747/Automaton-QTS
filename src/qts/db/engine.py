@@ -78,3 +78,20 @@ async def get_session(
         except Exception:
             await session.rollback()
             raise
+
+
+async def init_db(engine: AsyncEngine) -> None:
+    """Create all database tables. For dev/testing use.
+
+    Runs :meth:`sqlalchemy.schema.MetaData.create_all` inside an async
+    connection context so that the full ORM table schema is materialised in
+    the target database.  Safe to call multiple times (``checkfirst=True`` is
+    the SQLAlchemy default for ``create_all``).
+
+    Args:
+        engine: Async database engine to use for table creation.
+    """
+    from qts.db.tables import Base  # local import to avoid circular dependency
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)

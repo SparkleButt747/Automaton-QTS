@@ -117,8 +117,11 @@ class RiskManager:
         if portfolio_value <= 0.0:
             return True
 
-        drawdown_pct = -daily_pnl / portfolio_value  # positive = loss
-        if drawdown_pct >= self.limits.max_daily_drawdown_pct:
+        # Compare absolute loss to avoid division-induced floating-point rounding:
+        # -daily_pnl >= portfolio_value * max_daily_drawdown_pct
+        # is equivalent to drawdown_pct >= limit but avoids precision loss from dividing.
+        max_loss = portfolio_value * self.limits.max_daily_drawdown_pct
+        if -daily_pnl >= max_loss:
             if not self._halted:
                 self._trip_circuit_breaker()
             return False

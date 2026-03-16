@@ -164,17 +164,20 @@ class TestPositionSizeProperty:
 
 class TestMaxPositionsProperty:
     @given(
+        data=st.data(),
         limits=_risk_limits_strategy(),
-        positions=st.lists(_position_strategy(), min_size=0, max_size=20),
     )
     @settings(max_examples=300)
     def test_check_max_positions_rejects_at_or_above_max(
         self,
+        data: st.DataObject,
         limits: RiskLimits,
-        positions: list[Position],
     ) -> None:
         """check_max_positions must reject when at or above max_open_positions."""
-        assume(len(positions) >= limits.max_open_positions)
+        n = limits.max_open_positions
+        positions = data.draw(
+            st.lists(_position_strategy(), min_size=n, max_size=max(n, n + 5)),
+        )
         rm = RiskManager(limits)
         result = rm.check_max_positions(positions)
         assert (

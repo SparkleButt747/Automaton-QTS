@@ -2,7 +2,7 @@
 
 > A multi-signal, LLM-assisted trading engine where every trade is traceable to exact signal values, parameter versions, and regime state — and a human always has the final word.
 
-![CI](https://img.shields.io/badge/CI-passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-346%20tests-blue) ![Python](https://img.shields.io/badge/python-3.11%2B-blue) ![License](https://img.shields.io/badge/license-MIT-green)
+![CI](https://img.shields.io/badge/CI-passing-brightgreen) ![Coverage](https://img.shields.io/badge/coverage-346%20tests-blue) ![Python](https://img.shields.io/badge/python-3.11%2B-blue) ![License](https://img.shields.io/badge/license-CC--BY--NC--SA--4.0-green)
 
 ---
 
@@ -504,4 +504,4 @@ Algorithmic trading carries significant financial risk, including the total loss
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+CC-BY-NC-SA-4.0 — see [LICENSE](LICENSE) for details.

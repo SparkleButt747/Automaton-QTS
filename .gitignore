@@ -43,6 +43,7 @@ venv.bak/
 # Jupyter Notebooks
 .ipynb_checkpoints
 *.ipynb
+!notebooks/**/*.ipynb
 
 # Distribution / packaging
 .Python

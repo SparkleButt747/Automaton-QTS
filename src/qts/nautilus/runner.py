@@ -11,10 +11,9 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from qts.models.terrain import MarketTerrain
-from qts.nautilus.config import BacktestResult, BacktestRunConfig, VenueConfig
+from qts.nautilus.config import BacktestResult, VenueConfig
 
 if TYPE_CHECKING:
-    from qts.nautilus.config import QTSStrategyConfig
     from qts.strategies.base import Strategy
 
 logger = logging.getLogger(__name__)
@@ -45,14 +44,11 @@ def run_terrain_backtest(
         BacktestEngineConfig,
     )
     from nautilus_trader.backtest.models import FillModel  # noqa: PLC0415
-    from nautilus_trader.model.currencies import USD  # noqa: PLC0415
+    from nautilus_trader.config import LoggingConfig  # noqa: PLC0415
     from nautilus_trader.model.enums import AccountType, OmsType  # noqa: PLC0415
     from nautilus_trader.model.identifiers import InstrumentId, Venue  # noqa: PLC0415
+    from nautilus_trader.model.instruments import CurrencyPair  # noqa: PLC0415
     from nautilus_trader.model.objects import Money  # noqa: PLC0415
-    from nautilus_trader.config import LoggingConfig  # noqa: PLC0415
-    from nautilus_trader.test_kit.providers import (  # noqa: PLC0415
-        TestInstrumentProvider,
-    )
 
     from qts.nautilus.actor import QTSStrategy, QTSStrategyConfig  # noqa: PLC0415
     from qts.nautilus.converters import qts_bar_to_nautilus  # noqa: PLC0415
@@ -69,7 +65,14 @@ def run_terrain_backtest(
     )
     engine = BacktestEngine(config=engine_config)
 
-    # 2. Add venue with fill model
+    # 2. Resolve instrument first — its asset class drives the venue setup
+    instrument_id_str = f"{terrain.symbol}.{vc.name}"
+    instrument_id = InstrumentId.from_str(instrument_id_str)
+    instrument = _get_instrument(terrain.symbol, vc.name)
+
+    # 3. Add venue with fill model. Spot CurrencyPair instruments need a
+    # multi-currency CASH account (base_currency=None) seeded in the
+    # instrument's quote currency, e.g. USDT for BTCUSDT.
     venue_obj = Venue(vc.name)
     fill_model = FillModel(
         prob_fill_on_limit=vc.prob_fill_on_limit,
@@ -78,27 +81,35 @@ def run_terrain_backtest(
         random_seed=vc.fill_model_seed,
     )
 
-    engine.add_venue(
-        venue=venue_obj,
-        oms_type=OmsType[vc.oms_type],
-        account_type=AccountType[vc.account_type],
-        base_currency=USD,
-        starting_balances=[Money(vc.starting_balance, USD)],
-        fill_model=fill_model,
-    )
+    if isinstance(instrument, CurrencyPair):
+        engine.add_venue(
+            venue=venue_obj,
+            oms_type=OmsType[vc.oms_type],
+            account_type=AccountType.CASH,
+            base_currency=None,  # multi-currency
+            starting_balances=[Money(vc.starting_balance, instrument.quote_currency)],
+            fill_model=fill_model,
+        )
+    else:
+        from nautilus_trader.model.currencies import USD  # noqa: PLC0415
 
-    # 3. Add instrument — use appropriate provider based on symbol
-    instrument_id_str = f"{terrain.symbol}.{vc.name}"
-    instrument_id = InstrumentId.from_str(instrument_id_str)
-    instrument = _get_instrument(terrain.symbol, vc.name)
+        engine.add_venue(
+            venue=venue_obj,
+            oms_type=OmsType[vc.oms_type],
+            account_type=AccountType[vc.account_type],
+            base_currency=USD,
+            starting_balances=[Money(vc.starting_balance, USD)],
+            fill_model=fill_model,
+        )
+
+    # 4. Add the instrument now that its venue is configured
     engine.add_instrument(instrument)
 
     # 4. Convert and add bar data (match instrument precision)
     price_prec = instrument.price_precision
     size_prec = instrument.size_precision
     nautilus_bars = [
-        qts_bar_to_nautilus(b, instrument_id, price_prec, size_prec)
-        for b in terrain.bars
+        qts_bar_to_nautilus(b, instrument_id, price_prec, size_prec) for b in terrain.bars
     ]
     engine.add_data(nautilus_bars)
 
@@ -153,9 +164,7 @@ def _get_instrument(symbol: str, venue_name: str) -> object:
         return TestInstrumentProvider.default_fx_ccy(pair)
     except (ValueError, Exception):
         # Fallback to BTCUSDT as a generic instrument
-        logger.warning(
-            "Could not create instrument for '%s', using BTCUSDT fallback", symbol
-        )
+        logger.warning("Could not create instrument for '%s', using BTCUSDT fallback", symbol)
         return TestInstrumentProvider.btcusdt_binance()
 
 
@@ -168,10 +177,16 @@ def _extract_results(engine: object, venue_config: VenueConfig) -> BacktestResul
 
         venue = Venue(venue_config.name)
 
+        # Nautilus often returns Money-formatted strings like "100.00 USDT".
+        # Strip the currency suffix to recover a pure float.
+        def _to_float(v: object) -> float:
+            s = str(v).split(" ", 1)[0]
+            return float(s)
+
         # Equity curve from account reports
         account_report = engine.trader.generate_account_report(venue)
         if account_report is not None and len(account_report) > 0:
-            result.equity_curve = [float(v) for v in account_report["total"].values]
+            result.equity_curve = [_to_float(v) for v in account_report["total"].values]
 
         # Trade statistics from position reports
         position_report = engine.trader.generate_positions_report()
@@ -179,7 +194,7 @@ def _extract_results(engine: object, venue_config: VenueConfig) -> BacktestResul
             result.total_trades = len(position_report)
             pnls = position_report.get("realized_pnl", [])
             if len(pnls) > 0:
-                pnl_arr = np.array([float(p) for p in pnls], dtype=np.float64)
+                pnl_arr = np.array([_to_float(p) for p in pnls], dtype=np.float64)
                 result.total_pnl = float(np.sum(pnl_arr))
                 wins = pnl_arr[pnl_arr > 0]
                 losses = pnl_arr[pnl_arr < 0]
@@ -222,9 +237,7 @@ def _extract_results(engine: object, venue_config: VenueConfig) -> BacktestResul
                 if result.max_drawdown > 0:
                     result.calmar_ratio = float(ann_return / result.max_drawdown)
 
-            result.total_return = float(
-                (equity[-1] - equity[0]) / equity[0]
-            )
+            result.total_return = float((equity[-1] - equity[0]) / equity[0])
 
     except Exception:  # noqa: BLE001
         logger.exception("Failed to extract results from NautilusTrader engine")

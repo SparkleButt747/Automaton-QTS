@@ -21,9 +21,11 @@ from nautilus_trader.model.data import BarSpecification, BarType
 from nautilus_trader.model.enums import (
     AggregationSource,
     BarAggregation,
-    OrderSide as NtOrderSide,
     PriceType,
     TimeInForce,
+)
+from nautilus_trader.model.enums import (
+    OrderSide as NtOrderSide,
 )
 from nautilus_trader.model.identifiers import InstrumentId
 from nautilus_trader.model.objects import Quantity
@@ -118,9 +120,11 @@ class QTSStrategy(NtStrategy):
         if len(self._bar_buffer) > window * 2:
             self._bar_buffer = self._bar_buffer[-window:]
 
-        # Compute signals
+        # Compute signals — forward the inner strategy's params so the
+        # pipeline can produce a non-zero combined_alpha for entry decisions.
         bar_window = self._bar_buffer[-window:]
-        snapshot = self._signal_pipeline.compute(bar_window)
+        params = getattr(self._inner_strategy, "params", None)
+        snapshot = self._signal_pipeline.compute(bar_window, params=params)
         if snapshot is None:
             return
 
@@ -167,13 +171,13 @@ class QTSStrategy(NtStrategy):
         for nt_pos in self.cache.positions(instrument_id=self._instrument_id):
             if nt_pos.is_closed:
                 continue
-            from datetime import datetime  # noqa: PLC0415
-            from datetime import UTC  # noqa: PLC0415
+            from datetime import (
+                UTC,  # noqa: PLC0415
+                datetime,  # noqa: PLC0415
+            )
 
             direction = (
-                TradeDirection.LONG
-                if nt_pos.side == PositionSide.LONG
-                else TradeDirection.SHORT
+                TradeDirection.LONG if nt_pos.side == PositionSide.LONG else TradeDirection.SHORT
             )
             ts_seconds = nt_pos.ts_opened / 1e9
             entry_time = datetime.fromtimestamp(ts_seconds, tz=UTC)
@@ -185,9 +189,7 @@ class QTSStrategy(NtStrategy):
                     entry_price=float(nt_pos.avg_px_open),
                     quantity=float(nt_pos.quantity),
                     entry_time=entry_time,
-                    unrealized_pnl=(
-                        float(nt_pos.unrealized_pnl) if nt_pos.unrealized_pnl else 0.0
-                    ),
+                    unrealized_pnl=0.0,
                 )
             )
         return positions
@@ -199,8 +201,21 @@ class QTSStrategy(NtStrategy):
 
         from nautilus_trader.model.identifiers import ClientOrderId  # noqa: PLC0415
 
+        # Match the instrument's actual price/size precision — Nautilus
+        # rejects orders whose precision exceeds the instrument's.
+        instrument = self.cache.instrument(self._instrument_id)
+        if instrument is None:
+            logger.warning("QTSStrategy: instrument %s not in cache", self._instrument_id)
+            return
+
         nt_side = NtOrderSide.BUY if order.side.value == "BUY" else NtOrderSide.SELL
-        qty = Quantity.from_str(f"{order.quantity:.8f}")
+        size_prec = instrument.size_precision
+        price_prec = instrument.price_precision
+
+        rounded_qty = round(order.quantity, size_prec)
+        if rounded_qty <= 0:
+            return
+        qty = Quantity.from_str(f"{rounded_qty:.{size_prec}f}")
         client_order_id = ClientOrderId(order.order_id)
 
         if order.order_type == OrderType.MARKET:
@@ -217,7 +232,7 @@ class QTSStrategy(NtStrategy):
                 instrument_id=self._instrument_id,
                 order_side=nt_side,
                 quantity=qty,
-                price=Price.from_str(f"{order.price:.8f}"),
+                price=Price.from_str(f"{round(order.price, price_prec):.{price_prec}f}"),
                 time_in_force=TimeInForce.GTC,
             )
         elif order.order_type in (OrderType.STOP, OrderType.STOP_LIMIT) and order.stop_price:
@@ -227,7 +242,9 @@ class QTSStrategy(NtStrategy):
                 instrument_id=self._instrument_id,
                 order_side=nt_side,
                 quantity=qty,
-                trigger_price=Price.from_str(f"{order.stop_price:.8f}"),
+                trigger_price=Price.from_str(
+                    f"{round(order.stop_price, price_prec):.{price_prec}f}"
+                ),
                 time_in_force=TimeInForce.GTC,
             )
         else:

@@ -39,6 +39,10 @@ venv.bak/
 *.sqlite
 *.sqlite3
 /data/
+# World simulator ships hand-written persona corpora and scenario assets
+# under data/world/ — those must remain tracked.
+!/data/world/
+!/data/world/**
 
 # Jupyter Notebooks
 .ipynb_checkpoints

@@ -1,7 +1,7 @@
 # Terrain Architecture Refactor — Implementation Plan
 
 **Created**: 2026-04-05
-**Status**: Phases 1-7 COMPLETE (Phase 8 deferred)
+**Status**: Phases 1-8 v1 COMPLETE
 **Reference**: docs/research/market-terrain-architecture.md
 
 ---
@@ -100,9 +100,28 @@
 
 ---
 
-## Phase 8: Synthetic Market Generation (DEFERRED)
+## Phase 8: World Simulator — v1 vertical slice (DELIVERED)
 
-- [ ] Regime-switching GARCH generator
-- [ ] MarS-style generative models (if Phases 1-7 demand it)
-- [ ] Macro Engine generator mode
-- [ ] `terrain/synthetic.py`
+See `docs/specs/2026-05-20-phase-8-world-simulator.md` for the full spec
+and `.grill/phase-8-world-simulator.md` for the design log.
+
+v1 delivered:
+- [x] `src/qts/world/` package — events, episode, clock, scenario, corpus, sentiment, runner, agent_sim, bar_aggregator
+- [x] Agent roster: SchedulerAgent + PersonaAgent (Powell) + 3 configurable AnonRetailAgents + InventoryAwareMM
+- [x] SimpleOrderBook stage-1 matching engine
+- [x] PersonaCorpus with seeded Powell FOMC YAML (hawkish/dovish/neutral × 4 statements)
+- [x] FOMC v1 scenario config (`config/scenarios/fomc_btcusdt_v1.yaml`)
+- [x] Acceptance suite — 6 tests covering reproducibility, seed variation, terrain compatibility, JSON serialisation, event_calendar population, text-blind-strategy compat
+- [x] Strategy protocol unchanged; QTSStrategy actor forwards text events via duck-typed `on_text`
+
+Deferred (per spec scaling path):
+- v1.5: empirical calibration against real Powell/FOMC reactions on BTC
+- v2: more scenarios (CPI, NFP, geopolitical, USDT depeg), more personas (Trump, Musk, CEOs, congressional), 2-3 competing MMs, larger anon pool
+- v3: news-reactive strategies via `on_text`; Optuna sweeps over `(scenario, agent_roster)` space
+- v4: multimodal events via Gemma (Fed press-conference video / audio); Avellaneda-Stoikov MMs; multi-asset cross-correlation
+- v5: RL agents trained on real data deployed as adversaries (research-grade)
+
+Original Phase 8 entry (regime-switching GARCH, MarS-style generative models):
+explicitly rejected during the grill. The strategy reacts to news+events, not
+just price/volume, so a pure price-generative model would not test what
+the strategy actually consumes. v1 is news-reactive instead.

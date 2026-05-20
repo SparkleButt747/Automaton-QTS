@@ -9,7 +9,7 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from qts.models.base import Bar, SignalSnapshot, VolRegime
+from qts.models.base import Bar, SignalSnapshot, VolLevel
 from qts.signals.alpha import combined_alpha
 from qts.signals.indicators import (
     compute_atr,
@@ -130,7 +130,7 @@ class SignalPipeline:
         if self._detector_fitted:
             regime, regime_confidence = self._detector.predict(atr_arr)
         else:
-            regime = VolRegime.LOW
+            regime = VolLevel.LOW
             regime_confidence = 0.0
 
         # ── Assemble snapshot ────────────────────────────────────────────────
@@ -151,8 +151,8 @@ class SignalPipeline:
             bb_lower=bb_lower_val,
             atr=atr_val,
             momentum_5=mom_val,
-            vol_regime=regime,
-            vol_regime_confidence=regime_confidence,
+            vol_level=regime,
+            vol_level_confidence=regime_confidence,
             sentiment_score=effective_sentiment,
             combined_alpha=0.0,  # placeholder; updated below if params provided
         )
@@ -177,8 +177,8 @@ class SignalPipeline:
                     bb_lower=snapshot.bb_lower,
                     atr=snapshot.atr,
                     momentum_5=snapshot.momentum_5,
-                    vol_regime=snapshot.vol_regime,
-                    vol_regime_confidence=snapshot.vol_regime_confidence,
+                    vol_level=snapshot.vol_level,
+                    vol_level_confidence=snapshot.vol_level_confidence,
                     sentiment_score=snapshot.sentiment_score,
                     combined_alpha=alpha,
                 )

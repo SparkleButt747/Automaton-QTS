@@ -13,7 +13,7 @@ from __future__ import annotations
 from datetime import datetime
 from unittest.mock import MagicMock
 
-from qts.models.base import SignalSnapshot, VolRegime
+from qts.models.base import SignalSnapshot, VolLevel
 from qts.trade_logging.signal_logger import SignalLogger
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -37,8 +37,8 @@ def _make_snapshot(
         bb_lower=90.0,
         atr=1.0,
         momentum_5=0.0,
-        vol_regime=VolRegime.HIGH,
-        vol_regime_confidence=0.8,
+        vol_level=VolLevel.HIGH,
+        vol_level_confidence=0.8,
         sentiment_score=sentiment,
         combined_alpha=0.0,
     )

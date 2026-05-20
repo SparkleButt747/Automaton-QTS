@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 import pytest
 from prometheus_client import REGISTRY
 
-from qts.models.base import ExitReason, TradeDirection, TradeOutcome, TradeRecord, VolRegime
+from qts.models.base import ExitReason, TradeDirection, TradeOutcome, TradeRecord, VolLevel
 from qts.monitoring.metrics import (
     ACTIVE_POSITIONS,
     CIRCUIT_BREAKER_TRIPS,
@@ -57,7 +57,7 @@ def _make_trade(
         sentiment_at_entry=0.3,
         social_velocity_at_entry=0.5,
         gdelt_intensity_at_entry=0.2,
-        vol_regime_at_entry=VolRegime.LOW,
+        vol_level_at_entry=VolLevel.LOW,
         combined_alpha_at_entry=0.4,
         params_version="v1",
         outcome=outcome,

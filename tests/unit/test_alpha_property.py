@@ -8,12 +8,12 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from qts.config import SentimentFusionWeights, SignalWeights, StrategyParams
-from qts.models.base import SignalSnapshot, VolRegime
+from qts.models.base import SignalSnapshot, VolLevel
 from qts.signals.alpha import combined_alpha
 
 # ── Strategies ────────────────────────────────────────────────────────────────
 
-_vol_regime_st = st.sampled_from([VolRegime.HIGH, VolRegime.LOW])
+_vol_level_st = st.sampled_from([VolLevel.HIGH, VolLevel.LOW, VolLevel.TRANSITIONING])
 
 
 def _signal_snapshot_strategy() -> st.SearchStrategy:  # type: ignore[type-arg]
@@ -43,8 +43,8 @@ def _signal_snapshot_strategy() -> st.SearchStrategy:  # type: ignore[type-arg]
         momentum_5=st.floats(
             min_value=-10.0, max_value=10.0, allow_nan=False, allow_infinity=False
         ),
-        vol_regime=_vol_regime_st,
-        vol_regime_confidence=st.floats(min_value=0.0, max_value=1.0, allow_nan=False),
+        vol_level=_vol_level_st,
+        vol_level_confidence=st.floats(min_value=0.0, max_value=1.0, allow_nan=False),
         sentiment_score=st.floats(min_value=-1.0, max_value=1.0, allow_nan=False),
         combined_alpha=st.just(0.0),
     )
@@ -145,8 +145,8 @@ class TestCombinedAlphaProperty:
             bb_lower=90.0,
             atr=1.0,
             momentum_5=0.0,
-            vol_regime=VolRegime.HIGH,
-            vol_regime_confidence=0.9,
+            vol_level=VolLevel.HIGH,
+            vol_level_confidence=0.9,
             sentiment_score=0.0,
             combined_alpha=0.0,
         )
@@ -174,8 +174,8 @@ class TestCombinedAlphaProperty:
             bb_lower=snapshot.bb_lower,
             atr=snapshot.atr,
             momentum_5=snapshot.momentum_5,
-            vol_regime=VolRegime.HIGH,
-            vol_regime_confidence=snapshot.vol_regime_confidence,
+            vol_level=VolLevel.HIGH,
+            vol_level_confidence=snapshot.vol_level_confidence,
             sentiment_score=snapshot.sentiment_score,
             combined_alpha=0.0,
         )
@@ -191,8 +191,8 @@ class TestCombinedAlphaProperty:
             bb_lower=snapshot.bb_lower,
             atr=snapshot.atr,
             momentum_5=snapshot.momentum_5,
-            vol_regime=VolRegime.LOW,
-            vol_regime_confidence=snapshot.vol_regime_confidence,
+            vol_level=VolLevel.LOW,
+            vol_level_confidence=snapshot.vol_level_confidence,
             sentiment_score=snapshot.sentiment_score,
             combined_alpha=0.0,
         )

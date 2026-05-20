@@ -27,7 +27,7 @@ from qts.models.base import (
     TradeDirection,
     TradeOutcome,
     TradeRecord,
-    VolRegime,
+    VolLevel,
 )
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -76,8 +76,8 @@ def _make_snapshot(ts=_T0, symbol="BTCUSDT", alpha=0.7) -> SignalSnapshot:
         bb_lower=41000.0,
         atr=250.0,
         momentum_5=0.02,
-        vol_regime=VolRegime.LOW,
-        vol_regime_confidence=0.8,
+        vol_level=VolLevel.LOW,
+        vol_level_confidence=0.8,
         sentiment_score=0.4,
         combined_alpha=alpha,
     )
@@ -106,7 +106,7 @@ def _make_trade(
         sentiment_at_entry=0.4,
         social_velocity_at_entry=0.1,
         gdelt_intensity_at_entry=0.0,
-        vol_regime_at_entry=VolRegime.LOW,
+        vol_level_at_entry=VolLevel.LOW,
         combined_alpha_at_entry=0.7,
         params_version="v1",
         outcome=outcome,
@@ -318,7 +318,7 @@ class TestSignalRepository:
 
         assert len(result) == 1
         assert result[0].combined_alpha == pytest.approx(0.9)
-        assert result[0].vol_regime == VolRegime.LOW
+        assert result[0].vol_level == VolLevel.LOW
 
     @pytest.mark.asyncio
     async def test_get_snapshots_empty_range(self, session_factory):

@@ -24,7 +24,7 @@ from qts.models.base import (
     Position,
     SignalSnapshot,
     TradeDirection,
-    VolRegime,
+    VolLevel,
 )
 from qts.strategies.momentum import MomentumStrategy
 
@@ -90,8 +90,8 @@ def _make_snapshot(combined_alpha: float = 0.0, symbol: str = "SYNTH") -> Signal
         bb_lower=90.0,
         atr=1.0,
         momentum_5=0.0,
-        vol_regime=VolRegime.HIGH,
-        vol_regime_confidence=0.8,
+        vol_level=VolLevel.HIGH,
+        vol_level_confidence=0.8,
         sentiment_score=0.0,
         combined_alpha=combined_alpha,
     )

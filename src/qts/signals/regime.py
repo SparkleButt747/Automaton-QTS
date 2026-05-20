@@ -12,7 +12,7 @@ from typing import Protocol, runtime_checkable
 import numpy as np
 from numpy.typing import NDArray
 
-from qts.models.base import VolRegime
+from qts.models.base import VolLevel
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class RegimeDetectorProtocol(Protocol):
         """
         ...
 
-    def predict(self, atr_history: NDArray[np.float64]) -> tuple[VolRegime, float]:
+    def predict(self, atr_history: NDArray[np.float64]) -> tuple[VolLevel, float]:
         """Predict the current volatility regime.
 
         Args:
@@ -105,7 +105,7 @@ class RegimeDetector:
             means,
         )
 
-    def predict(self, atr_history: NDArray[np.float64]) -> tuple[VolRegime, float]:
+    def predict(self, atr_history: NDArray[np.float64]) -> tuple[VolLevel, float]:
         """Predict the current volatility regime and confidence.
 
         Runs the Viterbi algorithm on the clean ATR history and reads the
@@ -116,7 +116,7 @@ class RegimeDetector:
             atr_history: 1-D float64 array of ATR values (NaN stripped internally).
 
         Returns:
-            Tuple (regime, confidence) where regime is VolRegime.HIGH or LOW
+            Tuple (regime, confidence) where regime is VolLevel.HIGH or LOW
             and confidence is a float in [0.0, 1.0].
 
         Raises:
@@ -127,7 +127,7 @@ class RegimeDetector:
         clean = atr_history[~np.isnan(atr_history)].reshape(-1, 1)
         if len(clean) == 0:
             # No data: fall back to LOW with low confidence
-            return VolRegime.LOW, 0.0
+            return VolLevel.LOW, 0.0
 
         # Viterbi path for the most likely state sequence
         _logprob, state_sequence = self._model.decode(clean, algorithm="viterbi")
@@ -137,7 +137,7 @@ class RegimeDetector:
         posteriors = self._model.predict_proba(clean)
         confidence = float(posteriors[-1, current_state])
 
-        regime = VolRegime.HIGH if current_state == self._high_state else VolRegime.LOW
+        regime = VolLevel.HIGH if current_state == self._high_state else VolLevel.LOW
         logger.debug(
             "RegimeDetector predict: state=%d, regime=%s, confidence=%.3f",
             current_state,

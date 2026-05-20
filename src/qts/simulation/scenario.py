@@ -139,8 +139,8 @@ class StressScenarioRunner:
                 bb_lower=s.bb_lower,
                 atr=s.atr,
                 momentum_5=s.momentum_5,
-                vol_regime=s.vol_regime,
-                vol_regime_confidence=s.vol_regime_confidence,
+                vol_level=s.vol_level,
+                vol_level_confidence=s.vol_level_confidence,
                 sentiment_score=magnitude,
                 combined_alpha=0.0,  # invalidated; recompute if needed
             )

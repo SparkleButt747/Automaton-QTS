@@ -11,7 +11,7 @@ from qts.models.base import (
     SignalSnapshot,
     TradeOutcome,
     TradeRecord,
-    VolRegime,
+    VolLevel,
 )
 
 logger = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ class FailureModeClassifier:
     1. **SENTIMENT_FADE**: ``sentiment_at_exit < -0.3 * sentiment_at_entry``
     2. **NEWS_FRONT_RUN**: ``|entry_price - fair_price| > 2 * atr``
        where *fair_price* is derived from the entry snapshot (``bb_upper + bb_lower) / 2``).
-    3. **REGIME_MISMATCH**: ``vol_regime == LOW and |sentiment| > 0.5``
+    3. **REGIME_MISMATCH**: ``vol_level == LOW and |sentiment| > 0.5``
     4. **EXECUTION_SLIP**: ``slippage_usd > expected_slippage``
     5. **FALSE_ALPHA**: default fallback for losses with no other classification.
     """
@@ -137,7 +137,7 @@ class FailureModeClassifier:
 
         # ── Rule 3: REGIME_MISMATCH ─────────────────────────────────────────
         if (
-            trade.vol_regime_at_entry == VolRegime.LOW
+            trade.vol_level_at_entry == VolLevel.LOW
             and abs(trade.sentiment_at_entry) > _REGIME_MISMATCH_SENTIMENT_THRESHOLD
         ):
             logger.debug(

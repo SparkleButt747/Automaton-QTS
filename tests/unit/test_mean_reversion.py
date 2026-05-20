@@ -26,7 +26,7 @@ from qts.models.base import (
     Position,
     SignalSnapshot,
     TradeDirection,
-    VolRegime,
+    VolLevel,
 )
 from qts.strategies.mean_reversion import MeanReversionStrategy
 
@@ -75,8 +75,8 @@ def _make_snapshot(
         bb_lower=90.0,
         atr=1.0,
         momentum_5=0.0,
-        vol_regime=VolRegime.HIGH,
-        vol_regime_confidence=0.8,
+        vol_level=VolLevel.HIGH,
+        vol_level_confidence=0.8,
         sentiment_score=sentiment_score,
         combined_alpha=0.0,
     )

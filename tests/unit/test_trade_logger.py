@@ -20,7 +20,7 @@ from qts.models.base import (
     TradeDirection,
     TradeOutcome,
     TradeRecord,
-    VolRegime,
+    VolLevel,
 )
 from qts.trade_logging.trade_logger import TradeLogger
 
@@ -46,7 +46,7 @@ def _make_trade(trade_id: str = "trade-001") -> TradeRecord:
         sentiment_at_entry=0.3,
         social_velocity_at_entry=0.1,
         gdelt_intensity_at_entry=0.05,
-        vol_regime_at_entry=VolRegime.HIGH,
+        vol_level_at_entry=VolLevel.HIGH,
         combined_alpha_at_entry=0.45,
         params_version="1.0.0",
         outcome=TradeOutcome.WIN,
@@ -68,8 +68,8 @@ def _make_snapshot(symbol: str = "SYNTH") -> SignalSnapshot:
         bb_lower=90.0,
         atr=1.5,
         momentum_5=0.01,
-        vol_regime=VolRegime.HIGH,
-        vol_regime_confidence=0.85,
+        vol_level=VolLevel.HIGH,
+        vol_level_confidence=0.85,
         sentiment_score=0.3,
         combined_alpha=0.45,
     )

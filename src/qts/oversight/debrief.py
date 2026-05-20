@@ -194,7 +194,7 @@ class DebriefEngine:
                     "failure_mode": t.failure_mode.value if t.failure_mode else None,
                     "exit_reason": t.exit_reason.value,
                     "sentiment_at_entry": t.sentiment_at_entry,
-                    "vol_regime": t.vol_regime_at_entry.value,
+                    "vol_regime": t.vol_level_at_entry.value,
                 }
             )
 

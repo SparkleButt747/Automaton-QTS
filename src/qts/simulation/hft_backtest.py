@@ -26,7 +26,7 @@ from qts.models.base import (
     TradeDirection,
     TradeOutcome,
     TradeRecord,
-    VolRegime,
+    VolLevel,
 )
 from qts.simulation.backtest import BacktestResult
 
@@ -363,7 +363,7 @@ class HFTBacktestAdapter:
                         sentiment_at_entry=0.0,
                         social_velocity_at_entry=0.0,
                         gdelt_intensity_at_entry=0.0,
-                        vol_regime_at_entry=VolRegime.LOW,
+                        vol_level_at_entry=VolLevel.LOW,
                         combined_alpha_at_entry=0.0,
                         params_version="hft_backtest",
                         outcome=outcome,

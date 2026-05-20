@@ -14,7 +14,7 @@ from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from qts.models.base import Position, TradeRecord, VolRegime
+from qts.models.base import Position, TradeRecord, VolLevel
 from qts.monitoring.alerts import Alert, AlertLevel
 
 logger = logging.getLogger(__name__)
@@ -71,7 +71,7 @@ class DashboardState:
     positions: list[Position] = field(default_factory=list)
     recent_trades: list[TradeRecord] = field(default_factory=list)
     signals: list[SignalValues] = field(default_factory=list)
-    vol_regime: VolRegime = VolRegime.LOW
+    vol_regime: VolLevel = VolLevel.LOW
     llm_regime_assessment: str = "N/A"
     data_timestamps: dict[str, datetime] = field(default_factory=dict)
     db_connected: bool = True
@@ -246,7 +246,7 @@ class TradingDashboard:
         return Panel(table, title="[bold]Signals[/bold]", border_style="blue")
 
     def _render_regime(self, state: DashboardState) -> Panel:
-        regime_color = "red" if state.vol_regime == VolRegime.HIGH else "green"
+        regime_color = "red" if state.vol_regime == VolLevel.HIGH else "green"
         content = Text()
         content.append("Vol Regime: ", style="dim")
         content.append(str(state.vol_regime), style=f"bold {regime_color}")

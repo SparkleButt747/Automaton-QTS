@@ -23,7 +23,7 @@ from qts.models.base import (
     TradeDirection,
     TradeOutcome,
     TradeRecord,
-    VolRegime,
+    VolLevel,
 )
 from qts.oversight.debrief import (
     DebriefEngine,
@@ -53,7 +53,7 @@ def _make_trade_record() -> TradeRecord:
         sentiment_at_entry=0.3,
         social_velocity_at_entry=0.1,
         gdelt_intensity_at_entry=0.2,
-        vol_regime_at_entry=VolRegime.HIGH,
+        vol_level_at_entry=VolLevel.HIGH,
         combined_alpha_at_entry=0.6,
         params_version="1.0.0",
         outcome=TradeOutcome.LOSS,

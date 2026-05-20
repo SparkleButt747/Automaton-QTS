@@ -14,7 +14,7 @@ import numpy as np
 import pytest
 
 from qts.config import SentimentFusionWeights, SignalWeights, StrategyParams
-from qts.models.base import SignalSnapshot, VolRegime
+from qts.models.base import SignalSnapshot, VolLevel
 from qts.signals.alpha import combined_alpha
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -45,7 +45,7 @@ def _make_snapshot(
     bb_position: float = 0.5,
     momentum_5: float = 0.0,
     sentiment_score: float = 0.0,
-    vol_regime: VolRegime = VolRegime.HIGH,
+    vol_level: VolLevel = VolLevel.HIGH,
 ) -> SignalSnapshot:
     return SignalSnapshot(
         timestamp=datetime(2024, 1, 1),
@@ -59,8 +59,8 @@ def _make_snapshot(
         bb_lower=90.0,
         atr=1.0,
         momentum_5=momentum_5,
-        vol_regime=vol_regime,
-        vol_regime_confidence=0.9,
+        vol_level=vol_level,
+        vol_level_confidence=0.9,
         sentiment_score=sentiment_score,
         combined_alpha=0.0,
     )
@@ -84,7 +84,7 @@ class TestCombinedAlphaRange:
             bb_position=1.0,
             momentum_5=1.0,  # large positive -> tanh ~ 1
             sentiment_score=1.0,
-            vol_regime=VolRegime.HIGH,
+            vol_level=VolLevel.HIGH,
         )
         params = _make_params()
         result = combined_alpha(snap, params)
@@ -97,7 +97,7 @@ class TestCombinedAlphaRange:
             bb_position=0.0,
             momentum_5=-1.0,
             sentiment_score=-1.0,
-            vol_regime=VolRegime.HIGH,
+            vol_level=VolLevel.HIGH,
         )
         params = _make_params()
         result = combined_alpha(snap, params)
@@ -113,7 +113,7 @@ class TestCombinedAlphaRange:
                 bb_position=float(rng.uniform(0, 1)),
                 momentum_5=float(rng.uniform(-0.5, 0.5)),
                 sentiment_score=float(rng.uniform(-1, 1)),
-                vol_regime=VolRegime.HIGH if rng.random() > 0.5 else VolRegime.LOW,
+                vol_level=VolLevel.HIGH if rng.random() > 0.5 else VolLevel.LOW,
             )
             result = combined_alpha(snap, params)
             assert -1.0 <= result <= 1.0, f"Out of range: {result}"
@@ -122,8 +122,8 @@ class TestCombinedAlphaRange:
 class TestRegimeScalar:
     def test_low_regime_dampens_signal(self) -> None:
         """Same snapshot in LOW regime should produce half the alpha of HIGH."""
-        snap_high = _make_snapshot(rsi=80.0, sentiment_score=0.8, vol_regime=VolRegime.HIGH)
-        snap_low = _make_snapshot(rsi=80.0, sentiment_score=0.8, vol_regime=VolRegime.LOW)
+        snap_high = _make_snapshot(rsi=80.0, sentiment_score=0.8, vol_level=VolLevel.HIGH)
+        snap_low = _make_snapshot(rsi=80.0, sentiment_score=0.8, vol_level=VolLevel.LOW)
         params = _make_params()
         alpha_high = combined_alpha(snap_high, params)
         alpha_low = combined_alpha(snap_low, params)
@@ -132,7 +132,7 @@ class TestRegimeScalar:
 
     def test_high_regime_full_signal(self) -> None:
         """HIGH regime scalar should be 1.0."""
-        snap = _make_snapshot(rsi=70.0, sentiment_score=0.5, vol_regime=VolRegime.HIGH)
+        snap = _make_snapshot(rsi=70.0, sentiment_score=0.5, vol_level=VolLevel.HIGH)
         params = _make_params(w_rsi=0.5, w_macd=0.0, w_bb=0.0, w_mom=0.0, w_sentiment=0.5)
         result = combined_alpha(snap, params)
         # Should be unscaled
@@ -148,7 +148,7 @@ class TestSentimentContribution:
             bb_position=0.5,
             momentum_5=0.0,
             sentiment_score=1.0,
-            vol_regime=VolRegime.HIGH,
+            vol_level=VolLevel.HIGH,
         )
         params = _make_params(w_rsi=0.0, w_macd=0.0, w_bb=0.0, w_mom=0.0, w_sentiment=1.0)
         result = combined_alpha(snap, params)
@@ -161,7 +161,7 @@ class TestSentimentContribution:
             bb_position=0.5,
             momentum_5=0.0,
             sentiment_score=-1.0,
-            vol_regime=VolRegime.HIGH,
+            vol_level=VolLevel.HIGH,
         )
         params = _make_params(w_rsi=0.0, w_macd=0.0, w_bb=0.0, w_mom=0.0, w_sentiment=1.0)
         result = combined_alpha(snap, params)
@@ -170,19 +170,19 @@ class TestSentimentContribution:
 
 class TestRSIContribution:
     def test_rsi_overbought_positive(self) -> None:
-        snap = _make_snapshot(rsi=80.0, vol_regime=VolRegime.HIGH)
+        snap = _make_snapshot(rsi=80.0, vol_level=VolLevel.HIGH)
         params = _make_params(w_rsi=1.0, w_macd=0.0, w_bb=0.0, w_mom=0.0, w_sentiment=0.0)
         result = combined_alpha(snap, params)
         assert result > 0.0
 
     def test_rsi_oversold_negative(self) -> None:
-        snap = _make_snapshot(rsi=20.0, vol_regime=VolRegime.HIGH)
+        snap = _make_snapshot(rsi=20.0, vol_level=VolLevel.HIGH)
         params = _make_params(w_rsi=1.0, w_macd=0.0, w_bb=0.0, w_mom=0.0, w_sentiment=0.0)
         result = combined_alpha(snap, params)
         assert result < 0.0
 
     def test_nan_rsi_defaults_to_zero(self) -> None:
-        snap = _make_snapshot(rsi=float("nan"), vol_regime=VolRegime.HIGH)
+        snap = _make_snapshot(rsi=float("nan"), vol_level=VolLevel.HIGH)
         params = _make_params(w_rsi=1.0, w_macd=0.0, w_bb=0.0, w_mom=0.0, w_sentiment=0.0)
         result = combined_alpha(snap, params)
         assert result == pytest.approx(0.0, abs=1e-6)

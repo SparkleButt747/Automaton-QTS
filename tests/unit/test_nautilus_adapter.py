@@ -27,7 +27,7 @@ from qts.models.base import (
     TradeDirection,
     TradeOutcome,
     TradeRecord,
-    VolRegime,
+    VolLevel,
 )
 from qts.simulation.backtest import BacktestResult, compute_backtest_statistics
 from qts.simulation.nautilus_adapter import (
@@ -80,7 +80,7 @@ def _make_trade(pnl: float) -> TradeRecord:
         sentiment_at_entry=0.0,
         social_velocity_at_entry=0.0,
         gdelt_intensity_at_entry=0.0,
-        vol_regime_at_entry=VolRegime.LOW,
+        vol_level_at_entry=VolLevel.LOW,
         combined_alpha_at_entry=0.0,
         params_version="test",
         outcome=outcome,
@@ -127,6 +127,7 @@ def test_has_nautilus_is_bool():
 # ── T-NAUT-3: ImportError when nautilus not installed ─────────────────────────
 
 
+@pytest.mark.skip(reason="nautilus_trader is now a required dep — optional import guard removed")
 def test_adapter_raises_without_nautilus():
     """T-NAUT-3: NautilusBacktestAdapter raises ImportError without nautilus_trader."""
     bars = _make_bars(10)
@@ -137,6 +138,7 @@ def test_adapter_raises_without_nautilus():
             NautilusBacktestAdapter(strategy=strategy, bars=bars)
 
 
+@pytest.mark.skip(reason="nautilus_trader is now a required dep — optional import guard removed")
 def test_qts_bar_to_nautilus_raises_without_nautilus():
     """qts_bar_to_nautilus raises ImportError when nautilus_trader is absent."""
     bar = _make_bar()

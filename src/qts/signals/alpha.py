@@ -9,7 +9,7 @@ from __future__ import annotations
 import numpy as np
 
 from qts.config import StrategyParams
-from qts.models.base import SignalSnapshot, VolRegime
+from qts.models.base import SignalSnapshot, VolLevel
 from qts.signals.indicators import normalise_rsi
 
 
@@ -58,19 +58,24 @@ def _normalise_momentum(momentum: float) -> float:
     return float(np.tanh(momentum * 10.0))  # scale factor for typical values
 
 
-def _regime_scalar(regime: VolRegime) -> float:
+def _regime_scalar(regime: VolLevel) -> float:
     """Return the position-size scalar for the given regime.
 
-    HIGH volatility -> full signal (1.0).
-    LOW volatility  -> dampened signal (0.5).
+    HIGH volatility        -> full signal (1.0).
+    TRANSITIONING          -> partial signal (0.75).
+    LOW volatility         -> dampened signal (0.5).
 
     Args:
-        regime: Current VolRegime.
+        regime: Current VolLevel.
 
     Returns:
-        1.0 for HIGH, 0.5 for LOW.
+        1.0 for HIGH, 0.75 for TRANSITIONING, 0.5 for LOW.
     """
-    return 1.0 if regime == VolRegime.HIGH else 0.5
+    if regime == VolLevel.HIGH:
+        return 1.0
+    if regime == VolLevel.TRANSITIONING:
+        return 0.75
+    return 0.5
 
 
 def combined_alpha(snapshot: SignalSnapshot, params: StrategyParams) -> float:
@@ -114,5 +119,5 @@ def combined_alpha(snapshot: SignalSnapshot, params: StrategyParams) -> float:
         + w.w_sentiment * sentiment_val
     )
 
-    scalar = _regime_scalar(snapshot.vol_regime)
+    scalar = _regime_scalar(snapshot.vol_level)
     return float(np.clip(raw_alpha * scalar, -1.0, 1.0))

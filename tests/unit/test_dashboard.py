@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from qts.models.base import VolRegime
+from qts.models.base import VolLevel
 from qts.monitoring.alerts import Alert, AlertLevel, AlertManager
 from qts.monitoring.dashboard import DashboardState, SignalValues
 
@@ -20,7 +20,7 @@ class TestDashboardState:
         assert state.positions == []
         assert state.recent_trades == []
         assert state.signals == []
-        assert state.vol_regime == VolRegime.LOW
+        assert state.vol_regime == VolLevel.LOW
         assert state.pending_proposals == 0
         assert state.db_connected is True
         assert state.active_alerts == []
@@ -32,12 +32,12 @@ class TestDashboardState:
             daily_pnl=-150.0,
             daily_drawdown=0.003,
             drawdown_limit=0.02,
-            vol_regime=VolRegime.HIGH,
+            vol_regime=VolLevel.HIGH,
             llm_regime_assessment="Elevated volatility expected.",
             pending_proposals=2,
         )
         assert state.portfolio_value == 50_000.0
-        assert state.vol_regime == VolRegime.HIGH
+        assert state.vol_regime == VolLevel.HIGH
         assert state.pending_proposals == 2
 
     def test_signals_list(self) -> None:

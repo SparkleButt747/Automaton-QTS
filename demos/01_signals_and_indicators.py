@@ -21,7 +21,7 @@ from rich.text import Text
 
 from qts.config import SentimentFusionWeights, SignalWeights, StrategyParams
 from qts.data.market.mock_adapter import MockBarAdapter
-from qts.models.base import Bar, VolRegime
+from qts.models.base import Bar, VolLevel
 from qts.signals.alpha import combined_alpha
 from qts.signals.indicators import (
     compute_atr,
@@ -67,8 +67,8 @@ def _colour_value(val: float, *, bullish_positive: bool = True) -> str:
     return "red" if val > 0 else "green"
 
 
-def _colour_regime(regime: VolRegime) -> str:
-    return "red bold" if regime == VolRegime.HIGH else "green bold"
+def _colour_regime(regime: VolLevel) -> str:
+    return "red bold" if regime == VolLevel.HIGH else "green bold"
 
 
 def _fmt(val: float, decimals: int = 4) -> str:

@@ -26,7 +26,7 @@ from qts.models.base import (
     TradeDirection,
     TradeOutcome,
     TradeRecord,
-    VolRegime,
+    VolLevel,
 )
 
 # ── Helpers / Factories ───────────────────────────────────────────────────────
@@ -37,7 +37,7 @@ def _make_trade(
     pnl_usd: float = -100.0,
     outcome: TradeOutcome = TradeOutcome.LOSS,
     sentiment_at_entry: float = 0.1,
-    vol_regime_at_entry: VolRegime = VolRegime.HIGH,
+    vol_level_at_entry: VolLevel = VolLevel.HIGH,
     slippage_usd: float = 0.0,
     entry_price: float = 100.0,
     direction: TradeDirection = TradeDirection.LONG,
@@ -61,7 +61,7 @@ def _make_trade(
         sentiment_at_entry=sentiment_at_entry,
         social_velocity_at_entry=0.0,
         gdelt_intensity_at_entry=0.0,
-        vol_regime_at_entry=vol_regime_at_entry,
+        vol_level_at_entry=vol_level_at_entry,
         combined_alpha_at_entry=0.0,
         params_version="v1.0",
         outcome=outcome,
@@ -76,7 +76,7 @@ def _make_snapshot(
     bb_upper: float = 110.0,
     bb_lower: float = 90.0,
     atr: float = 5.0,
-    vol_regime: VolRegime = VolRegime.HIGH,
+    vol_level: VolLevel = VolLevel.HIGH,
 ) -> SignalSnapshot:
     """Create a minimal SignalSnapshot for testing."""
     return SignalSnapshot(
@@ -91,8 +91,8 @@ def _make_snapshot(
         bb_lower=bb_lower,
         atr=atr,
         momentum_5=0.0,
-        vol_regime=vol_regime,
-        vol_regime_confidence=0.9,
+        vol_level=vol_level,
+        vol_level_confidence=0.9,
         sentiment_score=sentiment_score,
         combined_alpha=0.0,
     )
@@ -170,7 +170,7 @@ class TestRegimeMismatchRule:
     def test_triggers_with_low_regime_and_high_sentiment(self) -> None:
         classifier = FailureModeClassifier()
         trade = _make_trade(
-            vol_regime_at_entry=VolRegime.LOW,
+            vol_level_at_entry=VolLevel.LOW,
             sentiment_at_entry=0.8,  # |0.8| > 0.5
         )
         result = classifier.classify(trade, exit_snapshot=None)
@@ -179,7 +179,7 @@ class TestRegimeMismatchRule:
     def test_triggers_with_low_regime_and_negative_high_sentiment(self) -> None:
         classifier = FailureModeClassifier()
         trade = _make_trade(
-            vol_regime_at_entry=VolRegime.LOW,
+            vol_level_at_entry=VolLevel.LOW,
             sentiment_at_entry=-0.7,  # |-0.7| > 0.5
         )
         result = classifier.classify(trade, exit_snapshot=None)
@@ -188,7 +188,7 @@ class TestRegimeMismatchRule:
     def test_does_not_trigger_with_high_regime(self) -> None:
         classifier = FailureModeClassifier()
         trade = _make_trade(
-            vol_regime_at_entry=VolRegime.HIGH,
+            vol_level_at_entry=VolLevel.HIGH,
             sentiment_at_entry=0.8,
             slippage_usd=0.0,
         )
@@ -198,7 +198,7 @@ class TestRegimeMismatchRule:
     def test_does_not_trigger_with_low_sentiment(self) -> None:
         classifier = FailureModeClassifier()
         trade = _make_trade(
-            vol_regime_at_entry=VolRegime.LOW,
+            vol_level_at_entry=VolLevel.LOW,
             sentiment_at_entry=0.3,  # |0.3| < 0.5
             slippage_usd=0.0,
         )
@@ -213,7 +213,7 @@ class TestExecutionSlipRule:
         classifier = FailureModeClassifier()
         trade = _make_trade(
             slippage_usd=5.0,
-            vol_regime_at_entry=VolRegime.HIGH,
+            vol_level_at_entry=VolLevel.HIGH,
             sentiment_at_entry=0.1,
         )
         result = classifier.classify(trade, exit_snapshot=None)
@@ -235,7 +235,7 @@ class TestFalseAlphaRule:
         trade = _make_trade(
             outcome=TradeOutcome.LOSS,
             sentiment_at_entry=0.0,
-            vol_regime_at_entry=VolRegime.HIGH,
+            vol_level_at_entry=VolLevel.HIGH,
             slippage_usd=0.0,
         )
         result = classifier.classify(trade, exit_snapshot=None)
@@ -247,7 +247,7 @@ class TestFalseAlphaRule:
             outcome=TradeOutcome.WIN,
             pnl_usd=100.0,
             sentiment_at_entry=0.0,
-            vol_regime_at_entry=VolRegime.HIGH,
+            vol_level_at_entry=VolLevel.HIGH,
             slippage_usd=0.0,
         )
         result = classifier.classify(trade, exit_snapshot=None)
@@ -270,7 +270,7 @@ class TestAllLossesClassified:
         losses = [
             _make_trade(outcome=TradeOutcome.LOSS, sentiment_at_entry=0.0, slippage_usd=0.0),
             _make_trade(
-                outcome=TradeOutcome.LOSS, sentiment_at_entry=0.8, vol_regime_at_entry=VolRegime.LOW
+                outcome=TradeOutcome.LOSS, sentiment_at_entry=0.8, vol_level_at_entry=VolLevel.LOW
             ),
             _make_trade(outcome=TradeOutcome.LOSS, slippage_usd=10.0),
         ]
@@ -287,7 +287,7 @@ class TestAllLossesClassified:
             # Regime mismatch
             _make_trade(
                 outcome=TradeOutcome.LOSS,
-                vol_regime_at_entry=VolRegime.LOW,
+                vol_level_at_entry=VolLevel.LOW,
                 sentiment_at_entry=0.9,
             ),
             # Execution slip
@@ -321,7 +321,7 @@ class TestAttributionReport:
         loss_regime = _make_trade(
             pnl_usd=-50.0,
             outcome=TradeOutcome.LOSS,
-            vol_regime_at_entry=VolRegime.LOW,
+            vol_level_at_entry=VolLevel.LOW,
             sentiment_at_entry=0.9,
         )
         loss_false_alpha = _make_trade(

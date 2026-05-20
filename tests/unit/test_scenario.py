@@ -14,7 +14,7 @@ from datetime import datetime
 
 import pytest
 
-from qts.models.base import Bar, SignalSnapshot, VolRegime
+from qts.models.base import Bar, SignalSnapshot, VolLevel
 from qts.simulation.scenario import StressScenarioRunner
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -50,8 +50,8 @@ def _make_snapshots(n: int, sentiment: float = 0.0) -> list[SignalSnapshot]:
             bb_lower=90.0,
             atr=1.0,
             momentum_5=0.0,
-            vol_regime=VolRegime.HIGH,
-            vol_regime_confidence=0.8,
+            vol_level=VolLevel.HIGH,
+            vol_level_confidence=0.8,
             sentiment_score=sentiment,
             combined_alpha=0.0,
         )

@@ -1,7 +1,7 @@
 """Unit tests for qts.signals.regime.
 
 Verifies:
-- RegimeDetector always outputs VolRegime.HIGH or VolRegime.LOW
+- RegimeDetector always outputs VolLevel.HIGH or VolLevel.LOW
 - Confidence is always in [0, 1]
 - Fit/predict lifecycle works correctly
 - Edge cases (insufficient data, unfitted model)
@@ -12,7 +12,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from qts.models.base import VolRegime
+from qts.models.base import VolLevel
 from qts.signals.regime import RegimeDetector, RegimeDetectorProtocol
 
 
@@ -66,8 +66,8 @@ class TestRegimeDetectorPredict:
         detector = RegimeDetector(random_state=42)
         detector.fit(atr)
         regime, confidence = detector.predict(atr)
-        assert isinstance(regime, VolRegime)
-        assert regime in (VolRegime.HIGH, VolRegime.LOW)
+        assert isinstance(regime, VolLevel)
+        assert regime in (VolLevel.HIGH, VolLevel.LOW)
 
     def test_confidence_in_unit_interval(self) -> None:
         rng = np.random.default_rng(42)
@@ -92,7 +92,7 @@ class TestRegimeDetectorPredict:
         # Prediction on purely high ATR
         test_high = rng.uniform(4.0, 6.0, 30).astype(np.float64)
         regime, _ = detector.predict(test_high)
-        assert regime == VolRegime.HIGH
+        assert regime == VolLevel.HIGH
 
     def test_low_atr_predicts_low_regime(self) -> None:
         """Consistently low ATR should predict LOW regime."""
@@ -105,7 +105,7 @@ class TestRegimeDetectorPredict:
 
         test_low = rng.uniform(0.5, 1.0, 30).astype(np.float64)
         regime, _ = detector.predict(test_low)
-        assert regime == VolRegime.LOW
+        assert regime == VolLevel.LOW
 
     def test_empty_atr_returns_low_zero_confidence(self) -> None:
         rng = np.random.default_rng(42)
@@ -113,7 +113,7 @@ class TestRegimeDetectorPredict:
         detector = RegimeDetector(random_state=42)
         detector.fit(atr)
         regime, confidence = detector.predict(np.array([], dtype=np.float64))
-        assert regime == VolRegime.LOW
+        assert regime == VolLevel.LOW
         assert confidence == 0.0
 
     def test_predict_with_nan_prefixed_atr(self) -> None:
@@ -124,5 +124,5 @@ class TestRegimeDetectorPredict:
         detector.fit(atr)
         atr_with_nan = np.concatenate([[np.nan] * 14, atr])
         regime, confidence = detector.predict(atr_with_nan)
-        assert regime in (VolRegime.HIGH, VolRegime.LOW)
+        assert regime in (VolLevel.HIGH, VolLevel.LOW)
         assert 0.0 <= confidence <= 1.0

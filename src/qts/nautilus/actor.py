@@ -145,6 +145,19 @@ class QTSStrategy(NtStrategy):
         fill = nautilus_fill_to_qts(event)
         self._inner_strategy.on_fill(fill)
 
+    def on_text_event(self, event: object) -> None:
+        """Forward a TextEvent (or any object) to the inner strategy.
+
+        The Strategy protocol does not require on_text; news-aware strategies
+        define it, the rest don't. We duck-type-check at the call site so a
+        missing method is a no-op — never an error.
+        """
+        if self._inner_strategy is None:
+            return
+        handler = getattr(self._inner_strategy, "on_text", None)
+        if callable(handler):
+            handler(event)
+
     def on_stop(self) -> None:
         """Called when the strategy actor stops."""
         logger.info("QTSStrategy: stopped")

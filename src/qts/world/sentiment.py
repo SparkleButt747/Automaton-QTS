@@ -13,12 +13,20 @@ import re
 from dataclasses import dataclass
 
 # Hawkish vocabulary subtracts; dovish adds.
+# `disinflation` is intentionally NOT in DOVISH — it appears in both bullish
+# ("disinflation underway") and bearish ("disinflation has slowed") contexts;
+# leaving it neutral lets the surrounding vocabulary decide.
 _HAWKISH = re.compile(
-    r"\b(hawkish|hike|tightening|restrict|stubborn|persistent|stick|firmer|warrant)",
+    r"\b("
+    r"hawkish|hike|hikes|hiking|"
+    r"tighten\w*|restrict\w*|stubborn\w*|persistent\w*|sticky?|"
+    r"firm(?:er|ing|s)|warrant\w*|"
+    r"raise(?:s|d)?|raising|further|additional"
+    r")",
     re.IGNORECASE,
 )
 _DOVISH = re.compile(
-    r"\b(dovish|cut|easing|progress|peak|pause|patient|disinflation|cooling)",
+    r"\b(dovish|cut|cuts|cutting|easing|ease|progress|peak|paused?|patient|cooling|cooler|sustainably)",
     re.IGNORECASE,
 )
 

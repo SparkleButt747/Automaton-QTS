@@ -151,11 +151,7 @@ def test_episode_json_serialisable() -> None:  # T-WRUN-4 (acceptance #4)
     blob = ep.to_json()
     parsed = json.loads(blob)
     assert parsed["scenario_name"] == "fomc_btcusdt_v1_test"
-    # order_log key must serialise (list-of-dicts or empty list). We don't
-    # assert non-emptiness because order flow in v1 is corpus-RNG dependent
-    # (anon sentiment fires only on hawkish/dovish persona statements, and a
-    # subset of corpus statements score within VADER's [-0.1, 0.1] dead-band).
-    assert isinstance(parsed["order_log"], list)
+    assert len(parsed["order_log"]) > 0
     assert len(parsed["agent_traces"]) > 0
 
 

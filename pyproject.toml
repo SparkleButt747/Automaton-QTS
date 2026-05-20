@@ -25,6 +25,7 @@ dependencies = [
   "pyarrow",
   "rich",
   "click",
+  "pyyaml",
   # Monitoring
   "prometheus-client",
   # Sentiment
@@ -43,12 +44,13 @@ dependencies = [
   "redis",
   # Async PostgreSQL driver
   "asyncpg",
+  # Execution / simulation
+  "nautilus_trader>=1.200",
+  # Optimisation
+  "optuna>=3.0",
 ]
 
 [project.optional-dependencies]
-trading = [
-  "nautilus_trader",
-]
 hft = [
   "hftbacktest",
 ]
@@ -100,6 +102,8 @@ module = [
   "sklearn.*",
   "nautilus_trader.*",
   "hftbacktest.*",
+  "optuna.*",
+  "yaml.*",
 ]
 ignore_missing_imports = true
 

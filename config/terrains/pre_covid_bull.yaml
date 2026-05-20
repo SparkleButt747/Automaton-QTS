@@ -1,0 +1,30 @@
+name: pre_covid_bull
+symbol: SPY
+start: "2020-01-02"
+end: "2020-02-19"
+split: train
+
+regime:
+  trend: BULL
+  volatility: LOW
+  liquidity: ABUNDANT
+  sentiment: EUPHORIC
+  catalyst: NONE
+  expected_drift: 0.28
+  expected_vol: 0.12
+  correlation_regime: 0.35
+  scenario_description: "Late-cycle bull market in January 2020 before COVID-19 awareness reached Western markets. SPY at all-time highs, VIX sub-15, driven by Phase 1 US-China trade deal signed Jan 15 and strong Q4 2019 earnings. Credit spreads tight, momentum high across all sectors. Complacency extreme — markets largely ignored early Wuhan outbreak news."
+
+events:
+  - timestamp: "2020-01-15T14:00:00"
+    event_type: "geopolitical"
+    description: "US-China Phase 1 trade deal signed, removing major tail risk from 2019"
+    impact_magnitude: 0.6
+  - timestamp: "2020-01-29T14:00:00"
+    event_type: "fomc"
+    description: "FOMC holds rates steady at 1.50-1.75%, signals extended pause"
+    impact_magnitude: 0.1
+  - timestamp: "2020-02-07T00:00:00"
+    event_type: "macro"
+    description: "January nonfarm payrolls beat at +225k; unemployment 3.6%"
+    impact_magnitude: 0.3

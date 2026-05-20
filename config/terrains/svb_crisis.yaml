@@ -1,0 +1,30 @@
+name: svb_crisis
+symbol: SPY
+start: "2023-03-01"
+end: "2023-03-31"
+split: train
+
+regime:
+  trend: BEAR
+  volatility: HIGH
+  liquidity: CRISIS
+  sentiment: FEARFUL
+  catalyst: MACRO_EVENT
+  expected_drift: -0.60
+  expected_vol: 0.48
+  correlation_regime: 0.88
+  scenario_description: "Silicon Valley Bank (SVB) collapsed on March 10 — largest US bank failure since 2008 — after a bank run triggered by its disclosure of a $1.8bn loss on held-to-maturity bond portfolio. FDIC took over Friday; by Sunday the regulators also seized Signature Bank. Treasury, FDIC, and Fed announced a guarantee of all SVB/Signature depositors (beyond FDIC limit) and created the BTFP facility Sunday night. Contagion fears spread to First Republic, Credit Suisse (forced UBS merger March 19), and European banks. Financial sector ETF (XLF) fell 10% in two weeks. Fed was caught in a dilemma: hike to fight inflation or pause to stabilise banks. Ultimately hiked 25bps on March 22."
+
+events:
+  - timestamp: "2023-03-10T00:00:00"
+    event_type: "macro"
+    description: "SVB shut down by FDIC; $42bn withdrawn in 10 hours — fastest bank run in history; regional bank stocks collapse"
+    impact_magnitude: -1.0
+  - timestamp: "2023-03-12T18:00:00"
+    event_type: "macro"
+    description: "Treasury/FDIC/Fed joint statement: all SVB and Signature depositors made whole; BTFP backstop facility created"
+    impact_magnitude: 0.7
+  - timestamp: "2023-03-22T14:00:00"
+    event_type: "fomc"
+    description: "Fed hikes 25bps to 4.75-5.00% despite banking stress; Powell says bank sector 'sound and resilient'"
+    impact_magnitude: -0.2

@@ -1,0 +1,30 @@
+name: btc_halving_2024
+symbol: BTCUSDT
+start: "2024-03-01"
+end: "2024-05-31"
+split: train
+
+regime:
+  trend: BULL
+  volatility: TRANSITIONING
+  liquidity: ABUNDANT
+  sentiment: EUPHORIC
+  catalyst: REGULATORY
+  expected_drift: 1.20
+  expected_vol: 0.65
+  correlation_regime: 0.55
+  scenario_description: "Fourth Bitcoin halving occurred on April 19, reducing block reward from 6.25 to 3.125 BTC. Unlike previous cycles, the halving was front-run heavily — BTC made new ATH of $73,737 on March 14, six weeks before the event, driven by ETF inflows. Spot Bitcoin ETF launch on January 11 (BlackRock IBIT, Fidelity FBTC) was the structural catalyst, attracting ~$12bn in net inflows in Q1 2024. Post-halving, BTC consolidated (classic 'buy the news') before resuming higher in May. Ethereum and altcoins tracked BTC with higher beta. Regulatory clarity from ETF approvals reduced tail risk. On-chain metrics (hash rate, active addresses) at cycle highs."
+
+events:
+  - timestamp: "2024-03-14T00:00:00"
+    event_type: "macro"
+    description: "BTC reaches new ATH of $73,737 — six weeks before halving; ETF inflows accelerating beyond all forecasts"
+    impact_magnitude: 0.8
+  - timestamp: "2024-04-19T00:00:00"
+    event_type: "regulatory"
+    description: "Bitcoin halving at block 840,000; block reward halves to 3.125 BTC; BTC consolidates near $60k post-event"
+    impact_magnitude: 0.2
+  - timestamp: "2024-05-23T00:00:00"
+    event_type: "regulatory"
+    description: "SEC approves spot Ethereum ETF applications (unexpected); ETH +20% in 48 hours, broader crypto rally"
+    impact_magnitude: 0.7

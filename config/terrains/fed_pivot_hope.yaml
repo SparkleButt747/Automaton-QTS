@@ -1,0 +1,30 @@
+name: fed_pivot_hope
+symbol: SPY
+start: "2022-10-14"
+end: "2022-11-30"
+split: train
+
+regime:
+  trend: BULL
+  volatility: TRANSITIONING
+  liquidity: ABUNDANT
+  sentiment: NEUTRAL
+  catalyst: MACRO_EVENT
+  expected_drift: 0.90
+  expected_vol: 0.28
+  correlation_regime: 0.60
+  scenario_description: "SPY rallied from 2022 lows (348) to 410 (+18%) on growing belief the Fed was nearing peak rates and a policy pivot was imminent. Catalysts: WSJ's Nick Timiraos (considered Fed whisperer) published article hinting at slower rate increases on Oct 21, taken as Fed messaging. October CPI (7.7% vs 7.9% expected) on Nov 10 triggered a massive short-covering rally — SPY +5.5% in a single day. Midterm elections produced gridlock, historically bullish. FTX collapse on Nov 8-11 created crypto carnage but had limited equity contagion. Rally ultimately stalled as the Fed remained resolutely hawkish."
+
+events:
+  - timestamp: "2022-10-21T00:00:00"
+    event_type: "fomc"
+    description: "WSJ's Timiraos signals Fed considering slowing hike pace in December; markets interpret as pivot signal"
+    impact_magnitude: 0.7
+  - timestamp: "2022-11-02T14:00:00"
+    event_type: "fomc"
+    description: "Fed hikes 75bps (4th consecutive); Powell statement more hawkish than expected, dampening pivot hopes temporarily"
+    impact_magnitude: -0.4
+  - timestamp: "2022-11-10T08:30:00"
+    event_type: "macro"
+    description: "CPI 7.7% vs 7.9% expected; largest positive surprise vs expectations in months; SPY +5.5%, NDX +7.4%"
+    impact_magnitude: 0.9

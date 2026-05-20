@@ -1,0 +1,30 @@
+name: covid_recovery
+symbol: SPY
+start: "2020-03-24"
+end: "2020-06-30"
+split: train
+
+regime:
+  trend: BULL
+  volatility: HIGH
+  liquidity: ABUNDANT
+  sentiment: NEUTRAL
+  catalyst: MACRO_EVENT
+  expected_drift: 1.85
+  expected_vol: 0.42
+  correlation_regime: 0.65
+  scenario_description: "V-shaped recovery from COVID lows, driven by the most aggressive coordinated fiscal and monetary stimulus in history. CARES Act ($2.2tn) signed March 27. Fed expanded balance sheet by ~$3tn in 12 weeks via QE, repo, and alphabet-soup credit facilities (PMCCF, SMCCF, TALF, MSLP). SPY recovered from 218 to 312 (+43%) by June 30 despite worst economic data in decades (April unemployment 14.7%). High-beta and growth names led. Value traps abounded. V-shaped price action masked fundamental divergence between market and economy."
+
+events:
+  - timestamp: "2020-03-27T00:00:00"
+    event_type: "macro"
+    description: "CARES Act signed — $2.2tn fiscal stimulus including $1,200 direct payments and expanded unemployment"
+    impact_magnitude: 0.9
+  - timestamp: "2020-04-09T00:00:00"
+    event_type: "fomc"
+    description: "Fed announces additional $2.3tn in lending programs; Main Street Lending, muni facilities"
+    impact_magnitude: 0.7
+  - timestamp: "2020-05-08T08:30:00"
+    event_type: "macro"
+    description: "April nonfarm payrolls: -20.5 million jobs, unemployment 14.7% — worst since Great Depression; market already priced it"
+    impact_magnitude: 0.1

@@ -1,0 +1,30 @@
+name: election_rally_2024
+symbol: SPY
+start: "2024-11-01"
+end: "2024-11-29"
+split: train
+
+regime:
+  trend: BULL
+  volatility: LOW
+  liquidity: ABUNDANT
+  sentiment: EUPHORIC
+  catalyst: MACRO_EVENT
+  expected_drift: 1.60
+  expected_vol: 0.16
+  correlation_regime: 0.40
+  scenario_description: "Trump election victory on November 5 triggered an immediate 'Trump trade' — SPY rallied 2.5% on election day as red sweep became apparent. Financials (XLF +10%), energy, and crypto surged on deregulation/tax cut expectations. Bitcoin broke $75,000 for the first time and continued to $99,000 by end of November. Small-caps (IWM +8%) outperformed on domestic growth optimism. 10Y yields initially spiked on deficit concerns but stabilised. Fed delivered 25bps cut on November 7 as scheduled. Market narrative: lower corporate taxes + deregulation + tariffs = US exceptionalism. VIX compressed to 14 by month-end. SPY hit all-time highs above 600 by Thanksgiving."
+
+events:
+  - timestamp: "2024-11-05T23:00:00"
+    event_type: "geopolitical"
+    description: "Trump wins 2024 US presidential election; Republican Senate majority called; markets price 'red sweep' deregulation/tax cut thesis"
+    impact_magnitude: 0.9
+  - timestamp: "2024-11-07T14:00:00"
+    event_type: "fomc"
+    description: "Fed cuts 25bps to 4.50-4.75% as expected; Powell declines to comment on election/fiscal policy impact"
+    impact_magnitude: 0.2
+  - timestamp: "2024-11-20T00:00:00"
+    event_type: "macro"
+    description: "Bitcoin crosses $90,000; MSTR, COIN, crypto equities hit multi-year highs; crypto-equity correlation spikes"
+    impact_magnitude: 0.6

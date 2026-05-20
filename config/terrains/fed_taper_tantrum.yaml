@@ -1,0 +1,30 @@
+name: fed_taper_tantrum
+symbol: SPY
+start: "2021-11-01"
+end: "2021-12-31"
+split: train
+
+regime:
+  trend: SIDEWAYS
+  volatility: TRANSITIONING
+  liquidity: ABUNDANT
+  sentiment: NEUTRAL
+  catalyst: MACRO_EVENT
+  expected_drift: -0.05
+  expected_vol: 0.22
+  correlation_regime: 0.55
+  scenario_description: "SPY made new ATH (479) in late November before reversing sharply on the Omicron variant announcement and an abruptly hawkish Powell pivot. After months of calling inflation 'transitory', Powell dropped the word at his Nov 30 Senate testimony, signalling accelerated taper and earlier rate hikes. SPY oscillated in a wide range — bulls anchored to strong earnings season, bears pricing the end of zero-rate regime. Yield curve flattened aggressively as front-end rose. Growth vs value divergence intensified. December FOMC doubled the taper pace, signalling three 2022 hikes."
+
+events:
+  - timestamp: "2021-11-03T14:00:00"
+    event_type: "fomc"
+    description: "FOMC announces start of QE taper at $15bn/month; markets initially calm"
+    impact_magnitude: 0.1
+  - timestamp: "2021-11-26T00:00:00"
+    event_type: "macro"
+    description: "Omicron variant identified by South Africa; WHO designates as variant of concern; markets gap down 2.3% on Black Friday"
+    impact_magnitude: -0.7
+  - timestamp: "2021-12-15T14:00:00"
+    event_type: "fomc"
+    description: "FOMC doubles taper to $30bn/month, dot plot signals 3 hikes in 2022 — significant hawkish shift"
+    impact_magnitude: -0.3

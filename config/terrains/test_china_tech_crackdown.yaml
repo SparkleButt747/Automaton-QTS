@@ -1,0 +1,30 @@
+name: test_china_tech_crackdown
+symbol: KWEB
+start: "2021-07-01"
+end: "2021-08-31"
+split: test
+
+regime:
+  trend: BEAR
+  volatility: HIGH
+  liquidity: TIGHT
+  sentiment: FEARFUL
+  catalyst: REGULATORY
+  expected_drift: -2.40
+  expected_vol: 0.75
+  correlation_regime: 0.70
+  scenario_description: "China's sweeping regulatory crackdown on domestic technology companies produced a catastrophic drawdown in KWEB (KraneShares China Internet ETF). DiDi Chuxing was forced to delist from NYSE within days of its June IPO after regulators banned it from app stores for national security data violations. July 24 announcement banning for-profit tutoring companies wiped 70-90% from TAL Education and New Oriental in hours. Alibaba, Tencent, Meituan, and Pinduoduo all fell 20-40%. KWEB fell from 78 to 42 (-46%) in two months. The crackdown was framed as enforcing 'common prosperity' ideology. Western institutional investors faced forced redemptions. Geopolitical dimension added: Biden administration independently listed companies on trade restriction lists."
+
+events:
+  - timestamp: "2021-07-02T00:00:00"
+    event_type: "regulatory"
+    description: "China's CAC bans DiDi from app stores 2 days after NYSE IPO, citing national security data concerns; DiDi -25%"
+    impact_magnitude: -0.8
+  - timestamp: "2021-07-24T00:00:00"
+    event_type: "regulatory"
+    description: "Chinese authorities ban for-profit tutoring companies; TAL Education and New Oriental collapse 70-90% overnight"
+    impact_magnitude: -1.0
+  - timestamp: "2021-08-10T00:00:00"
+    event_type: "regulatory"
+    description: "Beijing releases 'common prosperity' guidelines targeting platform monopolies; Alibaba, Tencent hit new 2021 lows"
+    impact_magnitude: -0.6

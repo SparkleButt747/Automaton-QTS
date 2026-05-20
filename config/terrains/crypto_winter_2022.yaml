@@ -1,0 +1,30 @@
+name: crypto_winter_2022
+symbol: BTCUSDT
+start: "2022-05-01"
+end: "2022-07-31"
+split: train
+
+regime:
+  trend: BEAR
+  volatility: HIGH
+  liquidity: CRISIS
+  sentiment: FEARFUL
+  catalyst: MACRO_EVENT
+  expected_drift: -2.80
+  expected_vol: 1.10
+  correlation_regime: 0.85
+  scenario_description: "Catastrophic crypto bear market triggered by Terra/Luna ecosystem collapse. UST algorithmic stablecoin lost its $1 peg on May 9, triggering a death spiral that wiped ~$45bn in Terra/Luna market cap within days. Contagion spread to leveraged crypto lenders: Celsius froze withdrawals Jun 12, Three Arrows Capital (3AC) became insolvent in June, Voyager and BlockFi followed. BTC fell from ~38k to 17.6k (-54%) between May 1 and June 18. DeFi TVL collapsed 70%+. Crypto-correlated equities (COIN, MSTR, RIOT) tracked lower. Fed rate hikes exacerbated the risk-off move as the crypto 'store of value' narrative collapsed."
+
+events:
+  - timestamp: "2022-05-09T00:00:00"
+    event_type: "macro"
+    description: "Terra UST stablecoin loses peg; LUNA hyperinflation spiral begins — $45bn evaporated in 72 hours"
+    impact_magnitude: -1.0
+  - timestamp: "2022-06-12T00:00:00"
+    event_type: "macro"
+    description: "Celsius Network freezes all withdrawals citing 'extreme market conditions'; BTC breaks below $26k"
+    impact_magnitude: -0.9
+  - timestamp: "2022-06-15T14:00:00"
+    event_type: "fomc"
+    description: "Fed hikes 75bps — largest since 1994 — as CPI hit 8.6%; risk assets sell off broadly"
+    impact_magnitude: -0.7

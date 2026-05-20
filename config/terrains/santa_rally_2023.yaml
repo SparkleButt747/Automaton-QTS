@@ -1,0 +1,30 @@
+name: santa_rally_2023
+symbol: SPY
+start: "2023-11-01"
+end: "2023-12-29"
+split: train
+
+regime:
+  trend: BULL
+  volatility: LOW
+  liquidity: ABUNDANT
+  sentiment: EUPHORIC
+  catalyst: MACRO_EVENT
+  expected_drift: 1.40
+  expected_vol: 0.14
+  correlation_regime: 0.35
+  scenario_description: "Explosive two-month rally as the market aggressively repriced a Fed pivot. SPY surged from 412 to 475 (+15%) driven by: October CPI (3.2% YoY, below 3.3% expected) on Nov 14 triggering a massive short-covering rally; December FOMC dot plot showing 3 cuts in 2024; and seasonal flows. Rate-sensitive sectors led — REITs, utilities, small-caps all outperformed. Bond/equity correlation finally turned negative again, restoring diversification. Treasury yields fell from 5% to 3.88% on 10Y. Market priced in 150bps of 2024 cuts by year-end — ultimately proved optimistic. Strong breadth, high volume, record-high close on December 28."
+
+events:
+  - timestamp: "2023-11-14T08:30:00"
+    event_type: "macro"
+    description: "October CPI 3.2% vs 3.3% expected; core 4.0% vs 4.1%; SPY +2.0%, NDX +2.4% — pivot trade reignited"
+    impact_magnitude: 0.8
+  - timestamp: "2023-12-13T14:00:00"
+    event_type: "fomc"
+    description: "FOMC holds; dot plot signals 3 rate cuts in 2024; Powell less hawkish than feared — 'pivot' confirmed; SPY +1.4%"
+    impact_magnitude: 0.9
+  - timestamp: "2023-12-22T08:30:00"
+    event_type: "macro"
+    description: "Core PCE November 3.2% YoY — below expectations, confirming disinflation trend; year-end rally extends"
+    impact_magnitude: 0.4

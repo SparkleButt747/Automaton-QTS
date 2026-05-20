@@ -1,0 +1,30 @@
+name: ai_bull_2023
+symbol: QQQ
+start: "2023-04-01"
+end: "2023-07-31"
+split: train
+
+regime:
+  trend: BULL
+  volatility: LOW
+  liquidity: ABUNDANT
+  sentiment: EUPHORIC
+  catalyst: EARNINGS
+  expected_drift: 1.10
+  expected_vol: 0.18
+  correlation_regime: 0.42
+  scenario_description: "ChatGPT-driven AI euphoria powered QQQ from 307 to 389 (+27%) in four months. NVDA became the centrepiece trade — shares tripled in H1 2023 as data centre demand for H100 GPUs exploded beyond any analyst forecast. Microsoft's Copilot integration, Google's Bard launch, and Meta's LLaMA release kept the narrative hot. Magnificent 7 stocks (AAPL, MSFT, GOOGL, AMZN, NVDA, META, TSLA) dominated index returns; equal-weight S&P500 barely moved. Debt ceiling resolution on June 1 removed a tail risk. Market breadth was narrow — this was a concentrated AI momentum trade, not a broad bull. VIX compressed below 14 by July."
+
+events:
+  - timestamp: "2023-05-24T16:00:00"
+    event_type: "earnings"
+    description: "NVDA Q1 earnings: revenue guidance of $11bn vs $7.2bn expected — blowout print cements AI infrastructure theme; stock +24% next day"
+    impact_magnitude: 0.9
+  - timestamp: "2023-06-01T00:00:00"
+    event_type: "macro"
+    description: "Debt ceiling deal signed; fiscal uncertainty resolved, risk-on tone resumes"
+    impact_magnitude: 0.5
+  - timestamp: "2023-07-26T14:00:00"
+    event_type: "fomc"
+    description: "Fed hikes 25bps to 5.25-5.50% (final hike of cycle); statement opens door to pause — markets cheer"
+    impact_magnitude: 0.4

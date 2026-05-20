@@ -1,0 +1,30 @@
+name: test_ftx_collapse
+symbol: BTCUSDT
+start: "2022-11-01"
+end: "2022-11-30"
+split: test
+
+regime:
+  trend: BEAR
+  volatility: HIGH
+  liquidity: CRISIS
+  sentiment: FEARFUL
+  catalyst: MACRO_EVENT
+  expected_drift: -2.10
+  expected_vol: 0.95
+  correlation_regime: 0.90
+  scenario_description: "FTX, the world's second-largest crypto exchange, collapsed in under a week following a CoinDesk report on November 2 revealing Alameda Research's balance sheet was dominated by illiquid FTT tokens. Binance's CZ publicly offered to acquire FTX on November 8, then withdrew due to 'misappropriation of funds' on November 9. FTX filed Chapter 11 bankruptcy November 11 with an estimated $8bn shortfall. BTC fell from $21k to $15.5k (-26%). Contagion spread to Genesis Trading (froze withdrawals), BlockFi (bankruptcy), and numerous smaller funds. Sam Bankman-Fried was arrested in December. The collapse triggered the most severe liquidity crisis in crypto since 2008 comparisons were drawn — and validated regulators' concerns about centralised crypto platforms."
+
+events:
+  - timestamp: "2022-11-02T00:00:00"
+    event_type: "macro"
+    description: "CoinDesk publishes Alameda balance sheet expose; FTT token begins falling; market uneasy"
+    impact_magnitude: -0.5
+  - timestamp: "2022-11-08T00:00:00"
+    event_type: "macro"
+    description: "Binance announces intent to acquire FTX; BTC -5% on contagion fears; FTX user withdrawals frozen"
+    impact_magnitude: -0.7
+  - timestamp: "2022-11-11T00:00:00"
+    event_type: "macro"
+    description: "FTX files Chapter 11 bankruptcy; SBF resigns as CEO; BTC falls to $15,500 — lowest since Nov 2020"
+    impact_magnitude: -1.0

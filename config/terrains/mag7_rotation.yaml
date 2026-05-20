@@ -1,0 +1,30 @@
+name: mag7_rotation
+symbol: QQQ
+start: "2024-07-01"
+end: "2024-07-31"
+split: train
+
+regime:
+  trend: SIDEWAYS
+  volatility: LOW
+  liquidity: ABUNDANT
+  sentiment: NEUTRAL
+  catalyst: EARNINGS
+  expected_drift: 0.05
+  expected_vol: 0.18
+  correlation_regime: 0.30
+  scenario_description: "Sharp intra-month sector rotation out of Magnificent 7 / mega-cap tech into small-caps and value. QQQ fell 5% from July highs while IWM (Russell 2000) rallied 10%+ — one of the largest relative divergences in years. Catalyst was a combination of: softer CPI print on July 11 (CPI 3.0%, below 3.1% expected) that repriced rate cut probability sharply higher (small-cap / rate-sensitive beneficiaries), and earnings disappointments from TSLA (-12%) and GOOGL on weak ad data. AI capex spend concerns emerged — investors questioned if hyperscaler spend would translate to revenue. The rotation was violent but brief; most mega-caps reclaimed losses by August."
+
+events:
+  - timestamp: "2024-07-11T08:30:00"
+    event_type: "macro"
+    description: "CPI 3.0% YoY vs 3.1% expected; September rate cut becomes consensus; small-caps explode higher, QQQ drops 2%"
+    impact_magnitude: -0.4
+  - timestamp: "2024-07-23T16:00:00"
+    event_type: "earnings"
+    description: "Tesla Q2 earnings miss on margins; TSLA -12% after hours; Alphabet ad revenue soft — rotation out of AI names intensifies"
+    impact_magnitude: -0.5
+  - timestamp: "2024-07-31T14:00:00"
+    event_type: "fomc"
+    description: "FOMC holds at 5.25-5.50% but signals September cut likely; Powell cites progress on inflation, labour market cooling"
+    impact_magnitude: 0.3

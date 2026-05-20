@@ -1,0 +1,30 @@
+name: summer_doldrums_2023
+symbol: SPY
+start: "2023-08-01"
+end: "2023-09-29"
+split: train
+
+regime:
+  trend: SIDEWAYS
+  volatility: LOW
+  liquidity: ABUNDANT
+  sentiment: NEUTRAL
+  catalyst: NONE
+  expected_drift: -0.08
+  expected_vol: 0.14
+  correlation_regime: 0.38
+  scenario_description: "SPY churned in a tight range (440-455) for most of August and September — low-conviction tape with no strong directional catalyst. AI enthusiasm moderated after the July FOMC. Fitch downgraded US credit rating on August 1, causing a brief 1.5% sell-off that quickly faded. Rising real yields (10Y TIPS at 2%+) were a headwind for valuation, partially offset by resilient economic data. Options market implied vol compressed; realised vol fell to cycle lows. Market participants were positioned cautiously ahead of Q3 earnings season. Low participation — typical summer liquidity conditions with institutional desks thinly staffed."
+
+events:
+  - timestamp: "2023-08-01T00:00:00"
+    event_type: "macro"
+    description: "Fitch downgrades US long-term credit rating from AAA to AA+, citing fiscal deterioration and governance concerns"
+    impact_magnitude: -0.4
+  - timestamp: "2023-08-25T10:00:00"
+    event_type: "fomc"
+    description: "Powell Jackson Hole speech: data-dependent stance maintained, leaves door open to further hikes if needed; tone balanced"
+    impact_magnitude: -0.2
+  - timestamp: "2023-09-20T14:00:00"
+    event_type: "fomc"
+    description: "FOMC holds at 5.25-5.50%; dot plot revised up — 'higher for longer' becomes consensus; 10Y yield approaches 4.5%"
+    impact_magnitude: -0.3

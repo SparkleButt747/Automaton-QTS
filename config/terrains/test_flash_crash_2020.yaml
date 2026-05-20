@@ -1,0 +1,30 @@
+name: test_flash_crash_2020
+symbol: SPY
+start: "2020-03-06"
+end: "2020-03-13"
+split: test
+
+regime:
+  trend: BEAR
+  volatility: HIGH
+  liquidity: CRISIS
+  sentiment: FEARFUL
+  catalyst: PANDEMIC
+  expected_drift: -8.50
+  expected_vol: 1.80
+  correlation_regime: 0.98
+  scenario_description: "Extreme short-window test terrain centred on the single worst week of the COVID crash. March 9 ('Black Monday 2') was triggered by a simultaneous Saudi-Russia oil price war announcement over a weekend, compounding COVID fears — SPY gapped down 7% at open, triggering the first circuit breaker halt (Level 1, -7%) since 1997. WTI crude fell 25% intraday. March 12 saw another circuit breaker halt after WHO declared pandemic the previous evening. Treasury market experienced severe dysfunction — 10Y yield rose even as stocks crashed (flight-to-safety breakdown). Bid/ask spreads in equity options widened to unprecedented levels. Market microstructure stress at maximum. This terrain tests strategy resilience to single-event gap risk and liquidity evaporation."
+
+events:
+  - timestamp: "2020-03-08T20:00:00"
+    event_type: "geopolitical"
+    description: "Saudi Arabia launches oil price war after Russia rejects OPEC+ cuts; Brent crude -30% Sunday evening"
+    impact_magnitude: -1.0
+  - timestamp: "2020-03-09T09:30:00"
+    event_type: "macro"
+    description: "SPY circuit breaker halt Level 1 (-7%) triggered at open; first since 1997; S&P500 -7.6% on the day"
+    impact_magnitude: -1.0
+  - timestamp: "2020-03-12T09:30:00"
+    event_type: "macro"
+    description: "Second circuit breaker halt in four days; ECB disappoints with no rate cut; SPY -9.5% — worst single day since 1987"
+    impact_magnitude: -1.0

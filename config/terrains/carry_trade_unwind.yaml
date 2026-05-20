@@ -1,0 +1,30 @@
+name: carry_trade_unwind
+symbol: SPY
+start: "2024-08-01"
+end: "2024-08-09"
+split: train
+
+regime:
+  trend: BEAR
+  volatility: HIGH
+  liquidity: CRISIS
+  sentiment: FEARFUL
+  catalyst: MACRO_EVENT
+  expected_drift: -3.50
+  expected_vol: 1.20
+  correlation_regime: 0.95
+  scenario_description: "The August 5 global equity crash — triggered by Bank of Japan's unexpected 15bps rate hike on July 31 and a weak US July jobs report on August 2. The BOJ hike unwound the global yen carry trade (estimated $4tn in positions), forcing simultaneous deleveraging across all risk assets. Japan's Nikkei 225 fell 12.4% on August 5 alone — its worst day since 1987. SPY fell 3% that day; VIX spiked to 65 intraday before closing at 38 — highest since COVID. Liquidity dried up across equity, FX, and rates markets simultaneously. The move reversed almost entirely within 10 trading days as BOJ Deputy Governor Uchida signalled caution on further hikes, but the episode exposed significant hidden leverage in the system."
+
+events:
+  - timestamp: "2024-07-31T03:00:00"
+    event_type: "macro"
+    description: "Bank of Japan hikes rates 15bps to 0.25%, signals further normalisation; yen strengthens sharply"
+    impact_magnitude: -0.7
+  - timestamp: "2024-08-02T08:30:00"
+    event_type: "macro"
+    description: "US July nonfarm payrolls: +114k vs +175k expected; unemployment 4.3% — Sahm Rule triggered; recession fears ignite"
+    impact_magnitude: -0.8
+  - timestamp: "2024-08-05T09:30:00"
+    event_type: "macro"
+    description: "Carry trade unwind accelerates; VIX spikes to 65 intraday; Nikkei -12.4%; global circuit breakers triggered"
+    impact_magnitude: -1.0

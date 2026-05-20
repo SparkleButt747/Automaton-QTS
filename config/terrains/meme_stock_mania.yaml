@@ -1,0 +1,30 @@
+name: meme_stock_mania
+symbol: SPY
+start: "2021-01-04"
+end: "2021-02-26"
+split: train
+
+regime:
+  trend: BULL
+  volatility: HIGH
+  liquidity: ABUNDANT
+  sentiment: EUPHORIC
+  catalyst: NONE
+  expected_drift: 0.45
+  expected_vol: 0.38
+  correlation_regime: 0.40
+  scenario_description: "Retail-driven mania spawned by WallStreetBets subreddit coordinating a short squeeze in heavily-shorted names (GME, AMC, BB, KOSS). GME rose from ~$20 to $483 intraday on Jan 28 before Robinhood restricted buying, triggering political backlash and congressional hearings. Broader SPY held up well amid idiosyncratic volatility — large-cap indices near ATH on vaccine optimism and Biden stimulus expectations. SPAC issuance at record levels. Call option flows from retail hit record daily volumes. Melvin Capital required $2.75bn emergency bailout."
+
+events:
+  - timestamp: "2021-01-27T00:00:00"
+    event_type: "macro"
+    description: "GME short squeeze peaks — Melvin Capital and Citron forced to cover; systemic contagion fears briefly spike VIX"
+    impact_magnitude: -0.5
+  - timestamp: "2021-01-28T09:30:00"
+    event_type: "regulatory"
+    description: "Robinhood restricts buying of GME, AMC, and other meme stocks; retail outrage, political scrutiny"
+    impact_magnitude: -0.3
+  - timestamp: "2021-02-05T14:00:00"
+    event_type: "fomc"
+    description: "Powell reiterates accommodative stance; taper not even being thought about"
+    impact_magnitude: 0.2

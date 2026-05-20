@@ -1,0 +1,30 @@
+name: rate_peak_selloff
+symbol: SPY
+start: "2023-10-01"
+end: "2023-10-31"
+split: train
+
+regime:
+  trend: BEAR
+  volatility: TRANSITIONING
+  liquidity: TIGHT
+  sentiment: FEARFUL
+  catalyst: MACRO_EVENT
+  expected_drift: -0.55
+  expected_vol: 0.26
+  correlation_regime: 0.72
+  scenario_description: "10Y Treasury yield breached 5% on October 19 for the first time since 2007, hammering equity valuations across the board. SPY fell from 430 to 412 (-4.2%) as duration pain intensified. The move was driven by persistent 'higher for longer' Fed rhetoric, strong September jobs data, and heavy Treasury issuance with weak demand. Israel-Hamas conflict erupted October 7, adding geopolitical premium. Mortgage rates hit 8% for the first time in 23 years. Real yields (TIPS) above 2.5% made the equity risk premium deeply negative relative to history. Market breadth was poor — 11-month low in advance/decline."
+
+events:
+  - timestamp: "2023-10-06T08:30:00"
+    event_type: "macro"
+    description: "September nonfarm payrolls: +336k vs +170k expected — blowout; 10Y yield surges, equity selloff resumes"
+    impact_magnitude: -0.5
+  - timestamp: "2023-10-07T00:00:00"
+    event_type: "geopolitical"
+    description: "Hamas attacks Israel; Middle East conflict escalates; oil spikes, safe-haven demand"
+    impact_magnitude: -0.4
+  - timestamp: "2023-10-19T00:00:00"
+    event_type: "macro"
+    description: "10Y Treasury yield crosses 5.00% intraday — highest since 2007; equity/bond correlation remains positive"
+    impact_magnitude: -0.6

@@ -1,0 +1,30 @@
+name: test_debt_ceiling_2023
+symbol: SPY
+start: "2023-05-01"
+end: "2023-05-31"
+split: test
+
+regime:
+  trend: SIDEWAYS
+  volatility: TRANSITIONING
+  liquidity: TIGHT
+  sentiment: FEARFUL
+  catalyst: MACRO_EVENT
+  expected_drift: -0.15
+  expected_vol: 0.20
+  correlation_regime: 0.68
+  scenario_description: "US debt ceiling standoff as the 'X-date' (estimated June 1 Treasury exhaustion date) approached. Treasury Secretary Yellen warned repeatedly of an unprecedented default risk. House Republicans demanded spending cuts; Biden administration refused to negotiate under duress. US 1-month T-bill yields briefly spiked above 5.8% as investors refused to buy paper maturing near X-date. CDS on US sovereign debt reached historic highs. Fitch placed US credit on Ratings Watch Negative. Equity market broadly flat but underlying anxiety visible in credit and rates. Deal was reached May 27 (Memorial Day weekend), signed June 2. This terrain tests strategy behaviour under sovereign tail risk with an ultimately benign resolution."
+
+events:
+  - timestamp: "2023-05-01T00:00:00"
+    event_type: "macro"
+    description: "Yellen formally notifies Congress Treasury has begun extraordinary measures; X-date estimated June 1"
+    impact_magnitude: -0.3
+  - timestamp: "2023-05-17T00:00:00"
+    event_type: "macro"
+    description: "1-month T-bill yield spikes to 5.8%; short-end curve inverts severely; some money market funds restructure away from near-term bills"
+    impact_magnitude: -0.5
+  - timestamp: "2023-05-27T00:00:00"
+    event_type: "regulatory"
+    description: "Biden-McCarthy debt ceiling deal reached; Fiscal Responsibility Act suspends limit to Jan 2025; risk-on resumes"
+    impact_magnitude: 0.7

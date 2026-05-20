@@ -1,0 +1,30 @@
+name: covid_crash
+symbol: SPY
+start: "2020-02-19"
+end: "2020-03-23"
+split: train
+
+regime:
+  trend: BEAR
+  volatility: HIGH
+  liquidity: CRISIS
+  sentiment: FEARFUL
+  catalyst: PANDEMIC
+  expected_drift: -3.20
+  expected_vol: 0.85
+  correlation_regime: 0.92
+  scenario_description: "Fastest 30% drawdown in US equity market history. SPY fell from 338 to 218 in 33 calendar days as COVID-19 pandemic reality hit Western markets. VIX spiked to 82.69 on March 16, surpassing 2008 GFC peak. Cross-asset correlations went to 1 — bonds, gold, and stocks all sold together as funds liquidated everything to raise cash. Fed's initial 50bps emergency cut on March 3 failed to arrest the decline. Treasury market experienced flash dysfunction. Circuit breakers triggered multiple times."
+
+events:
+  - timestamp: "2020-03-03T10:00:00"
+    event_type: "fomc"
+    description: "Fed emergency inter-meeting cut of 50bps to 1.00-1.25%; first emergency cut since 2008"
+    impact_magnitude: -0.4
+  - timestamp: "2020-03-11T00:00:00"
+    event_type: "macro"
+    description: "WHO declares COVID-19 a global pandemic; Trump announces European travel ban"
+    impact_magnitude: -0.9
+  - timestamp: "2020-03-15T17:00:00"
+    event_type: "fomc"
+    description: "Fed emergency cut to zero (0-0.25%), announces $700bn QE; markets gap lower Monday open anyway"
+    impact_magnitude: -0.5

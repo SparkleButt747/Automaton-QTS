@@ -1,0 +1,30 @@
+name: bear_rally_summer_2022
+symbol: SPY
+start: "2022-07-01"
+end: "2022-08-31"
+split: train
+
+regime:
+  trend: BULL
+  volatility: LOW
+  liquidity: ABUNDANT
+  sentiment: NEUTRAL
+  catalyst: NONE
+  expected_drift: 0.70
+  expected_vol: 0.20
+  correlation_regime: 0.50
+  scenario_description: "Classic bear market rally — SPY bounced from June 17 low (362) to August 16 high (431), a 19% recovery that lured many back in before the next leg down. The rally was driven by: peak inflation narrative (CPI MoM decelerated in July), strong Q2 earnings beats, short covering, and retail FOMO. Fed speakers remained hawkish throughout but markets priced in a 2023 pivot. Jackson Hole on August 26 ended the party — Powell delivered a 9-minute speech signalling continued aggressive hikes, SPY fell 3.4% that day and never recovered the summer highs until 2023."
+
+events:
+  - timestamp: "2022-07-13T08:30:00"
+    event_type: "macro"
+    description: "CPI prints 9.1% YoY — 40-year high — but MoM components show some moderation; peak inflation narrative begins"
+    impact_magnitude: 0.2
+  - timestamp: "2022-07-27T14:00:00"
+    event_type: "fomc"
+    description: "Fed hikes 75bps again; Powell hints at slowing pace of hikes as appropriate — market interprets as dovish pivot, SPY +2.6%"
+    impact_magnitude: 0.6
+  - timestamp: "2022-08-26T10:00:00"
+    event_type: "fomc"
+    description: "Powell Jackson Hole speech: 'restoring price stability will require maintaining a restrictive stance for some time'; SPY -3.4%"
+    impact_magnitude: -0.9

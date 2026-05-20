@@ -1,0 +1,30 @@
+name: rate_hike_cycle_2022
+symbol: SPY
+start: "2022-01-03"
+end: "2022-06-30"
+split: train
+
+regime:
+  trend: BEAR
+  volatility: HIGH
+  liquidity: TIGHT
+  sentiment: FEARFUL
+  catalyst: MACRO_EVENT
+  expected_drift: -0.55
+  expected_vol: 0.28
+  correlation_regime: 0.78
+  scenario_description: "Most aggressive Fed tightening cycle since 1994 compressed into six months. SPY fell from 479 to 374 (-22%) as the market repriced the entire risk-free rate curve. 10Y Treasury yields rose from 1.5% to 3.5%. Russia invaded Ukraine on Feb 24, adding an energy/commodity shock on top of already-elevated inflation. CPI peaked at 9.1% in June. Rate-sensitive growth and tech led the drawdown — ARK Innovation (ARKK) halved. Bond/equity correlation turned positive for first time in 20 years, destroying the 60/40 portfolio. Liqiudity conditions tightened sharply as QT was announced in May."
+
+events:
+  - timestamp: "2022-02-24T00:00:00"
+    event_type: "geopolitical"
+    description: "Russia launches full-scale invasion of Ukraine; oil spikes above $100/bbl, European energy shock"
+    impact_magnitude: -0.8
+  - timestamp: "2022-03-16T14:00:00"
+    event_type: "fomc"
+    description: "Fed hikes 25bps for first time since 2018; signals 6 more hikes in 2022 via dot plot"
+    impact_magnitude: 0.3
+  - timestamp: "2022-05-04T14:00:00"
+    event_type: "fomc"
+    description: "Fed hikes 50bps (largest since 2000), announces QT start June 1; Powell rules out 75bps — markets briefly rally then resume decline"
+    impact_magnitude: -0.2

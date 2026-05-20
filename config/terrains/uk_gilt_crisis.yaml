@@ -1,0 +1,30 @@
+name: uk_gilt_crisis
+symbol: SPY
+start: "2022-09-01"
+end: "2022-10-31"
+split: train
+
+regime:
+  trend: BEAR
+  volatility: HIGH
+  liquidity: TIGHT
+  sentiment: FEARFUL
+  catalyst: GEOPOLITICAL
+  expected_drift: -0.80
+  expected_vol: 0.35
+  correlation_regime: 0.82
+  scenario_description: "SPY made new 2022 bear market lows (348 on Oct 13) amid a global rates shock and the UK gilt crisis. Liz Truss's 'mini budget' on Sep 23 announced unfunded tax cuts, causing UK 30Y gilts to sell off 100bps in days and GBP/USD to flash-crash near parity. UK LDI pension funds faced margin calls, forcing the BOE to intervene with emergency gilt purchases on Sep 28. This crystallised the global theme: central banks are not backstopping risk assets anymore. US CPI on Oct 13 printed hotter than expected (8.2%), causing SPY to open -2.5% then reverse violently to close +2.6% — one of the most dramatic intraday reversals in history."
+
+events:
+  - timestamp: "2022-09-23T08:30:00"
+    event_type: "geopolitical"
+    description: "UK Chancellor Kwarteng delivers unfunded 'mini-budget'; gilts crash, GBP hits record low vs USD"
+    impact_magnitude: -0.7
+  - timestamp: "2022-09-28T07:00:00"
+    event_type: "macro"
+    description: "Bank of England emergency gilt purchase programme announced to prevent pension fund LDI margin call cascade"
+    impact_magnitude: 0.4
+  - timestamp: "2022-10-13T08:30:00"
+    event_type: "macro"
+    description: "CPI 8.2% vs 8.1% expected; SPY opens -2.5%, reverses to close +2.6% on position-squaring; classic bear capitulation exhaustion"
+    impact_magnitude: 0.3

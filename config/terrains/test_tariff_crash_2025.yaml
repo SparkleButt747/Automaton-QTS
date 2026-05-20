@@ -1,0 +1,30 @@
+name: test_tariff_crash_2025
+symbol: SPY
+start: "2025-04-02"
+end: "2025-04-07"
+split: test
+
+regime:
+  trend: BEAR
+  volatility: HIGH
+  liquidity: CRISIS
+  sentiment: FEARFUL
+  catalyst: REGULATORY
+  expected_drift: -9.00
+  expected_vol: 1.50
+  correlation_regime: 0.96
+  scenario_description: "Trump's 'Liberation Day' tariff announcement on April 2 — sweeping reciprocal tariffs on virtually all US trading partners — triggered the third-largest two-day equity decline in modern US market history. SPY fell approximately 10% over April 2-4, with baseline tariffs of 10% on all countries and reciprocal rates as high as 54% on China, 46% on Vietnam, and 20% on the EU. Bond yields initially rose (unusual in a risk-off move) as foreign holders sold Treasuries in retaliation. Yen strengthened sharply on carry unwind echoes. The 90-day pause announced April 9 partially reversed the move, but the damage to global trade confidence persisted. This is an extreme out-of-sample test for any strategy trained pre-2025."
+
+events:
+  - timestamp: "2025-04-02T15:00:00"
+    event_type: "regulatory"
+    description: "Trump announces 'Liberation Day' reciprocal tariffs: 10% baseline on all, 54% on China, 46% Vietnam, 20% EU; broadest tariff action since 1930 Smoot-Hawley"
+    impact_magnitude: -1.0
+  - timestamp: "2025-04-04T08:30:00"
+    event_type: "macro"
+    description: "March nonfarm payrolls +228k beat (pre-tariff), but market ignores; SPY down another 6% as China announces 34% retaliatory tariffs"
+    impact_magnitude: -0.9
+  - timestamp: "2025-04-04T00:00:00"
+    event_type: "macro"
+    description: "10Y Treasury yields rise to 4.4% even as equities crash — foreign sovereign selling of Treasuries; dollar weakens simultaneously"
+    impact_magnitude: -0.7

@@ -63,7 +63,7 @@ The `SignalPipeline` is called once per bar for each symbol:
 
 1. Appends the new `Bar` to a rolling window.
 2. Computes technical indicators (RSI, MACD, Bollinger Bands, ATR, Momentum).
-3. Runs the HMM `RegimeDetector` on ATR history → `VolRegime`.
+3. Runs the HMM `RegimeDetector` on ATR history → `VolLevel`.
 4. Injects the current `sentiment_score`.
 5. Assembles a frozen `SignalSnapshot`.
 
@@ -195,7 +195,7 @@ back to an in-memory buffer on failure.
 | rsi / macd_*        | NUMERIC     | Technical indicator values        |
 | bb_position         | NUMERIC     | [0, 1]                            |
 | atr / momentum_5    | NUMERIC     |                                   |
-| vol_regime          | ENUM        | HIGH / LOW                        |
+| vol_level          | ENUM        | HIGH / LOW                        |
 | sentiment_score     | NUMERIC     | [-1, 1]                           |
 | combined_alpha      | NUMERIC     | [-1, 1]                           |
 

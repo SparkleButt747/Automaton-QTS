@@ -128,19 +128,19 @@ See Bollinger Bands(20, 2σ) above.
 
 ## Volatility Regime Signal
 
-### Vol Regime — HMM Regime Detector
+### Vol Level — HMM Regime Detector
 
 **Method:** 2-state Hidden Markov Model (HMM) trained on ATR history.
 
-**States:** `{HIGH, LOW}`
+**States:** `{HIGH, LOW, TRANSITIONING}`
 
 - `HIGH` — elevated volatility; regime scalar = `1.0`.
 - `LOW`  — calm market; regime scalar = `0.5` (dampens signal strength).
 
-**Range:** Discrete categorical `{HIGH, LOW}`.
+**Range:** Discrete categorical `{HIGH, LOW, TRANSITIONING}`.
 
 **Confidence:** Posterior probability of the assigned state from HMM
-`predict_proba`.  Stored in `SignalSnapshot.vol_regime_confidence`.
+`predict_proba`.  Stored in `SignalSnapshot.vol_level_confidence`.
 
 **Staleness:** 60 bars (HMM state is relatively stable; re-classification
 happens once per hour under 1 h bars).
@@ -213,7 +213,7 @@ raw_alpha = (
     w_sentiment × sentiment_val
 )
 
-regime_scalar = 1.0 if VolRegime.HIGH else 0.5
+regime_scalar = 1.0 if VolLevel.HIGH else 0.5
 combined_alpha = clip(raw_alpha × regime_scalar, −1, 1)
 ```
 

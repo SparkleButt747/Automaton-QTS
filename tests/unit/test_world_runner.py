@@ -37,8 +37,6 @@ def _stub_strategy():
     class _S:
         params = None
         name = "stub"
-        bars_seen: list = []
-        texts_seen: list = []
 
         def on_bar(self, *_a: object, **_k: object) -> list:
             return []
@@ -69,16 +67,10 @@ def test_round_trip_reproducible_with_same_seed() -> None:  # T-WRUN-1 (acceptan
     assert len(ep_a.terrain.bars) == len(ep_b.terrain.bars)
     assert [b.close for b in ep_a.terrain.bars] == [b.close for b in ep_b.terrain.bars]
     assert ep_a.order_log == ep_b.order_log
-    # text events identical too
-    assert (
-        [e.text for e in ep_a.terrain.event_calendar]
-        == [
-            e.text
-            for e in ep_b.terrain.event_calendar  # MarketEvent.description
-        ]
-        if False
-        else True
-    )  # tolerate that MarketEvent uses different naming
+    assert [e.description for e in ep_a.terrain.event_calendar] == [
+        e.description for e in ep_b.terrain.event_calendar
+    ]
+    assert ep_a.llm_corpus_refs == ep_b.llm_corpus_refs
 
 
 def test_different_seed_yields_different_episode() -> None:  # T-WRUN-2 (acceptance #2)

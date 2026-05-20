@@ -19,7 +19,10 @@ from qts.world.corpus import PersonaCorpus
 from qts.world.episode import SimulatedEpisode
 from qts.world.scenario import ScenarioConfig
 
-_DEFAULT_CORPUS = Path("data/world/persona_corpus/powell_fomc.yaml")
+# Anchor to the repo root (src/qts/world/runner.py -> ../../../../data/...)
+# so run_simulation works regardless of cwd.
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+_DEFAULT_CORPUS = _REPO_ROOT / "data" / "world" / "persona_corpus" / "powell_fomc.yaml"
 
 
 def _macro_regime_for(scenario: ScenarioConfig, surprise_bucket: str) -> MacroRegime:
@@ -151,7 +154,9 @@ def run_simulation(
         scenario_name=scenario.name,
         seed=seed,
         agent_traces=sim.agent_traces,
-        llm_corpus_refs=list(set(sim.consumed_corpus_keys)),
+        # sorted() because set ordering is non-deterministic across runs
+        # (CPython hash randomisation); episode reproducibility depends on this.
+        llm_corpus_refs=sorted(set(sim.consumed_corpus_keys)),
         order_log=list(sim.order_log),
     )
     return episode

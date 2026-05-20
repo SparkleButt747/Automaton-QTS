@@ -20,7 +20,7 @@ _HAWKISH = re.compile(
     r"\b("
     r"hawkish|hike|hikes|hiking|"
     r"tighten\w*|restrict\w*|stubborn\w*|persistent\w*|sticky?|"
-    r"firm(?:er|ing|s)|warrant\w*|"
+    r"firm(?:er|ing|s)|warrant\w*|restore|stabilit\w*|"
     r"raise(?:s|d)?|raising|further|additional"
     r")",
     re.IGNORECASE,

@@ -154,3 +154,7 @@ class SMACrossoverStrategy:
         Args:
             fill: Execution fill report.
         """
+
+    def on_text(self, event: object) -> None:  # noqa: ARG002
+        """Default no-op — vanilla SMA crossover doesn't consume text."""
+        return None

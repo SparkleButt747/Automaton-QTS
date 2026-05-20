@@ -272,6 +272,10 @@ class MeanReversionStrategy:
             fill.price,
         )
 
+    def on_text(self, event: object) -> None:  # noqa: ARG002
+        """Default no-op — vanilla mean-reversion doesn't consume text."""
+        return None
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------

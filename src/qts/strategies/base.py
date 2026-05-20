@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Protocol, runtime_checkable
 
 from qts.models.base import Bar, Fill, Order, Position, SignalSnapshot
+from qts.world.events import TextEvent
 
 
 @runtime_checkable
@@ -39,5 +40,16 @@ class Strategy(Protocol):
 
         Args:
             fill: The execution fill report from the broker.
+        """
+        ...
+
+    def on_text(self, event: TextEvent) -> None:
+        """Handle a text event (news, persona statement, macro release).
+
+        Default implementation in concrete strategies is a no-op; news-reactive
+        strategies override to update internal belief state.
+
+        Args:
+            event: The TextEvent to consume.
         """
         ...

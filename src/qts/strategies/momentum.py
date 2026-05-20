@@ -203,3 +203,7 @@ class MomentumStrategy:
             fill.quantity,
             fill.price,
         )
+
+    def on_text(self, event: object) -> None:  # noqa: ARG002
+        """Default no-op — vanilla momentum doesn't consume text."""
+        return None

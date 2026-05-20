@@ -20,7 +20,6 @@ from qts.models.base import (
     Catalyst,
     LiquidityLevel,
     SentimentLevel,
-    Trend,
     VolLevel,
 )
 from qts.models.terrain import MacroRegime
@@ -91,9 +90,7 @@ class MacroEngine:
         # Compute sentiment from multiple sources if available
         if self._sentiment_fusion is not None:
             news_score = self._compute_news_sentiment(headlines or [])
-            social_score = (
-                float(sum(social_scores) / len(social_scores)) if social_scores else 0.0
-            )
+            social_score = float(sum(social_scores) / len(social_scores)) if social_scores else 0.0
             geo_score = 0.0  # placeholder for GDELT integration
             sentiment_score = self._sentiment_fusion.fuse(news_score, social_score, geo_score)
 
@@ -142,9 +139,7 @@ class MacroEngine:
         atr = compute_atr(highs, lows, closes)
         valid = atr[~np.isnan(atr)]
         mean_close = float(np.mean(closes[closes > 0])) if len(closes[closes > 0]) > 0 else 1.0
-        expected_vol = (
-            float(np.mean(valid / mean_close) * np.sqrt(252)) if len(valid) > 0 else 0.15
-        )
+        expected_vol = float(np.mean(valid / mean_close) * np.sqrt(252)) if len(valid) > 0 else 0.15
 
         return MacroRegime(
             trend=regime.trend,
@@ -191,7 +186,11 @@ class MacroEngine:
         if credit_spread is not None and credit_spread > 5.0:
             liquidity = LiquidityLevel.CRISIS
 
-        if volatility == regime.volatility and liquidity == regime.liquidity:
+        if (
+            volatility == regime.volatility
+            and liquidity == regime.liquidity
+            and sentiment == regime.sentiment
+        ):
             return regime
 
         return MacroRegime(
@@ -206,9 +205,7 @@ class MacroEngine:
             scenario_description=regime.scenario_description,
         )
 
-    def _apply_llm_override(
-        self, regime: MacroRegime, headlines: list[str]
-    ) -> MacroRegime:
+    def _apply_llm_override(self, regime: MacroRegime, headlines: list[str]) -> MacroRegime:
         """Override regime with LLM classification if confidence is high enough."""
         # Placeholder — in production, calls RegimeClassifierLLM
         return regime

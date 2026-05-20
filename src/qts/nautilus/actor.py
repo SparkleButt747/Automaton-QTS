@@ -128,8 +128,8 @@ class QTSStrategy(NtStrategy):
         if snapshot is None:
             return
 
-        # Get current positions from Nautilus portfolio
-        positions = self._get_qts_positions()
+        # Get current positions from Nautilus portfolio, valued at this bar's close
+        positions = self._get_qts_positions(reference_price=bar.close)
 
         # Run strategy decision logic
         orders = self._inner_strategy.on_bar(qts_bar, snapshot, positions)
@@ -160,10 +160,19 @@ class QTSStrategy(NtStrategy):
     # Internal helpers
     # ------------------------------------------------------------------
 
-    def _get_qts_positions(self) -> list[Position]:
-        """Convert Nautilus portfolio positions to QTS positions."""
+    def _get_qts_positions(self, reference_price: object | None = None) -> list[Position]:
+        """Convert Nautilus portfolio positions to QTS positions.
+
+        Args:
+            reference_price: Nautilus Price (or None) used to mark open
+                positions to market. When provided, unrealized_pnl is
+                computed via Nautilus's Position.unrealized_pnl(price);
+                otherwise unrealized_pnl falls back to 0.0.
+        """
         if self._instrument_id is None:
             return []
+
+        from datetime import UTC, datetime  # noqa: PLC0415
 
         from nautilus_trader.model.enums import PositionSide  # noqa: PLC0415
 
@@ -171,16 +180,18 @@ class QTSStrategy(NtStrategy):
         for nt_pos in self.cache.positions(instrument_id=self._instrument_id):
             if nt_pos.is_closed:
                 continue
-            from datetime import (
-                UTC,  # noqa: PLC0415
-                datetime,  # noqa: PLC0415
-            )
 
             direction = (
                 TradeDirection.LONG if nt_pos.side == PositionSide.LONG else TradeDirection.SHORT
             )
-            ts_seconds = nt_pos.ts_opened / 1e9
-            entry_time = datetime.fromtimestamp(ts_seconds, tz=UTC)
+            entry_time = datetime.fromtimestamp(nt_pos.ts_opened / 1e9, tz=UTC)
+
+            unrealized = 0.0
+            if reference_price is not None:
+                try:
+                    unrealized = float(nt_pos.unrealized_pnl(reference_price))
+                except (TypeError, ValueError):
+                    unrealized = 0.0
 
             positions.append(
                 Position(
@@ -189,10 +200,31 @@ class QTSStrategy(NtStrategy):
                     entry_price=float(nt_pos.avg_px_open),
                     quantity=float(nt_pos.quantity),
                     entry_time=entry_time,
-                    unrealized_pnl=0.0,
+                    unrealized_pnl=unrealized,
                 )
             )
         return positions
+
+    def _is_cash_account(self) -> bool:
+        """True if the venue runs a spot CASH account (no shorting allowed)."""
+        if self._instrument_id is None:
+            return False
+        from nautilus_trader.model.enums import AccountType  # noqa: PLC0415
+
+        account = self.cache.account_for_venue(self._instrument_id.venue)
+        return account is not None and account.type == AccountType.CASH
+
+    def _current_long_quantity(self) -> float:
+        """Total open LONG quantity on this instrument, summed across positions."""
+        if self._instrument_id is None:
+            return 0.0
+        from nautilus_trader.model.enums import PositionSide  # noqa: PLC0415
+
+        total = 0.0
+        for nt_pos in self.cache.positions(instrument_id=self._instrument_id):
+            if not nt_pos.is_closed and nt_pos.side == PositionSide.LONG:
+                total += float(nt_pos.quantity)
+        return total
 
     def _submit_qts_order(self, order: Any, bar: NtBar) -> None:
         """Convert a QTS Order and submit it through Nautilus."""
@@ -213,6 +245,18 @@ class QTSStrategy(NtStrategy):
         price_prec = instrument.price_precision
 
         rounded_qty = round(order.quantity, size_prec)
+
+        # Spot CASH accounts cannot short. Two layered defences:
+        # 1. Clamp SELL quantity to the currently-held long, so we don't
+        #    accidentally over-sell within a single bar's order batch.
+        # 2. Mark SELL orders reduce_only=True so Nautilus itself refuses
+        #    to flip a long position into a net short via a multi-order
+        #    sequence in the same bar.
+        cash_account = nt_side == NtOrderSide.SELL and self._is_cash_account()
+        if cash_account:
+            long_qty = self._current_long_quantity()
+            rounded_qty = min(rounded_qty, round(long_qty, size_prec))
+
         if rounded_qty <= 0:
             return
         qty = Quantity.from_str(f"{rounded_qty:.{size_prec}f}")
@@ -224,6 +268,7 @@ class QTSStrategy(NtStrategy):
                 order_side=nt_side,
                 quantity=qty,
                 time_in_force=TimeInForce.IOC,
+                reduce_only=cash_account,
             )
         elif order.order_type == OrderType.LIMIT and order.price is not None:
             from nautilus_trader.model.objects import Price  # noqa: PLC0415
@@ -234,6 +279,7 @@ class QTSStrategy(NtStrategy):
                 quantity=qty,
                 price=Price.from_str(f"{round(order.price, price_prec):.{price_prec}f}"),
                 time_in_force=TimeInForce.GTC,
+                reduce_only=cash_account,
             )
         elif order.order_type in (OrderType.STOP, OrderType.STOP_LIMIT) and order.stop_price:
             from nautilus_trader.model.objects import Price  # noqa: PLC0415
@@ -246,6 +292,7 @@ class QTSStrategy(NtStrategy):
                     f"{round(order.stop_price, price_prec):.{price_prec}f}"
                 ),
                 time_in_force=TimeInForce.GTC,
+                reduce_only=cash_account,
             )
         else:
             nt_order = self.order_factory.market(
@@ -253,6 +300,7 @@ class QTSStrategy(NtStrategy):
                 order_side=nt_side,
                 quantity=qty,
                 time_in_force=TimeInForce.IOC,
+                reduce_only=cash_account,
             )
 
         self.submit_order(nt_order)

@@ -120,3 +120,34 @@ class TestRunTerrainBacktest:
         # Some trades must have been executed (the bridge previously denied
         # all orders due to precision and account-currency bugs).
         assert result.total_trades > 0
+        # Equity curve must be tracked in a single currency (USDT here),
+        # not interleaved BTC + USDT rows from the multi-currency account.
+        assert all(v > 1.0 for v in result.equity_curve), (
+            "equity curve contains sub-1 values, suggesting BTC rows leaked "
+            f"into the USDT series: {result.equity_curve[:10]}"
+        )
+        # Total return must be sane (well within +/-100%) because the
+        # engine should not halt on a clean bull-regime run any more.
+        assert -1.0 < result.total_return < 1.0
+
+
+class TestGetInstrument:
+    def test_btcusdt_returns_currency_pair(self) -> None:  # T-NRUN-3
+        from qts.nautilus.runner import _get_instrument
+
+        inst = _get_instrument("BTCUSDT", "BINANCE")
+        assert type(inst).__name__ == "CurrencyPair"
+        assert str(inst.quote_currency) == "USDT"
+
+    def test_unknown_symbol_raises(self) -> None:  # T-NRUN-4
+        from qts.nautilus.runner import UnsupportedSymbolError, _get_instrument
+
+        with pytest.raises(UnsupportedSymbolError, match="No built-in instrument"):
+            _get_instrument("AAPL", "NASDAQ")
+
+    def test_fx_pair_supported(self) -> None:  # T-NRUN-5
+        from qts.nautilus.runner import _get_instrument
+
+        inst = _get_instrument("EURUSD", "SIM")
+        # default_fx_ccy returns a CurrencyPair-like object
+        assert inst is not None

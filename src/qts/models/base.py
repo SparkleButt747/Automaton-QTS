@@ -61,11 +61,47 @@ class ExitReason(enum.StrEnum):
     TAKE_PROFIT = "TAKE_PROFIT"
 
 
-class VolRegime(enum.StrEnum):
-    """Volatility regime state."""
+class VolLevel(enum.StrEnum):
+    """Volatility level within a macro regime."""
 
     HIGH = "HIGH"
     LOW = "LOW"
+    TRANSITIONING = "TRANSITIONING"
+
+
+class Trend(enum.StrEnum):
+    """Market trend direction."""
+
+    BULL = "BULL"
+    BEAR = "BEAR"
+    SIDEWAYS = "SIDEWAYS"
+
+
+class LiquidityLevel(enum.StrEnum):
+    """Market liquidity conditions."""
+
+    ABUNDANT = "ABUNDANT"
+    TIGHT = "TIGHT"
+    CRISIS = "CRISIS"
+
+
+class SentimentLevel(enum.StrEnum):
+    """Market sentiment state."""
+
+    EUPHORIC = "EUPHORIC"
+    FEARFUL = "FEARFUL"
+    NEUTRAL = "NEUTRAL"
+
+
+class Catalyst(enum.StrEnum):
+    """Event catalyst driving the current regime."""
+
+    EARNINGS = "EARNINGS"
+    MACRO_EVENT = "MACRO_EVENT"
+    GEOPOLITICAL = "GEOPOLITICAL"
+    PANDEMIC = "PANDEMIC"
+    REGULATORY = "REGULATORY"
+    NONE = "NONE"
 
 
 class FailureMode(enum.StrEnum):
@@ -180,8 +216,8 @@ class SignalSnapshot:
     bb_lower: float
     atr: float
     momentum_5: float
-    vol_regime: VolRegime
-    vol_regime_confidence: float
+    vol_level: VolLevel
+    vol_level_confidence: float
     sentiment_score: float = 0.0
     combined_alpha: float = 0.0
 
@@ -207,7 +243,7 @@ class TradeRecord:
     sentiment_at_entry: float
     social_velocity_at_entry: float
     gdelt_intensity_at_entry: float
-    vol_regime_at_entry: VolRegime
+    vol_level_at_entry: VolLevel
     combined_alpha_at_entry: float
     params_version: str
     outcome: TradeOutcome

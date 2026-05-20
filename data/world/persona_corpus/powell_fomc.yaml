@@ -1,0 +1,17 @@
+powell:
+  fomc:
+    hawkish:
+      - "Inflation remains stubbornly above our target and we will need to keep policy restrictive for longer."
+      - "The labour market continues to run hot; further policy firming may be appropriate."
+      - "We must restore price stability; the Committee is prepared to raise rates further if data warrant."
+      - "Disinflation is proceeding more slowly than expected. Additional tightening cannot be ruled out."
+    dovish:
+      - "We are seeing meaningful progress on inflation; the disinflationary process is underway."
+      - "Recent data give the Committee greater confidence that inflation is moving sustainably to 2 percent."
+      - "We may have reached the peak of this tightening cycle. Future moves will be data-dependent."
+      - "It would not be appropriate to continue raising rates given the cumulative effect of past tightening."
+    neutral:
+      - "The Committee judges that the risks to achieving its dual mandate have moved into better balance."
+      - "Policy is well positioned to respond to incoming data. We are not on a preset path."
+      - "We will continue to assess the appropriate stance of monetary policy meeting by meeting."
+      - "The economy has shown remarkable resilience; we remain attentive to risks on both sides of our mandate."

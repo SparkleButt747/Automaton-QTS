@@ -2,7 +2,7 @@
 
 Composes an inner MomentumStrategy. Each TextEvent fires on_text:
     1. Look up the multi-axis NewsSignal via the cached NewsClassifier.
-    2. Fold the multi-axis NewsSignal into a NewsBelief accumulator (conviction/relevance/magnitude).
+    2. Fold it into a NewsBelief accumulator (conviction / relevance / magnitude).
 
 On every on_bar, the decayed belief is blended into the SignalSnapshot's
 combined_alpha via:

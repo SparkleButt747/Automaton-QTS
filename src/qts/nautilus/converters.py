@@ -25,10 +25,30 @@ if TYPE_CHECKING:
     from nautilus_trader.model.orders import Order as NtOrder
     from nautilus_trader.model.position import Position as NtPosition
 
+    from qts.nautilus.news_data import NewsDataPoint
+    from qts.world.events import TextEvent
+
 
 # ------------------------------------------------------------------
 # QTS → Nautilus
 # ------------------------------------------------------------------
+
+
+def text_event_to_news_data(event: TextEvent) -> NewsDataPoint:
+    """Convert a QTS TextEvent to a Nautilus NewsDataPoint custom data object."""
+    from qts.nautilus.news_data import NewsDataPoint  # noqa: PLC0415
+
+    ts = event.timestamp
+    if ts.tzinfo is None:
+        ts = ts.replace(tzinfo=UTC)
+    ts_ns = int(ts.timestamp() * 1e9)
+    return NewsDataPoint(
+        source=event.source,
+        persona=event.persona or "",
+        text=event.text,
+        ts_event=ts_ns,
+        ts_init=ts_ns,
+    )
 
 
 def qts_bar_to_nautilus(
@@ -193,9 +213,7 @@ def nautilus_position_to_qts(position: NtPosition) -> Position:
     """Convert a NautilusTrader Position to a QTS Position."""
     from nautilus_trader.model.enums import PositionSide  # noqa: PLC0415
 
-    direction = (
-        TradeDirection.LONG if position.side == PositionSide.LONG else TradeDirection.SHORT
-    )
+    direction = TradeDirection.LONG if position.side == PositionSide.LONG else TradeDirection.SHORT
     ts_seconds = position.ts_opened / 1e9
     entry_time = datetime.fromtimestamp(ts_seconds, tz=UTC)
 
@@ -223,4 +241,23 @@ def nautilus_bar_to_qts(bar: NtBar) -> Bar:
         low=float(bar.low),
         close=float(bar.close),
         volume=float(bar.volume),
+    )
+
+
+def news_data_to_text_event(data: NewsDataPoint) -> TextEvent:
+    """Convert a Nautilus NewsDataPoint back to a QTS TextEvent.
+
+    persona/metadata are not round-tripped, but the classifier cache key is
+    sha256(source + text + version) — timestamp/persona-free — so classify()
+    still hits the warmed cache after the roundtrip.
+    """
+    from qts.world.events import TextEvent  # noqa: PLC0415
+
+    ts = datetime.fromtimestamp(data.ts_event / 1e9, tz=UTC)
+    return TextEvent(
+        timestamp=ts,
+        source=data.source,
+        persona=data.persona or None,
+        text=data.text,
+        metadata={},
     )

@@ -36,15 +36,24 @@ def _cache_has_entries() -> bool:
     return any(_CACHE_DIR.glob("*.json"))
 
 
+_LLAMACPP_BASE_URL = "http://localhost:8080"
+
+
 def _llm_reachable() -> bool:
-    """Probe whether a usable LLM is available for live cache warming."""
+    """Probe whether a llama-server with a loaded model is available.
+
+    Checks the OpenAI-compatible /v1/models endpoint — a non-empty model list
+    is a stronger signal than a bare server-up check (it confirms a model is
+    actually loaded, not just that the daemon answers).
+    """
     try:
         import httpx
 
         with httpx.Client(timeout=2.0) as client:
-            response = client.get("http://localhost:11434/api/tags")
+            response = client.get(f"{_LLAMACPP_BASE_URL}/v1/models")
             response.raise_for_status()
-        return True
+            data = response.json()
+        return bool(data.get("data"))
     except Exception:  # noqa: BLE001
         return False
 
@@ -86,7 +95,7 @@ def _build_params_and_risk():
 )
 @pytest.mark.skipif(
     not (_cache_has_entries() or _llm_reachable()),
-    reason="no classifier cache and no reachable LLM — run scripts/validate_news_classifier.py first",
+    reason="no classifier cache and no reachable LLM — run validate_news_classifier.py first",
 )
 def test_beats_buy_and_hold_on_dovish_pivot() -> None:  # T-V2-ACCEPT
     from qts.data.real_episode import RealEpisode
@@ -100,7 +109,7 @@ def test_beats_buy_and_hold_on_dovish_pivot() -> None:  # T-V2-ACCEPT
     episode = RealEpisode.from_disk(_CURATED_ROOT, symbol="BTCUSDT", source="fomc:2023-12-13")
 
     # Pre-warm classifier cache. If the cache is already populated, no LLM calls happen.
-    llm = create_llm_client(backend="ollama")
+    llm = create_llm_client(backend="llamacpp")
     classifier = NewsClassifier(llm_client=llm, cache_dir=_CACHE_DIR)
     asyncio.run(classifier.warm_cache_for(episode.text_events))
 

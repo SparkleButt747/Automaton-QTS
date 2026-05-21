@@ -1,25 +1,11 @@
-"""run_real_backtest — terrain backtest that also dispatches text events.
+"""run_real_backtest — terrain backtest with news as interleaved custom data.
 
-Real-data analogue of run_terrain_backtest. Uses the same Nautilus
-machinery for bars + matching engine, but additionally walks the
-RealEpisode's text_events list and forwards each through
-QTSStrategy.on_text_event at the appropriate point in the bar stream.
-
-For v2, text-event dispatch happens *before* the backtest runs:
-we eagerly walk every event in chronological order against the
-QTSStrategy actor's on_text_event method. This is correct because
-on_text only updates strategy state — the strategy's bar-level
-decisions happen during the Nautilus engine.run() pass, by which
-time the belief state is already populated.
-
-For events that fall *during* the bar stream (the common FOMC case),
-this approximation is fine for v2: the belief state evolves correctly
-relative to bar timestamps because BeliefAxis.at(bar.timestamp)
-respects the event timestamp. Bars before the event see decayed state
-from t=-inf (zero); bars after see the post-event belief.
-
-(A future bar-by-bar interleaved dispatch would be more faithful for
-multi-event scenarios, but is out of scope for v2.)
+Real-data analogue of run_terrain_backtest. Each RealEpisode text event is
+converted to a NewsDataPoint and added to the engine as CustomData, so Nautilus
+interleaves it with the bar stream by timestamp. The QTSStrategy actor receives
+each via on_data (events for ts <= T are delivered before bar T), reconstructs the
+TextEvent, and forwards it to the strategy's on_text — a causal, look-ahead-free
+dispatch. (v2's eager pre-dispatch is gone.)
 """
 
 from __future__ import annotations
@@ -44,19 +30,23 @@ def run_real_backtest(
     log_level: str = "WARNING",
     instrument: object | None = None,
 ) -> BacktestResult:
-    """Run `strategy` against a RealEpisode, dispatching text events first."""
-    # Pre-dispatch all text events into the strategy in chronological order.
-    for event in sorted(episode.text_events, key=lambda e: e.timestamp):
-        try:
-            strategy.on_text(event)
-        except Exception:  # noqa: BLE001
-            logger.exception("strategy.on_text failed on event %r", event)
+    """Run `strategy` against a RealEpisode, dispatching text events as custom data."""
+    from nautilus_trader.model.data import CustomData, DataType  # noqa: PLC0415
 
-    # Then run the standard terrain backtest — the strategy's belief is now warmed up.
+    from qts.nautilus.converters import text_event_to_news_data  # noqa: PLC0415
+    from qts.nautilus.news_data import NewsDataPoint  # noqa: PLC0415
+
+    data_type = DataType(NewsDataPoint)
+    custom_data = [
+        CustomData(data_type=data_type, data=text_event_to_news_data(event))
+        for event in sorted(episode.text_events, key=lambda e: e.timestamp)
+    ]
+
     return run_terrain_backtest(
         episode.terrain,
         strategy,
         venue_config=venue_config,
         log_level=log_level,
         instrument=instrument,
+        custom_data=custom_data,
     )

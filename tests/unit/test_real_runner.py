@@ -132,3 +132,44 @@ def test_run_real_backtest_returns_backtest_result(tmp_path: Path) -> None:  # T
 
     result = run_real_backtest(episode, strat, log_level="ERROR")
     assert len(result.equity_curve) > 0
+
+
+def test_run_real_backtest_interleaves_news_between_bars(tmp_path: Path) -> None:  # T-REAL-3
+    from qts.data.real_episode import RealEpisode
+    from qts.nautilus.real_runner import run_real_backtest
+
+    sequence: list[tuple[str, object]] = []
+
+    class _Strategy:
+        params = None
+        name = "spy"
+
+        def on_bar(self, bar, *a, **k):
+            sequence.append(("bar", bar.timestamp))
+            return []
+
+        def on_fill(self, *a, **k):
+            pass
+
+        def on_text(self, event) -> None:
+            sequence.append(("news", event.timestamp))
+
+    terrain = _terrain_with_n_bars(80)
+    # Event mid-stream and strictly between two bars, well after indicator warmup
+    # (the actor only forwards bars to the inner strategy once the pipeline has
+    # enough history, so the event must land after that to prove interleaving).
+    evt = TextEvent(
+        timestamp=terrain.bars[65].timestamp + timedelta(seconds=30),
+        source="fed_press_release",
+        persona=None,
+        text="mid-stream",
+        metadata={},
+    )
+    episode = RealEpisode(terrain=terrain, text_events=[evt], source="test")
+    run_real_backtest(episode, _Strategy(), log_level="ERROR")
+
+    kinds = [k for k, _ in sequence]
+    assert "news" in kinds  # delivered via the engine, not pre-dispatched
+    news_idx = kinds.index("news")
+    assert news_idx > 0  # bars recorded BEFORE the news (not pre-dispatched up front)
+    assert "bar" in kinds[news_idx + 1 :]  # and bars AFTER → genuinely interleaved

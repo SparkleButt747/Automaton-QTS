@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any
 
 from nautilus_trader.config import StrategyConfig
 from nautilus_trader.model.data import Bar as NtBar
-from nautilus_trader.model.data import BarSpecification, BarType
+from nautilus_trader.model.data import BarSpecification, BarType, DataType
 from nautilus_trader.model.enums import (
     AggregationSource,
     BarAggregation,
@@ -32,7 +32,12 @@ from nautilus_trader.model.objects import Quantity
 from nautilus_trader.trading.strategy import Strategy as NtStrategy
 
 from qts.models.base import Bar, OrderType, Position, TradeDirection
-from qts.nautilus.converters import nautilus_bar_to_qts, nautilus_fill_to_qts
+from qts.nautilus.converters import (
+    nautilus_bar_to_qts,
+    nautilus_fill_to_qts,
+    news_data_to_text_event,
+)
+from qts.nautilus.news_data import NewsDataPoint
 from qts.signals.pipeline import SignalPipeline
 from qts.strategies.base import Strategy
 
@@ -104,6 +109,8 @@ class QTSStrategy(NtStrategy):
             aggregation_source=AggregationSource.EXTERNAL,
         )
         self.subscribe_bars(bar_type)
+        # Subscribe to interleaved news custom data (harmless when none is present).
+        self.subscribe_data(DataType(NewsDataPoint))
         logger.info("QTSStrategy: started, subscribed to %s", bar_type)
 
     def on_bar(self, bar: NtBar) -> None:
@@ -145,15 +152,23 @@ class QTSStrategy(NtStrategy):
         fill = nautilus_fill_to_qts(event)
         self._inner_strategy.on_fill(fill)
 
-    def on_text_event(self, event: object) -> None:
-        """Forward TextEvent to the inner strategy.
+    def on_data(self, data: object) -> None:
+        """Handle interleaved custom data from Nautilus's data engine.
 
-        Strategy protocol guarantees on_text exists (with a no-op default
-        in non-news strategies), so we can call it directly.
+        NewsDataPoint arrives here (interleaved with bars by timestamp). We
+        reconstruct the QTS TextEvent and forward it to the inner strategy's
+        on_text, which classifies (cache) and folds it into the belief.
         """
         if self._inner_strategy is None:
             return
-        self._inner_strategy.on_text(event)
+        if isinstance(data, NewsDataPoint):
+            event = news_data_to_text_event(data)
+            try:
+                self._inner_strategy.on_text(event)
+            except Exception:  # noqa: BLE001 — classifier cache miss raises KeyError
+                logger.exception(
+                    "on_text failed for news event from %s", getattr(data, "source", "?")
+                )
 
     def on_stop(self) -> None:
         """Called when the strategy actor stops."""

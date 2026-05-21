@@ -25,6 +25,7 @@ def run_terrain_backtest(
     venue_config: VenueConfig | None = None,
     log_level: str = "WARNING",
     instrument: object | None = None,
+    custom_data: list | None = None,
 ) -> BacktestResult:
     """Run a strategy against a MarketTerrain via NautilusTrader BacktestNode.
 
@@ -117,6 +118,13 @@ def run_terrain_backtest(
         qts_bar_to_nautilus(b, instrument_id, price_prec, size_prec) for b in terrain.bars
     ]
     engine.add_data(nautilus_bars)
+
+    if custom_data:
+        from nautilus_trader.model.identifiers import ClientId  # noqa: PLC0415
+
+        # Custom (non-builtin) data must be wrapped in CustomData and added with a
+        # client_id; the engine interleaves it with bars by ts_init.
+        engine.add_data(custom_data, client_id=ClientId("QTS_NEWS"))
 
     # 5. Create and configure the QTSStrategy actor
     actor_config = QTSStrategyConfig(

@@ -232,3 +232,34 @@ def test_news_reactive_forwards_on_fill(tmp_path: Path) -> None:  # T-NRX-4
     )
     strat.on_fill(f)
     assert captured == [f]
+
+
+@pytest.mark.asyncio
+async def test_belief_trajectory_recorded_per_bar(tmp_path: Path) -> None:  # T-NRX-5
+    from qts.macro.news_classifier import NewsClassifier
+    from qts.strategies.momentum import MomentumStrategy
+    from qts.strategies.news_reactive import NewsReactiveMomentum
+
+    llm = _FakeLLM({"direction": "bull", "confidence": 1.0, "relevance": 1.0, "magnitude": 1.0})
+    clf = NewsClassifier(llm_client=llm, cache_dir=tmp_path)
+    t0 = datetime(2023, 12, 13, 19, 0, tzinfo=UTC)
+    evt = TextEvent(timestamp=t0, source="fed", persona=None, text="dovish", metadata={})
+    await clf.warm_cache_for([evt])
+
+    strat = NewsReactiveMomentum(
+        inner=MomentumStrategy(params=_PARAMS, risk_limits=_RISK_LIMITS),
+        classifier=clf,
+        news_signal_weight=0.5,
+    )
+
+    # One bar BEFORE any news → belief must be 0.0 (causal).
+    strat.on_bar(
+        _bar(t0 - timedelta(minutes=1)), _snapshot(t0 - timedelta(minutes=1)), positions=[]
+    )
+    strat.on_text(evt)  # news arrives at t0
+    strat.on_bar(_bar(t0), _snapshot(t0), positions=[])
+
+    traj = strat.belief_trajectory
+    assert len(traj) == 2
+    assert traj[0][1] == 0.0  # zero before news (no look-ahead)
+    assert traj[1][1] > 0.0  # active after news

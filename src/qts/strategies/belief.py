@@ -60,27 +60,3 @@ class NewsBelief:
             return 0.0
         d = self._decay(now)
         return (self._conviction * d) * self._relevance * self._magnitude
-
-
-# Compatibility shim — BeliefAxis is still imported by news_reactive.py (Task 2 removes it).
-# Keep the old name importable so collection doesn't break before Task 2 lands.
-@dataclass
-class BeliefAxis:
-    """Deprecated: single-scalar belief replaced by NewsBelief. Do not use."""
-
-    half_life: timedelta
-    _value: float = field(default=0.0, init=False)
-    _last_update: datetime | None = field(default=None, init=False)
-
-    def update(self, value: float, now: datetime) -> None:
-        self._value = value
-        self._last_update = now
-
-    def at(self, now: datetime) -> float:
-        if self._last_update is None:
-            return 0.0
-        elapsed = max(0.0, (now - self._last_update).total_seconds())
-        half_life_s = self.half_life.total_seconds()
-        if half_life_s <= 0:
-            return self._value
-        return self._value * 0.5 ** (elapsed / half_life_s)

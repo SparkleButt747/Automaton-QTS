@@ -2,7 +2,7 @@
 
 Composes an inner MomentumStrategy. Each TextEvent fires on_text:
     1. Look up the multi-axis NewsSignal via the cached NewsClassifier.
-    2. Update a BeliefAxis with the signal's scalar alpha_contribution().
+    2. Fold the multi-axis NewsSignal into a NewsBelief accumulator (conviction/relevance/magnitude).
 
 On every on_bar, the decayed belief is blended into the SignalSnapshot's
 combined_alpha via:
@@ -19,7 +19,7 @@ from dataclasses import replace
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
-from qts.strategies.belief import BeliefAxis
+from qts.strategies.belief import NewsBelief
 
 if TYPE_CHECKING:
     from qts.macro.news_classifier import NewsClassifier
@@ -45,8 +45,9 @@ class NewsReactiveMomentum:
             raise ValueError(f"news_signal_weight must be in [0, 1], got {news_signal_weight}")
         self._inner = inner
         self._classifier = classifier
-        self._belief = BeliefAxis(half_life=belief_half_life)
+        self._belief = NewsBelief(half_life=belief_half_life)
         self._weight = news_signal_weight
+        self._trajectory: list[tuple[datetime, float]] = []
 
     @property
     def name(self) -> str:
@@ -66,6 +67,7 @@ class NewsReactiveMomentum:
         positions: list[Position],
     ) -> list[Order]:
         news_alpha = self.news_alpha_at(bar.timestamp)
+        self._trajectory.append((bar.timestamp, news_alpha))
         blended = (1.0 - self._weight) * snapshot.combined_alpha + self._weight * news_alpha
         blended_snapshot = replace(snapshot, combined_alpha=blended)
         return self._inner.on_bar(bar, blended_snapshot, positions)
@@ -74,12 +76,17 @@ class NewsReactiveMomentum:
         self._inner.on_fill(fill)
 
     def on_text(self, event: TextEvent) -> None:
-        """Classify the event (cache-only) and update the belief."""
+        """Classify the event (cache-only) and fold it into the belief."""
         signal = self._classifier.classify(event)
-        self._belief.update(value=signal.alpha_contribution(), now=event.timestamp)
+        self._belief.observe(signal, event.timestamp)
 
     # ---- Inspection -----------------------------------------------------------
 
+    @property
+    def belief_trajectory(self) -> list[tuple[datetime, float]]:
+        """Per-bar (timestamp, news_alpha) record — for acceptance + dashboard."""
+        return list(self._trajectory)
+
     def news_alpha_at(self, now: datetime) -> float:
         """Return the current decayed news alpha (for tests + diagnostics)."""
-        return self._belief.at(now)
+        return self._belief.value_at(now)

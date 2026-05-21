@@ -48,7 +48,6 @@ class _FakeLLM:
 @pytest.mark.asyncio
 async def test_classifier_returns_news_signal(tmp_path) -> None:  # T-CLF-1
     from qts.macro.news_classifier import NewsClassifier
-
     from qts.macro.news_signal import NewsSignal
 
     llm = _FakeLLM(
@@ -101,3 +100,80 @@ async def test_classifier_calls_llm_with_event_text(tmp_path) -> None:  # T-CLF-
     assert "target range for the federal funds rate" in user_prompt
     # The system prompt should mention BTC (the asset under analysis).
     assert "BTC" in system_prompt or "Bitcoin" in system_prompt
+
+
+@pytest.mark.asyncio
+async def test_classifier_caches_response(tmp_path) -> None:  # T-CLF-4
+    from qts.macro.news_classifier import NewsClassifier
+
+    llm = _FakeLLM(
+        responses=[{"direction": "bull", "confidence": 0.7, "relevance": 0.9, "magnitude": 0.6}]
+    )
+    clf = NewsClassifier(llm_client=llm, cache_dir=tmp_path)
+
+    sig1 = await clf.classify_async(_event())
+    # Second call must NOT hit the LLM — fully cached.
+    sig2 = await clf.classify_async(_event())
+
+    assert sig1 == sig2
+    assert len(llm.calls) == 1  # LLM only called once
+
+
+def test_classifier_sync_classify_requires_cache_hit(tmp_path) -> None:  # T-CLF-5
+    from qts.macro.news_classifier import NewsClassifier
+
+    llm = _FakeLLM(responses=[])
+    clf = NewsClassifier(llm_client=llm, cache_dir=tmp_path)
+
+    with pytest.raises(KeyError, match="not in cache"):
+        clf.classify(_event())
+
+
+@pytest.mark.asyncio
+async def test_classifier_sync_classify_works_after_warm(tmp_path) -> None:  # T-CLF-6
+    from qts.macro.news_classifier import NewsClassifier
+
+    llm = _FakeLLM(
+        responses=[{"direction": "bear", "confidence": 0.5, "relevance": 0.7, "magnitude": 0.4}]
+    )
+    clf = NewsClassifier(llm_client=llm, cache_dir=tmp_path)
+
+    await clf.warm_cache_for([_event()])
+    # Synchronous lookup — must not call the LLM again.
+    sig = clf.classify(_event())
+
+    assert sig.direction == "bear"
+    assert sig.confidence == 0.5
+
+
+@pytest.mark.asyncio
+async def test_cache_key_content_addressed(tmp_path) -> None:  # T-CLF-7
+    from datetime import timedelta
+
+    from qts.macro.news_classifier import NewsClassifier
+    from qts.world.events import TextEvent
+
+    llm = _FakeLLM(
+        responses=[
+            {"direction": "bull", "confidence": 0.7, "relevance": 0.9, "magnitude": 0.6},
+            {"direction": "bear", "confidence": 0.7, "relevance": 0.9, "magnitude": 0.6},
+        ]
+    )
+    clf = NewsClassifier(llm_client=llm, cache_dir=tmp_path)
+
+    e1 = _event()
+    # Same text, different timestamp → SAME cache key (content-addressed).
+    e2 = TextEvent(
+        timestamp=e1.timestamp + timedelta(hours=1),
+        source=e1.source,
+        persona=e1.persona,
+        text=e1.text,
+        metadata={"event_kind": "FOMC"},
+    )
+
+    sig1 = await clf.classify_async(e1)
+    sig2 = await clf.classify_async(e2)
+
+    # Same text → same cached signal (LLM only called once).
+    assert sig1 == sig2
+    assert len(llm.calls) == 1

@@ -7,6 +7,8 @@ the cache before a backtest is the recommended pattern — see warm_cache_for
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -45,7 +47,16 @@ text (sports, weather) warrants relevance < 0.2.
 
 
 class NewsClassifier:
-    """Multi-axis classifier with optional disk cache (Task 5 adds caching)."""
+    """Multi-axis classifier with content-addressed disk cache.
+
+    Recommended workflow:
+        clf = NewsClassifier(llm_client, cache_dir=Path("data/news_cache"))
+        await clf.warm_cache_for(events)        # pre-warm: async LLM calls
+        # ... in the strategy's on_text path:
+        signal = clf.classify(event)            # sync, cache-only lookup
+    """
+
+    _CACHE_KEY_VERSION = "v1"  # bump to invalidate all cached entries
 
     def __init__(
         self,
@@ -55,9 +66,17 @@ class NewsClassifier:
         self._llm = llm_client
         self._cache_dir = Path(cache_dir)
         self._cache_dir.mkdir(parents=True, exist_ok=True)
+        self._memory_cache: dict[str, NewsSignal] = {}
+
+    # ---- Public API ------------------------------------------------------
 
     async def classify_async(self, event: TextEvent) -> NewsSignal:
-        """Classify a TextEvent into a NewsSignal via Qwen."""
+        """Classify an event, hitting cache first; otherwise call the LLM."""
+        key = self._cache_key(event)
+        cached = self._read_cache(key)
+        if cached is not None:
+            return cached
+
         user_prompt = self._render_user_prompt(event)
         try:
             raw = await self._llm.query_json(_SYSTEM_PROMPT, user_prompt)
@@ -65,7 +84,61 @@ class NewsClassifier:
             logger.exception("News classifier LLM call failed; returning neutral signal")
             return NewsSignal(direction="neutral", confidence=0.0, relevance=0.0, magnitude=0.0)
 
-        return self._parse_response(raw)
+        signal = self._parse_response(raw)
+        self._write_cache(key, signal)
+        return signal
+
+    def classify(self, event: TextEvent) -> NewsSignal:
+        """Synchronous lookup. Requires the event to be in cache (call warm_cache_for first)."""
+        key = self._cache_key(event)
+        cached = self._read_cache(key)
+        if cached is None:
+            raise KeyError(
+                f"event with cache key {key!r} not in cache — call warm_cache_for(events) first"
+            )
+        return cached
+
+    async def warm_cache_for(self, events: list[TextEvent]) -> None:
+        """Pre-classify a batch of events so .classify() can serve them synchronously."""
+        for event in events:
+            await self.classify_async(event)
+
+    # ---- Internal helpers -----------------------------------------------
+
+    def _cache_key(self, event: TextEvent) -> str:
+        """Content-addressed key: sha256(source || text || version)."""
+        payload = f"{event.source}\n{event.text}\n{self._CACHE_KEY_VERSION}"
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+    def _read_cache(self, key: str) -> NewsSignal | None:
+        if key in self._memory_cache:
+            return self._memory_cache[key]
+        path = self._cache_dir / f"{key}.json"
+        if not path.exists():
+            return None
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            signal = NewsSignal(**raw)
+        except (ValueError, TypeError, KeyError, OSError) as exc:
+            logger.warning("Failed to load cache entry %s: %s", path, exc)
+            return None
+        self._memory_cache[key] = signal
+        return signal
+
+    def _write_cache(self, key: str, signal: NewsSignal) -> None:
+        self._memory_cache[key] = signal
+        path = self._cache_dir / f"{key}.json"
+        path.write_text(
+            json.dumps(
+                {
+                    "direction": signal.direction,
+                    "confidence": signal.confidence,
+                    "relevance": signal.relevance,
+                    "magnitude": signal.magnitude,
+                }
+            ),
+            encoding="utf-8",
+        )
 
     @staticmethod
     def _render_user_prompt(event: TextEvent) -> str:

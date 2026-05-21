@@ -121,6 +121,30 @@ Deferred (per spec scaling path):
 - v4: multimodal events via Gemma (Fed press-conference video / audio); Avellaneda-Stoikov MMs; multi-asset cross-correlation
 - v5: RL agents trained on real data deployed as adversaries (research-grade)
 
+### Phase 8 v2 — News-Reactive Strategy + Real-Data Acceptance (IN-PROGRESS)
+
+See `docs/specs/2026-05-21-phase-8-news-reactive-strategy.md` for the spec and `.grill/phase-8-news-reactive-strategy.md` for the design log.
+
+v2 architecture delivered:
+- [x] `Strategy.on_text(event)` formal protocol method (no-op default on existing strategies)
+- [x] `qts.macro.NewsSignal` — multi-axis structured output (direction + confidence + relevance + magnitude)
+- [x] `qts.macro.NewsClassifier` — Qwen-backed multi-axis classifier with content-hash disk cache + sync/async paths
+- [x] `qts.strategies.BeliefAxis` — exponentially-decaying belief primitive
+- [x] `qts.strategies.NewsReactiveMomentum` — composes MomentumStrategy with a Qwen-driven belief overlay
+- [x] `qts.data.RealEpisode` — real-data analogue of SimulatedEpisode
+- [x] `qts.nautilus.real_runner.run_real_backtest` — pre-dispatches text events, then runs terrain backtest
+- [x] Curated `data/real/fomc/2023-12-13/` dataset (1440 bars + statement + 24 press-conf paragraphs)
+- [x] Hand-validation tool `scripts/validate_news_classifier.py`
+- [x] Acceptance test `tests/integration/test_news_reactive_2023_12_13.py` wired end-to-end
+
+v2 alpha gate: NOT YET PROVEN — pending a working local LLM with a chat-completion model. The acceptance test is committed as a failing regression target. Once Ollama is configured with a working Qwen/GLM/equivalent model, run `scripts/validate_news_classifier.py data/real/fomc/2023-12-13` to warm the cache, then re-run the acceptance test.
+
+Deferred (next-grill candidates, per project memory `project_deferred_grills.md`):
+- Optuna sweep over news params (belief half-life, news_signal_weight, prompt variants)
+- Multiple historical FOMC days / bulk-data pipeline
+- Live Binance integration (scrapling + testnet)
+- Other event types (CPI, NFP, geopolitical, USDT depeg)
+
 Original Phase 8 entry (regime-switching GARCH, MarS-style generative models):
 explicitly rejected during the grill. The strategy reacts to news+events, not
 just price/volume, so a pure price-generative model would not test what

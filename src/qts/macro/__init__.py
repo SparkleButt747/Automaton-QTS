@@ -5,3 +5,11 @@ Two modes:
 - Classifier (Phase 3): labels real historical data
 - Generator (Phase 8): imagines hypothetical scenarios for synthetic data
 """
+
+from qts.macro.news_classifier import NewsClassifier
+from qts.macro.news_signal import NewsSignal
+
+__all__ = [
+    "NewsClassifier",
+    "NewsSignal",
+]

@@ -10,7 +10,7 @@ from typing import Any
 
 import optuna
 
-from qts.config import SignalWeights, SentimentFusionWeights, StrategyParams
+from qts.config import SentimentFusionWeights, SignalWeights, StrategyParams
 
 
 def sample_momentum_params(trial: optuna.Trial) -> StrategyParams:

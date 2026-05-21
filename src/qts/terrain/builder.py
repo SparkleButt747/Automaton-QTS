@@ -15,7 +15,7 @@ from pathlib import Path
 
 import numpy as np
 
-from qts.models.base import Bar, VolLevel
+from qts.models.base import Bar
 from qts.models.terrain import (
     Level,
     MacroRegime,
@@ -114,8 +114,7 @@ class TerrainBuilder:
             atr_min, atr_max = float(np.min(valid_atr)), float(np.max(valid_atr))
             atr_range = atr_max - atr_min if atr_max > atr_min else 1.0
             self._volatility_surface = [
-                float((v - atr_min) / atr_range) if not np.isnan(v) else 0.5
-                for v in atr
+                float((v - atr_min) / atr_range) if not np.isnan(v) else 0.5 for v in atr
             ]
         else:
             self._volatility_surface = [0.5] * len(self._bars)
@@ -125,8 +124,7 @@ class TerrainBuilder:
         if len(valid_vol) > 0:
             vol_median = float(np.median(valid_vol))
             self._liquidity_profile = [
-                min(1.0, float(v / vol_median)) if vol_median > 0 else 1.0
-                for v in volumes
+                min(1.0, float(v / vol_median)) if vol_median > 0 else 1.0 for v in volumes
             ]
         else:
             self._liquidity_profile = [1.0] * len(self._bars)
@@ -194,7 +192,7 @@ class TerrainBuilder:
             catalog_path = ensure_catalog(self._bars, self._catalog_root)
 
         # Derive start/end from bars if available, else use placeholder
-        from datetime import datetime, UTC  # noqa: PLC0415
+        from datetime import UTC  # noqa: PLC0415
 
         start = self._bars[0].timestamp if self._bars else datetime(2000, 1, 1, tzinfo=UTC)
         end = self._bars[-1].timestamp if self._bars else datetime(2000, 1, 1, tzinfo=UTC)

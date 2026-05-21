@@ -3,9 +3,16 @@
 All classes and functions are re-exported from qts._legacy.backtest.
 """
 
-from qts._legacy.backtest import (  # noqa: F401
+from qts._legacy.backtest import (
     BacktestEngine,
     BacktestResult,
     BacktestSettings,
     compute_backtest_statistics,
 )
+
+__all__ = [
+    "BacktestEngine",
+    "BacktestResult",
+    "BacktestSettings",
+    "compute_backtest_statistics",
+]

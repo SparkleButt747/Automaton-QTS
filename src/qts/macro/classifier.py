@@ -6,9 +6,7 @@ the richer regime taxonomy (Trend, VolLevel, LiquidityLevel, etc.).
 
 from __future__ import annotations
 
-import json
 import logging
-from datetime import UTC, datetime
 
 from qts.models.base import (
     Catalyst,
@@ -121,7 +119,5 @@ class MacroRegimeClassifier:
             expected_drift=float(response.get("expected_drift", 0.0)),
             expected_vol=float(response.get("expected_vol", 0.2)),
             correlation_regime=float(response.get("correlation_regime", 0.5)),
-            scenario_description=str(
-                response.get("scenario_description", "LLM-classified regime")
-            ),
+            scenario_description=str(response.get("scenario_description", "LLM-classified regime")),
         )

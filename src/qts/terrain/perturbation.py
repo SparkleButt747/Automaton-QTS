@@ -19,13 +19,12 @@ Additional market-specific perturbations:
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
 from dataclasses import dataclass
 
 import numpy as np
 
-from qts.models.base import Bar, LiquidityLevel, SentimentLevel, VolLevel
-from qts.models.terrain import MacroRegime, MarketTerrain, RegimeSpan
+from qts.models.base import Bar
+from qts.models.terrain import MarketTerrain
 from qts.nautilus.config import VenueConfig
 
 logger = logging.getLogger(__name__)
@@ -142,9 +141,7 @@ class TerrainPerturbator:
                 bar_count=b.bar_count,
             )
 
-        return _rebuild_terrain(
-            terrain, bars, f"{terrain.name}_liquidity_shock_{drain_factor:.0%}"
-        )
+        return _rebuild_terrain(terrain, bars, f"{terrain.name}_liquidity_shock_{drain_factor:.0%}")
 
     # ------------------------------------------------------------------
     # Data gap (exchange halt)
@@ -225,17 +222,13 @@ class TerrainPerturbator:
             noise = 1.0 + rng.normal(0, noise_std)
             bars[i] = _scale_bar(b, noise)
 
-        return _rebuild_terrain(
-            terrain, bars, f"{terrain.name}_correlation_break_{noise_std:.0%}"
-        )
+        return _rebuild_terrain(terrain, bars, f"{terrain.name}_correlation_break_{noise_std:.0%}")
 
     # ------------------------------------------------------------------
     # Batch perturbation generation
     # ------------------------------------------------------------------
 
-    def generate_all_perturbations(
-        self, terrain: MarketTerrain
-    ) -> list[MarketTerrain]:
+    def generate_all_perturbations(self, terrain: MarketTerrain) -> list[MarketTerrain]:
         """Generate all configured perturbation variants of a terrain."""
         results: list[MarketTerrain] = []
 

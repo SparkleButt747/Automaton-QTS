@@ -95,9 +95,9 @@ class TestSentimentFusionProperty:
         """Fusion(-score, -score, -score) must equal -fusion(score, score, score)."""
         pos = fusion.fuse(score, score, score)
         neg = fusion.fuse(-score, -score, -score)
-        assert (
-            abs(pos + neg) < 1e-9
-        ), f"Fusion not symmetric: fuse({score})={pos}, fuse({-score})={neg}"
+        assert abs(pos + neg) < 1e-9, (
+            f"Fusion not symmetric: fuse({score})={pos}, fuse({-score})={neg}"
+        )
 
     @given(
         news=_SCORE_STRATEGY,

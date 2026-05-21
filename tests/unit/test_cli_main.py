@@ -94,7 +94,7 @@ class TestBacktestCommand:
 
 
 class TestLiveCommand:
-    @pytest.mark.skip(reason="live command now starts a real TradingNode — needs integration test with mocked venue")
+    @pytest.mark.skip(reason="live command starts a real TradingNode; needs integration test")
     def test_dry_run_mode_prints_starting(self):
         """live in --dry-run mode prints Starting message (may fail to connect)."""
         result = _run_no_db("live", "--symbol", "BTCUSDT")

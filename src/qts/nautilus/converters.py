@@ -6,7 +6,7 @@ All conversion functions are stateless and side-effect free.
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from qts.models.base import (
     Bar,
@@ -84,9 +84,9 @@ def qts_bar_to_nautilus(
     ts_ns = int(ts.timestamp() * 1e9)
 
     # Nautilus validates OHLC constraints: low <= open/close <= high
-    o, h, l, c = bar.open, bar.high, bar.low, bar.close
+    o, h, lo, c = bar.open, bar.high, bar.low, bar.close
     h = max(h, o, c)
-    l = min(l, o, c)
+    lo = min(lo, o, c)
 
     pfmt = f".{price_precision}f"
     sfmt = f".{size_precision}f"
@@ -95,7 +95,7 @@ def qts_bar_to_nautilus(
         bar_type=bar_type,
         open=Price.from_str(f"{o:{pfmt}}"),
         high=Price.from_str(f"{h:{pfmt}}"),
-        low=Price.from_str(f"{l:{pfmt}}"),
+        low=Price.from_str(f"{lo:{pfmt}}"),
         close=Price.from_str(f"{c:{pfmt}}"),
         volume=Quantity.from_str(f"{max(bar.volume, 0.0):{sfmt}}"),
         ts_event=ts_ns,
@@ -106,7 +106,7 @@ def qts_bar_to_nautilus(
 def qts_order_to_nautilus(
     order: Order,
     instrument_id: InstrumentId,
-    strategy_id: object,
+    strategy_id: Any,
 ) -> NtOrder:
     """Convert a QTS Order to a NautilusTrader Order.
 

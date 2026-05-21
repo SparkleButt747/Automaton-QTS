@@ -58,7 +58,7 @@ def test_from_disk_loads_text_events(tmp_path: Path) -> None:  # T-REP-2
     _write_curated(root)
 
     ep = RealEpisode.from_disk(root, symbol="BTCUSDT", source="fomc:test")
-    # Two events: the statement (timestamped at the press release moment) and the press-conf paragraph.
+    # Two events: the statement (at the press release moment) and the press-conf paragraph.
     assert len(ep.text_events) == 2
 
     statement = next(e for e in ep.text_events if e.source == "fed_press_release")

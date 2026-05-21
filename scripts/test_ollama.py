@@ -35,7 +35,7 @@ BASE_URL = "http://localhost:11434"
 
 PLAIN_SYSTEM = "You are a quant analyst. Be concise and precise."
 PLAIN_USER = (
-    "Summarize in 2 sentences: " "BTC dropped 5% today on high volume with negative news sentiment."
+    "Summarize in 2 sentences: BTC dropped 5% today on high volume with negative news sentiment."
 )
 
 JSON_SYSTEM = (

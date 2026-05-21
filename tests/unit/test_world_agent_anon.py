@@ -143,6 +143,7 @@ def test_mean_revert_anon_sells_on_spike() -> None:  # T-WAN-4
 
 def test_anon_rejects_unknown_style() -> None:  # T-WAN-5
     import pytest
+
     from qts.world.agents.anon import AnonRetailAgent
 
     with pytest.raises(ValueError, match="unknown style"):

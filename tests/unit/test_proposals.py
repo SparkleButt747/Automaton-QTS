@@ -79,9 +79,9 @@ class TestValidateProposal:
         manager = _make_manager(tmp_path)
         for field in _RISK_LIMITS_FIELDS:
             proposal = _make_proposal(parameter=field, current_value=0.02, proposed_value=0.03)
-            assert (
-                manager.validate_proposal(proposal) is False
-            ), f"Expected rejection for risk limits field '{field}'"
+            assert manager.validate_proposal(proposal) is False, (
+                f"Expected rejection for risk limits field '{field}'"
+            )
 
     def test_rejects_max_daily_drawdown_pct(self, tmp_path: Path) -> None:
         """Specifically verify max_daily_drawdown_pct is rejected."""

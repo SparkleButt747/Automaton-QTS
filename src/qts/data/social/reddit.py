@@ -102,7 +102,7 @@ class RedditSentimentProvider:
                 import praw
             except ImportError as exc:
                 raise ImportError(
-                    "RedditSentimentProvider requires 'praw'. " "Install with: pip install praw"
+                    "RedditSentimentProvider requires 'praw'. Install with: pip install praw"
                 ) from exc
 
             self._reddit = praw.Reddit(

@@ -6,7 +6,7 @@ The terrain provides the data; NautilusTrader provides the physics.
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
@@ -24,8 +24,8 @@ def run_terrain_backtest(
     strategy: Strategy,
     venue_config: VenueConfig | None = None,
     log_level: str = "WARNING",
-    instrument: object | None = None,
-    custom_data: list | None = None,
+    instrument: Any = None,
+    custom_data: list[object] | None = None,
 ) -> BacktestResult:
     """Run a strategy against a MarketTerrain via NautilusTrader BacktestNode.
 
@@ -162,7 +162,7 @@ class UnsupportedSymbolError(ValueError):
     """Raised when no built-in instrument is available for a symbol."""
 
 
-def _get_instrument(symbol: str, venue_name: str) -> object:
+def _get_instrument(symbol: str, venue_name: str) -> Any:
     """Return a Nautilus instrument for a known symbol.
 
     Resolves a small built-in registry of common crypto pairs and 6-letter
@@ -194,7 +194,7 @@ def _get_instrument(symbol: str, venue_name: str) -> object:
     )
 
 
-def _extract_results(engine: object, venue_config: VenueConfig) -> BacktestResult:
+def _extract_results(engine: Any, venue_config: VenueConfig) -> BacktestResult:
     """Extract BacktestResult from NautilusTrader engine reports."""
     result = BacktestResult()
 

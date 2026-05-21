@@ -199,6 +199,6 @@ class TestCombinedAlphaProperty:
         alpha_high = combined_alpha(snap_high, params)
         alpha_low = combined_alpha(snap_low, params)
         # LOW regime uses 0.5 scalar, HIGH uses 1.0, so |alpha_low| <= |alpha_high|
-        assert (
-            abs(alpha_low) <= abs(alpha_high) + 1e-9
-        ), f"|alpha_low|={abs(alpha_low)} > |alpha_high|={abs(alpha_high)}"
+        assert abs(alpha_low) <= abs(alpha_high) + 1e-9, (
+            f"|alpha_low|={abs(alpha_low)} > |alpha_high|={abs(alpha_high)}"
+        )

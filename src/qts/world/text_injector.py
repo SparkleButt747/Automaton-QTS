@@ -8,6 +8,7 @@ QTSStrategy actor's on_text_event method.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -32,7 +33,7 @@ class TextEventInjector:
         self._pending = sorted(events, key=lambda e: e.timestamp)
         self._cursor = 0
 
-    def dispatch_up_to(self, now: datetime, sink) -> None:  # noqa: ANN001
+    def dispatch_up_to(self, now: datetime, sink: Callable[[TextEvent], None]) -> None:
         """Forward every queued event with timestamp <= now to sink(event)."""
         while self._cursor < len(self._pending) and self._pending[self._cursor].timestamp <= now:
             sink(self._pending[self._cursor])

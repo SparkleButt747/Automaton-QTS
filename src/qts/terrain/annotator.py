@@ -24,7 +24,7 @@ from qts.models.base import (
     VolLevel,
 )
 from qts.models.terrain import MacroRegime
-from qts.signals.indicators import compute_atr, compute_momentum, compute_rsi
+from qts.signals.indicators import compute_atr
 
 logger = logging.getLogger(__name__)
 

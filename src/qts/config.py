@@ -33,8 +33,7 @@ def _load_json(path: Path) -> dict[str, Any]:
     """Load and parse a JSON file, raising a clear error on failure."""
     if not path.exists():
         raise FileNotFoundError(
-            f"Config file not found: {path}. "
-            f"Expected project layout with config/ at: {_CONFIG_DIR}"
+            f"Config file not found: {path}. Expected project layout with config/ at: {_CONFIG_DIR}"
         )
     with path.open("r", encoding="utf-8") as fh:
         return json.load(fh)  # type: ignore[no-any-return]

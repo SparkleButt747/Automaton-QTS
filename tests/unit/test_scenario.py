@@ -100,9 +100,9 @@ class TestFlashCrash:
         end_crash = start + duration  # 10
         end_recovery = end_crash + duration  # 15
         for i in range(end_crash, end_recovery):
-            assert (
-                nadir <= result[i].close <= 100.0 + 1e-9
-            ), f"bar {i} close={result[i].close} not in recovery range [{nadir}, 100]"
+            assert nadir <= result[i].close <= 100.0 + 1e-9, (
+                f"bar {i} close={result[i].close} not in recovery range [{nadir}, 100]"
+            )
 
     def test_T_SCEN_5_bars_outside_window_unchanged(self) -> None:
         """Bars before crash window and after recovery window are unchanged."""

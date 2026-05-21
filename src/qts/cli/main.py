@@ -113,7 +113,7 @@ def terrain_backtest(ctx: click.Context, terrain: str, venue: str) -> None:
         venue_config=VenueConfig(name=venue),
     )
 
-    console.print(f"\n[bold]Results:[/bold]")
+    console.print("\n[bold]Results:[/bold]")
     console.print(f"  Sharpe:     {result.sharpe_ratio:.4f}")
     console.print(f"  Return:     {result.total_return:.2%}")
     console.print(f"  Max DD:     {result.max_drawdown:.2%}")
@@ -198,7 +198,7 @@ def optimise(ctx: click.Context, n_trials: int, workers: int, study_name: str) -
         config=config,
     )
 
-    console.print(f"\n[bold]Results:[/bold]")
+    console.print("\n[bold]Results:[/bold]")
     console.print(f"  Completed: {result.n_completed}")
     console.print(f"  Pruned:    {result.n_pruned}")
     console.print(f"  Best score: {result.best_score:.4f}")

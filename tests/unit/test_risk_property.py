@@ -149,9 +149,9 @@ class TestPositionSizeProperty:
         rm = RiskManager(limits)
         under_limit_size = portfolio_value * size_fraction
         result = rm.check_position_size(under_limit_size, portfolio_value)
-        assert (
-            result is True
-        ), f"Expected approval: size_frac={size_fraction}, limit={limits.max_position_size_pct}"
+        assert result is True, (
+            f"Expected approval: size_frac={size_fraction}, limit={limits.max_position_size_pct}"
+        )
 
     @given(limits=_risk_limits_strategy())
     @settings(max_examples=100)
@@ -180,9 +180,9 @@ class TestMaxPositionsProperty:
         )
         rm = RiskManager(limits)
         result = rm.check_max_positions(positions)
-        assert (
-            result is False
-        ), f"Expected rejection: count={len(positions)}, max={limits.max_open_positions}"
+        assert result is False, (
+            f"Expected rejection: count={len(positions)}, max={limits.max_open_positions}"
+        )
 
     @given(
         limits=_risk_limits_strategy(),
@@ -198,9 +198,9 @@ class TestMaxPositionsProperty:
         assume(len(positions) < limits.max_open_positions)
         rm = RiskManager(limits)
         result = rm.check_max_positions(positions)
-        assert (
-            result is True
-        ), f"Expected approval: count={len(positions)}, max={limits.max_open_positions}"
+        assert result is True, (
+            f"Expected approval: count={len(positions)}, max={limits.max_open_positions}"
+        )
 
     @given(limits=_risk_limits_strategy())
     @settings(max_examples=100)

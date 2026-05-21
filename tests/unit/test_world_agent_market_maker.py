@@ -34,7 +34,6 @@ def _ctx(last_price: float, recent_closes: list[float]) -> AgentContext:
 
 def test_mm_quotes_symmetric_around_mid_with_no_inventory() -> None:  # T-WMM-1
     from qts.world.agents.market_maker import InventoryAwareMM
-
     from qts.world.events import TextEvent
 
     mm = InventoryAwareMM(
@@ -58,7 +57,6 @@ def test_mm_quotes_symmetric_around_mid_with_no_inventory() -> None:  # T-WMM-1
 
 def test_mm_widens_spread_with_recent_vol() -> None:  # T-WMM-2
     from qts.world.agents.market_maker import InventoryAwareMM
-
     from qts.world.events import TextEvent
 
     mm = InventoryAwareMM(
@@ -91,7 +89,6 @@ def test_mm_widens_spread_with_recent_vol() -> None:  # T-WMM-2
 
 def test_mm_leans_quotes_when_long() -> None:  # T-WMM-3
     from qts.world.agents.market_maker import InventoryAwareMM
-
     from qts.world.events import TextEvent
 
     mm = InventoryAwareMM(

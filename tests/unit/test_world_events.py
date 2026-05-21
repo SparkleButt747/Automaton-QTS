@@ -27,6 +27,7 @@ def test_text_event_is_frozen() -> None:  # T-WEV-2
     from dataclasses import FrozenInstanceError
 
     import pytest
+
     from qts.world.events import TextEvent
 
     event = TextEvent(

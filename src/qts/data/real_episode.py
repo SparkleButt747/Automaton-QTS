@@ -12,6 +12,7 @@ import json
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 from qts.models.base import (
     Bar,
@@ -94,7 +95,7 @@ class RealEpisode:
             scenario_description=f"real:{source}",
         )
 
-        # Mirror text events as MarketEvents on the calendar (parallel to Phase 8 v1 SimulatedEpisode).
+        # Mirror text events as MarketEvents on the calendar (parallel to v1 SimulatedEpisode).
         calendar = [
             MarketEvent(
                 timestamp=e.timestamp,
@@ -137,12 +138,12 @@ def _load_bars(path: Path, symbol: str) -> list[Bar]:
     return bars
 
 
-def _load_press_conf(path: Path) -> list[dict]:
+def _load_press_conf(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
     raw = json.loads(path.read_text(encoding="utf-8"))
     paragraphs = raw.get("paragraphs", [])
-    out: list[dict] = []
+    out: list[dict[str, Any]] = []
     for p in paragraphs:
         out.append(
             {

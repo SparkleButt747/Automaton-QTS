@@ -44,7 +44,7 @@ class NewsBelief:
         half_life_s = self.half_life.total_seconds()
         if half_life_s <= 0:
             return 1.0
-        return 0.5 ** (elapsed / half_life_s)
+        return float(0.5 ** (elapsed / half_life_s))
 
     def observe(self, signal: NewsSignal, now: datetime) -> None:
         """Fold a classified signal into the belief at time `now`."""

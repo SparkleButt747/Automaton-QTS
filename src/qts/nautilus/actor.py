@@ -55,7 +55,7 @@ class QTSStrategyConfig(StrategyConfig, frozen=True):
     sentiment_score: float = 0.0
 
 
-class QTSStrategy(NtStrategy):
+class QTSStrategy(NtStrategy):  # type: ignore[misc]
     """NautilusTrader actor wrapping QTS signal + decision logic.
 
     This actor:
@@ -256,8 +256,6 @@ class QTSStrategy(NtStrategy):
         if self._instrument_id is None:
             return
 
-        from nautilus_trader.model.identifiers import ClientOrderId  # noqa: PLC0415
-
         # Match the instrument's actual price/size precision — Nautilus
         # rejects orders whose precision exceeds the instrument's.
         instrument = self.cache.instrument(self._instrument_id)
@@ -285,7 +283,6 @@ class QTSStrategy(NtStrategy):
         if rounded_qty <= 0:
             return
         qty = Quantity.from_str(f"{rounded_qty:.{size_prec}f}")
-        client_order_id = ClientOrderId(order.order_id)
 
         if order.order_type == OrderType.MARKET:
             nt_order = self.order_factory.market(

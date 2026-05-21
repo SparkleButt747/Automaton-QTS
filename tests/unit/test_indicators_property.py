@@ -285,9 +285,9 @@ class TestNormaliseRSIProperty:
         if rsi + delta <= 100.0:
             result_lo = normalise_rsi(rsi)
             result_hi = normalise_rsi(rsi + delta)
-            assert (
-                result_hi >= result_lo - 1e-12
-            ), f"normalise_rsi not monotone: f({rsi})={result_lo} > f({rsi+delta})={result_hi}"
+            assert result_hi >= result_lo - 1e-12, (
+                f"normalise_rsi not monotone: f({rsi})={result_lo} > f({rsi + delta})={result_hi}"
+            )
 
     def test_normalise_rsi_nan_returns_nan(self) -> None:
         """normalise_rsi(NaN) must return NaN."""

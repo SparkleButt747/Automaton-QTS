@@ -150,9 +150,9 @@ class TestWindowSplitting:
             window_total = len(w.train_bars) + len(w.validate_bars) + len(w.test_bars)
             train_frac = len(w.train_bars) / window_total
             # int() truncation means fraction may be slightly below 0.70
-            assert (
-                0.65 <= train_frac <= 0.75
-            ), f"Train fraction {train_frac:.3f} out of expected range [0.65, 0.75]"
+            assert 0.65 <= train_frac <= 0.75, (
+                f"Train fraction {train_frac:.3f} out of expected range [0.65, 0.75]"
+            )
 
     def test_validate_portion_is_approximately_15_percent(self) -> None:
         bars = _make_bars(n=600)
@@ -165,9 +165,9 @@ class TestWindowSplitting:
         for w in windows:
             window_total = len(w.train_bars) + len(w.validate_bars) + len(w.test_bars)
             validate_frac = len(w.validate_bars) / window_total
-            assert (
-                0.10 <= validate_frac <= 0.20
-            ), f"Validate fraction {validate_frac:.3f} out of expected range [0.10, 0.20]"
+            assert 0.10 <= validate_frac <= 0.20, (
+                f"Validate fraction {validate_frac:.3f} out of expected range [0.10, 0.20]"
+            )
 
     def test_test_portion_is_approximately_15_percent(self) -> None:
         bars = _make_bars(n=600)
@@ -181,9 +181,9 @@ class TestWindowSplitting:
             window_total = len(w.train_bars) + len(w.validate_bars) + len(w.test_bars)
             test_frac = len(w.test_bars) / window_total
             # Remainder after int() truncations goes to test
-            assert (
-                0.10 <= test_frac <= 0.25
-            ), f"Test fraction {test_frac:.3f} out of expected range [0.10, 0.25]"
+            assert 0.10 <= test_frac <= 0.25, (
+                f"Test fraction {test_frac:.3f} out of expected range [0.10, 0.25]"
+            )
 
     def test_window_indices_are_sequential(self) -> None:
         bars = _make_bars(n=600)

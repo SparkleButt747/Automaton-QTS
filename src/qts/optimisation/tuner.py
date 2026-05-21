@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging
 import multiprocessing
 from dataclasses import dataclass, field
+from multiprocessing.process import BaseProcess
 from pathlib import Path
 from typing import Any
 
@@ -173,15 +174,15 @@ def _run_parallel(
         )
 
     ctx = multiprocessing.get_context("spawn")
-    processes: list[multiprocessing.Process] = []
+    processes: list[BaseProcess] = []
 
     for worker_trials in trials_per_worker:
         p = ctx.Process(target=_worker, args=(worker_trials,))
         processes.append(p)
         p.start()
 
-    for p in processes:
-        p.join()
+    for proc in processes:
+        proc.join()
 
 
 def _split_trials(total: int, n_workers: int) -> list[int]:

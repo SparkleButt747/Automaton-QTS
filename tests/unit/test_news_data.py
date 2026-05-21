@@ -5,10 +5,9 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from pathlib import Path
 
-from qts.nautilus.news_data import NewsDataPoint
-
 from qts.macro.news_classifier import NewsClassifier
 from qts.nautilus.converters import news_data_to_text_event, text_event_to_news_data
+from qts.nautilus.news_data import NewsDataPoint
 from qts.world.events import TextEvent
 
 

@@ -44,6 +44,7 @@ def test_scenario_config_full() -> None:  # T-WSC-2
 
 def test_scenario_rejects_invalid_window() -> None:  # T-WSC-3
     import pytest
+
     from qts.world.scenario import ScenarioConfig
 
     with pytest.raises(ValueError, match="end must be after start"):
@@ -65,6 +66,7 @@ def test_scenario_rejects_invalid_window() -> None:  # T-WSC-3
 
 def test_scenario_rejects_fomc_outside_window() -> None:  # T-WSC-4
     import pytest
+
     from qts.world.scenario import ScenarioConfig
 
     with pytest.raises(ValueError, match="fomc_announcement_at must fall"):

@@ -11,7 +11,7 @@ import hashlib
 import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from qts.macro.news_signal import NewsSignal
 
@@ -149,7 +149,7 @@ class NewsClassifier:
         )
 
     @staticmethod
-    def _parse_response(raw: dict) -> NewsSignal:
+    def _parse_response(raw: dict[str, Any]) -> NewsSignal:
         """Parse LLM JSON into a NewsSignal; fall back to neutral on malformed."""
         try:
             return NewsSignal(

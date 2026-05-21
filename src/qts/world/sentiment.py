@@ -52,7 +52,7 @@ class SentimentScorer:
         self._ensure_vader()
         assert self._analyzer is not None
         # vader returns a dict with compound in [-1, 1]
-        base = float(self._analyzer.polarity_scores(text)["compound"])
+        base = float(self._analyzer.polarity_scores(text)["compound"])  # type: ignore[attr-defined]
 
         keyword_bump = 0.0
         keyword_bump += self.keyword_weight * len(_DOVISH.findall(text))

@@ -120,12 +120,15 @@ def _add_binance_venue(node: Any, config: LiveVenueConfig) -> None:
             BinanceLiveExecClientFactory,
         )
 
-        data_config = BinanceDataClientConfig(
+        # Live client configs — pending wiring: these belong in the node's
+        # TradingNodeConfig(data_clients=..., exec_clients=...) at build time;
+        # add_*_client_factory below only registers the factory class.
+        data_config = BinanceDataClientConfig(  # noqa: F841
             api_key=config.api_key,
             api_secret=config.api_secret,
             testnet=config.is_testnet,
         )
-        exec_config = BinanceExecClientConfig(
+        exec_config = BinanceExecClientConfig(  # noqa: F841
             api_key=config.api_key,
             api_secret=config.api_secret,
             testnet=config.is_testnet,
@@ -135,7 +138,5 @@ def _add_binance_venue(node: Any, config: LiveVenueConfig) -> None:
         node.add_exec_client_factory(config.venue_name, BinanceLiveExecClientFactory)
 
     except ImportError:
-        logger.error(
-            "Binance adapter not available. Install nautilus_trader with Binance support."
-        )
+        logger.error("Binance adapter not available. Install nautilus_trader with Binance support.")
         raise

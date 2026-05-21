@@ -120,8 +120,7 @@ class AlertManager:
             alert = Alert(
                 level=AlertLevel.WARNING,
                 message=(
-                    f"Daily drawdown {current_drawdown:.2%} is approaching "
-                    f"the {limit:.2%} limit."
+                    f"Daily drawdown {current_drawdown:.2%} is approaching the {limit:.2%} limit."
                 ),
                 timestamp=datetime.now(UTC),
                 component="risk_manager",

@@ -52,7 +52,6 @@ def test_corpus_sample_deterministic_with_seed(tmp_path: Path) -> None:  # T-WCP
     s2 = corpus.sample("powell", "fomc", "hawkish", rng=random.Random(42))
     assert s1 == s2  # same seed -> same sample
 
-    s3 = corpus.sample("powell", "fomc", "hawkish", rng=random.Random(43))
     # Different seed may yield same value with 4 items + 1 draw; assert
     # over a sequence instead
     seq_a = [corpus.sample("powell", "fomc", "hawkish", rng=random.Random(42)) for _ in range(5)]

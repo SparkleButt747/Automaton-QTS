@@ -10,7 +10,7 @@ from nautilus_trader.model.custom import customdataclass
 
 
 @customdataclass
-class NewsDataPoint(Data):
+class NewsDataPoint(Data):  # type: ignore[misc]
     """A text event as Nautilus custom data, interleaved with bars by the engine.
 
     Carries raw text (classification happens on receipt in the strategy, mirroring

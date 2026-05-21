@@ -65,6 +65,8 @@ dev = [
   "responses",
   "pre-commit",
   "aiosqlite",
+  # Used by scripts/fetch_fomc_data.py to extract press-conference transcripts.
+  "pypdf",
 ]
 
 [project.scripts]

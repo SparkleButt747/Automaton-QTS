@@ -38,11 +38,17 @@ venv.bak/
 *.db
 *.sqlite
 *.sqlite3
-/data/
+# Block /data/ contents wholesale, but keep curated subtrees tracked. Pattern
+# is /data/* (contents, not the directory itself) so that the !/data/world,
+# !/data/real exceptions below actually take effect — git won't re-include
+# files inside a directory whose own entry is excluded.
+/data/*
 # World simulator ships hand-written persona corpora and scenario assets
 # under data/world/ — those must remain tracked.
 !/data/world/
-!/data/world/**
+# Curated real-data episodes (e.g. FOMC bars + statement + presser transcript)
+# committed for reproducible integration tests.
+!/data/real/
 
 # Jupyter Notebooks
 .ipynb_checkpoints

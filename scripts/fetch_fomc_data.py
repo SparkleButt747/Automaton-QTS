@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import csv
 import html
+import io
 import json
 import logging
 import re
@@ -24,6 +25,7 @@ from pathlib import Path
 from typing import Any
 
 import httpx
+from pypdf import PdfReader
 
 logger = logging.getLogger(__name__)
 
@@ -114,26 +116,67 @@ def fetch_fomc_statement(date_str: str) -> str:
 
 
 def fetch_press_conf_paragraphs(date_str: str) -> list[str]:
-    """Fetch the press conference transcript HTML and return its body paragraphs."""
+    """Fetch the press conference transcript PDF and return its body paragraphs.
+
+    federalreserve.gov publishes Powell's press-conference transcripts as PDFs
+    only; the matching .htm page is just a wrapper around the video player.
+    """
     yyyymmdd = date_str.replace("-", "")
-    url = f"https://www.federalreserve.gov/monetarypolicy/fomcpresconf{yyyymmdd}.htm"
-    with httpx.Client(timeout=30.0, follow_redirects=True) as client:
+    url = f"https://www.federalreserve.gov/mediacenter/files/FOMCpresconf{yyyymmdd}.pdf"
+    with httpx.Client(timeout=60.0, follow_redirects=True) as client:
         response = client.get(url)
         response.raise_for_status()
-    return extract_paragraphs_from_html(response.text, min_chars=_PARAGRAPH_MIN_CHARS)
+    return extract_paragraphs_from_pdf(response.content, min_chars=_PARAGRAPH_MIN_CHARS)
 
 
 _TAG_RE = re.compile(r"<[^>]+>")
 _PARA_RE = re.compile(r"<p\b[^>]*>(.*?)</p>", re.IGNORECASE | re.DOTALL)
+# fed.gov wraps the real release body in <div id="article"> — everything outside
+# is .gov banner / chrome boilerplate that we don't want in the corpus.
+_ARTICLE_RE = re.compile(r'<div\b[^>]*\bid=["\']article["\'][^>]*>(.*)', re.IGNORECASE | re.DOTALL)
+# Per-page chrome that pypdf concatenates into the extracted text. We strip
+# the "Page N of M" line outright and also the running footer that fed.gov
+# stamps on every transcript page (date + "Chair Powell's Press Conference
+# FINAL"), which otherwise leaks into the end of each paragraph.
+_PDF_PAGE_HEADER_RE = re.compile(r"^[^\n]*Page \d+ of \d+\s*$", re.MULTILINE)
+# Anchored to non-whitespace boundaries so that the surrounding paragraph-break
+# newlines are preserved when we delete the footer.
+_PDF_RUNNING_FOOTER_RE = re.compile(
+    r"[A-Z][a-z]+\s+\d{1,2},\s+\d{4}\s+Chair\s+\S+(?:\s+\S+)?\s+Press\s+Conference\s+FINAL"
+)
 
 
 def extract_paragraphs_from_html(content: str, min_chars: int = 80) -> list[str]:
-    """Naive <p>-tag extractor. Filters paragraphs shorter than min_chars."""
+    """Naive <p>-tag extractor. Filters paragraphs shorter than min_chars.
+
+    If the document contains a <div id="article"> (fed.gov release layout), only
+    paragraphs inside that container are returned — the surrounding .gov banner
+    and security-notice boilerplate is dropped.
+    """
+    article_match = _ARTICLE_RE.search(content)
+    scope = article_match.group(1) if article_match else content
     paragraphs: list[str] = []
-    for match in _PARA_RE.finditer(content):
+    for match in _PARA_RE.finditer(scope):
         inner = _TAG_RE.sub("", match.group(1))
         text = html.unescape(inner).strip()
         text = re.sub(r"\s+", " ", text)
+        if len(text) >= min_chars:
+            paragraphs.append(text)
+    return paragraphs
+
+
+def extract_paragraphs_from_pdf(pdf_bytes: bytes, min_chars: int = 80) -> list[str]:
+    """Extract paragraphs from a press-conference transcript PDF.
+
+    Strips per-page headers like "Page 4 of 24" and splits on blank lines.
+    """
+    reader = PdfReader(io.BytesIO(pdf_bytes))
+    raw = "\n".join(page.extract_text() or "" for page in reader.pages)
+    cleaned = _PDF_PAGE_HEADER_RE.sub("", raw)
+    cleaned = _PDF_RUNNING_FOOTER_RE.sub("", cleaned)
+    paragraphs: list[str] = []
+    for chunk in re.split(r"\n\s*\n", cleaned):
+        text = re.sub(r"\s+", " ", chunk).strip()
         if len(text) >= min_chars:
             paragraphs.append(text)
     return paragraphs

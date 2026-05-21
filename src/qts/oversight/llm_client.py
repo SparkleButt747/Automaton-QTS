@@ -410,8 +410,10 @@ class LlamaCppClient:
         base_url: Base URL of the llama-server instance.
         max_retries: Maximum retry attempts on connection errors.
         timeout: HTTP request timeout in seconds.
-        temperature: Sampling temperature. Defaults to 0.0 for deterministic
-            classification output.
+        temperature: Optional sampling temperature. Defaults to None, which
+            omits the field from the request so llama-server applies the
+            model's own sampling defaults (custom sampling params can break
+            some MoE builds). Set explicitly only when you need to override.
     """
 
     def __init__(
@@ -420,7 +422,7 @@ class LlamaCppClient:
         base_url: str = _LLAMACPP_DEFAULT_BASE_URL,
         max_retries: int = 3,
         timeout: float = 120.0,
-        temperature: float = 0.0,
+        temperature: float | None = None,
     ) -> None:
         self._model = model
         self._base_url = base_url.rstrip("/")
@@ -450,16 +452,19 @@ class LlamaCppClient:
         Raises:
             httpx.HTTPError: If the request fails after all retries.
         """
-        payload = {
+        payload: dict[str, Any] = {
             "model": self._model,
             "messages": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
             "max_tokens": max_tokens,
-            "temperature": self._temperature,
             "stream": False,
         }
+        # Only send temperature when explicitly set — otherwise let the server
+        # apply the model's own sampling defaults (custom params break some builds).
+        if self._temperature is not None:
+            payload["temperature"] = self._temperature
 
         last_error: Exception | None = None
 

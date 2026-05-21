@@ -75,7 +75,7 @@ class TestLlamaCppClientQuery:
 
     @pytest.mark.asyncio
     async def test_query_sends_openai_payload(self) -> None:
-        client = LlamaCppClient(model="qwen-test", max_retries=0, temperature=0.0)
+        client = LlamaCppClient(model="qwen-test", max_retries=0)
         mock_resp = _mock_httpx_response("ok")
         captured: dict = {}
 
@@ -92,9 +92,25 @@ class TestLlamaCppClientQuery:
         assert payload["model"] == "qwen-test"
         assert payload["stream"] is False
         assert payload["max_tokens"] == 512
-        assert payload["temperature"] == 0.0
+        # Default omits temperature so the server uses the model's sampling defaults.
+        assert "temperature" not in payload
         assert payload["messages"][0] == {"role": "system", "content": "sys"}
         assert payload["messages"][1] == {"role": "user", "content": "usr"}
+
+    @pytest.mark.asyncio
+    async def test_query_includes_temperature_when_set(self) -> None:
+        client = LlamaCppClient(model="qwen-test", max_retries=0, temperature=0.2)
+        mock_resp = _mock_httpx_response("ok")
+        captured: dict = {}
+
+        async def mock_post(url, **kwargs):  # type: ignore[no-untyped-def]
+            captured.update(kwargs)
+            return mock_resp
+
+        with patch("httpx.AsyncClient.post", side_effect=mock_post):
+            await client.query("sys", "usr")
+
+        assert captured["json"]["temperature"] == 0.2
 
     @pytest.mark.asyncio
     async def test_connect_error_retries_then_raises(self) -> None:

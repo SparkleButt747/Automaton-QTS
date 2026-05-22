@@ -7,10 +7,10 @@ from typing import cast
 
 import numpy as np
 
-N_ASSETS = 8
+N_EVENT_TYPES = 6  # train on the first 5 pairs, hold out the last for the transfer gate
+N_ASSETS = 3 * N_EVENT_TYPES  # named [0:6], substitute [6:12], decoy [12:18]
 N_FACTORS = 2
-N_EVENT_TYPES = 3
-FEATURE_DIM = 4  # dims [0:2] = factor loadings, dims [2:4] = sector code
+FEATURE_DIM = 8  # dims [0:2] = factor loadings, dims [2:8] = 6-dim sector code
 
 
 @dataclass(frozen=True)
@@ -59,36 +59,30 @@ def _rot90(v: np.ndarray) -> np.ndarray:
 def build_world(config: PropagationSimConfig) -> GroundTruthWorld:
     """Deterministic construction satisfying the confound bounds by design.
 
-    Roles: named={0,1,2}, substitute={3,4,5} (sub of type k is k+3), decoys={6,7}.
-    Factor loadings (dims 0:2): named/decoy share a direction (high corr); each substitute
-    is the 90deg rotation of its named (~zero corr). Sector codes (dims 2:4): shared within a
-    (named, substitute) pair, distinct across pairs; decoys get near-zero sector code.
+    Roles (3 disjoint triples): named={0,1,2}, substitute={3,4,5} (sub of type k is k+3),
+    decoy={6,7,8} (decoy of type k is k+6). Each named asset has a DISTINCT factor direction, so
+    the model cannot memorise routing via factor betas and must learn the sector mechanism — which
+    is the thing that transfers to an unseen pair. Per triple k: substitute = 90deg rotation of
+    named (factor-orthogonal, ~zero corr) sharing named's sector code (cos=1); decoy = named's
+    factor direction + noise (high corr) with a near-zero sector code (no substitution affinity).
     """
     rng = np.random.default_rng(config.seed)
     f = np.zeros((config.n_assets, config.feature_dim))
+    n_types = config.n_event_types
+    nf = config.n_factors
+    sector_dim = config.feature_dim - nf
+    for k in range(n_types):
+        u = _unit(rng, nf)  # named k factor direction (distinct per k)
+        s = _unit(rng, sector_dim)  # named/substitute k sector code
+        f[k, :nf] = u
+        f[k, nf:] = s
+        f[n_types + k, :nf] = _rot90(u)  # substitute: factor-orthogonal to named
+        f[n_types + k, nf:] = s  # substitute: sector-matched to named
+        f[2 * n_types + k, :nf] = u + 0.05 * rng.standard_normal(nf)  # decoy: factor-aligned
+        f[2 * n_types + k, nf:] = 0.05 * rng.standard_normal(sector_dim)  # decoy: ~no sector
 
-    u = _unit(rng, 2)  # named0, named2, decoy6 factor direction
-    w = _unit(rng, 2)  # named1, decoy7 factor direction
-    f[0, :2] = u
-    f[1, :2] = w
-    f[2, :2] = u + 0.05 * rng.standard_normal(2)
-    f[3, :2] = _rot90(u)
-    f[4, :2] = _rot90(w)
-    f[5, :2] = _rot90(f[2, :2])
-    f[6, :2] = u + 0.05 * rng.standard_normal(2)
-    f[7, :2] = w + 0.05 * rng.standard_normal(2)
-
-    s0, s1, s2 = _unit(rng, 2), _unit(rng, 2), _unit(rng, 2)
-    f[0, 2:], f[3, 2:] = s0, s0
-    f[1, 2:], f[4, 2:] = s1, s1
-    f[2, 2:], f[5, 2:] = s2, s2
-    f[6, 2:] = 0.05 * rng.standard_normal(2)
-    f[7, 2:] = 0.05 * rng.standard_normal(2)
-
-    triples = (
-        EventTriple(named=0, substitute=3, decoy=6),
-        EventTriple(named=1, substitute=4, decoy=7),
-        EventTriple(named=2, substitute=5, decoy=6),
+    triples = tuple(
+        EventTriple(named=k, substitute=n_types + k, decoy=2 * n_types + k) for k in range(n_types)
     )
     regime_signs = np.array([1.0, -1.0])
     return GroundTruthWorld(
@@ -146,8 +140,11 @@ def make_splits(
     n_test: int = 1000,
     n_transfer: int = 1000,
 ) -> tuple[EventBatch, EventBatch, EventBatch, EventBatch]:
-    train = generate_events(world, n_train, rng, allowed_types=(0, 1))
-    val = generate_events(world, n_val, rng, allowed_types=(0, 1))
-    test = generate_events(world, n_test, rng, allowed_types=(0, 1))
-    transfer = generate_events(world, n_transfer, rng, allowed_types=(2,))
+    n = world.config.n_event_types
+    train_types = tuple(range(n - 1))  # all event types except the last
+    transfer_types = (n - 1,)  # the held-out pair the model never saw coupled
+    train = generate_events(world, n_train, rng, allowed_types=train_types)
+    val = generate_events(world, n_val, rng, allowed_types=train_types)
+    test = generate_events(world, n_test, rng, allowed_types=train_types)
+    transfer = generate_events(world, n_transfer, rng, allowed_types=transfer_types)
     return train, val, test, transfer

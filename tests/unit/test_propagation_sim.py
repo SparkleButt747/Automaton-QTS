@@ -55,9 +55,11 @@ def test_causal_edge_hits_substitute_not_decoy() -> None:  # T-PROP-SIM-3
 
 def test_splits_partition_event_types() -> None:  # T-PROP-SIM-2b
     world = build_world(PropagationSimConfig(seed=0))
+    n = world.config.n_event_types
     train, val, test, transfer = make_splits(
         world, np.random.default_rng(3), n_train=200, n_val=50, n_test=50, n_transfer=50
     )
-    assert set(np.unique(train.event_type)).issubset({0, 1})
-    assert set(np.unique(test.event_type)).issubset({0, 1})
-    assert set(np.unique(transfer.event_type)) == {2}
+    train_types = set(range(n - 1))
+    assert set(np.unique(train.event_type)).issubset(train_types)
+    assert set(np.unique(test.event_type)).issubset(train_types)
+    assert set(np.unique(transfer.event_type)) == {n - 1}

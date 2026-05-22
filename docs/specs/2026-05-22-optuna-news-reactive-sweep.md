@@ -37,7 +37,7 @@ Python 3.11, Optuna (TPE + MedianPruner — existing `tuner.py`), NautilusTrader
 | Decision | Rationale | Rejected |
 |---|---|---|
 | Train on sim episodes, hold out real day | Only 1 real day exists; sim gives diversity | source more real days (expensive), walk-forward in 1 day (no diversity) |
-| Wire MM `sentiment_drift_bps` with lag+noise | Sim has zero news→price coupling today | clean coupling (trivial optimum), post-hoc bars (no microstructure) |
+| Mark sim market to drift-adjusted fair (off fixed pre-event ref) | Sim has zero news→price coupling today; the raw `sentiment_drift_bps` multiply is invisible without flow AND compounds with it | clean coupling (trivial optimum), post-hoc bars (no microstructure) |
 | Randomise (lag, magnitude, noise) per episode | Robust-by-construction, no leakage | calibrate to real day (leakage), fixed value (overfits half-life) |
 | Objective = 25th-pct/CVaR of excess-vs-hold | Operationalises "robust", self-guards 0-trade | mean Sharpe (hides tails), mean beat-hold (averages tails) |
 | Tune only the 3 news params, freeze momentum | Smallest space = robust + clean attribution | co-tune all (confounds edge), two-stage (doubles runs) |
@@ -70,13 +70,22 @@ seeded gaussian noise (`noise_std_bps`). Deterministic given `seed`.
 
 ### 2. `src/qts/world/agent_sim.py` (modify)
 
-Add optional `drift_model: SentimentDriftModel | None = None` to `run_agent_sim`. In the tick
-loop (currently agent_sim.py:212-219), **before** `mm.on_tick`, set:
+Add optional `drift_model: SentimentDriftModel | None = None` to `run_agent_sim`. **Mark-to-fair**
+(NOT the raw `sentiment_drift_bps` multiply — that is invisible without trade flow and compounds
+*with* it). As the first statement inside the `for now in clock.iter_ticks():` loop:
 ```python
-if drift_model is not None:
-    mm.sentiment_drift_bps = drift_model.value_at(now)
+if drift_model is not None and now >= drift_model.event_time:
+    if drift_ref_price is None:
+        drift_ref_price = last_price          # fixed pre-event reference
+    fair = drift_ref_price * (1.0 + drift_model.value_at(now) / 1e4)
+    last_price = fair                          # agents perceive the move
+    aggregator.add_trade(now, price=fair, qty=0.0)  # empty-tick bar tracks fair
 ```
-`None` → unchanged current behaviour (no coupling).
+`drift_ref_price` (a `float | None`) is captured once at the first on/after-event tick, so the
+drift is applied off a fixed reference and never compounds. The MM still quotes its spread around
+`last_price` (= fair), so fills/inventory microstructure stays intact. Gated on `drift_model is not
+None` → baseline sims are byte-identical (zero regression). The `sentiment_drift_bps` field is left
+unused.
 
 ### 3. `src/qts/world/runner.py` (modify)
 

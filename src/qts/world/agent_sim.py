@@ -12,6 +12,10 @@ from __future__ import annotations
 import random
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from qts.world.drift_model import SentimentDriftModel  # noqa: F401
 
 from qts.models.base import Bar
 from qts.world.agents.anon import AnonRetailAgent
@@ -78,6 +82,7 @@ def run_agent_sim(
     corpus: PersonaCorpus,
     seed: int,
     fomc_actual_rate: float,
+    drift_model: SentimentDriftModel | None = None,
 ) -> AgentSimResult:
     """Step the clock tick by tick, route agent outputs through the book."""
     master_rng = random.Random(seed)  # noqa: S311 - deterministic sim, not crypto
@@ -100,6 +105,9 @@ def run_agent_sim(
     last_price = scenario.starting_price
     recent_bars: list[Bar] = []
     recent_text: list[TextEvent] = []
+    # Captured at the first tick on/after the news event. The drift level is applied
+    # relative to this fixed reference so it does not compound across ticks/trades.
+    drift_ref_price: float | None = None
 
     result = AgentSimResult(bars=[])
     result.agent_traces = {
@@ -210,6 +218,16 @@ def run_agent_sim(
                         _handle_outputs(nested, receiver, now)
 
     for now in clock.iter_ticks():
+        # 0. News-induced drift: mark the market to a drift-adjusted fair off the
+        #    fixed pre-event reference (non-compounding). This makes empty ticks and
+        #    the agents' perceived last_price track the news move; the MM still quotes
+        #    its spread around this fair, so fills and inventory microstructure stay intact.
+        if drift_model is not None and now >= drift_model.event_time:
+            if drift_ref_price is None:
+                drift_ref_price = last_price
+            fair = drift_ref_price * (1.0 + drift_model.value_at(now) / 1e4)
+            last_price = fair
+            aggregator.add_trade(now, price=fair, qty=0.0)
         # 1. MM publishes a quote first so anons have something to hit
         _handle_outputs(mm.on_tick(_ctx_for(mm_rng, now)), mm, now)
         # 2. Scheduler may emit FOMC + accompanying text

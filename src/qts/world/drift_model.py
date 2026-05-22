@@ -1,10 +1,11 @@
 """SentimentDriftModel — time-varying price drift induced by an FOMC news event.
 
-Wired into the agent simulation: the market-maker reads sentiment_drift_bps each
-tick, so this model shifts the simulated mid-price after a news event. The drift
-ramps in over onset_lag, then decays — leaving a lead-lag window a news-reading
-strategy can exploit (the simulated decode-gap edge). Per-tick gaussian noise is
-seed-deterministic so episodes are reproducible.
+Wired into the agent simulation: each tick the sim marks the market to a drift-
+adjusted fair price off a fixed pre-event reference, so this model shifts the
+simulated price after a news event. The drift ramps in over onset_lag, then decays
+— leaving a lead-lag window a news-reading strategy can exploit (the simulated
+decode-gap edge). Per-tick gaussian noise is seed-deterministic so episodes are
+reproducible.
 """
 
 from __future__ import annotations

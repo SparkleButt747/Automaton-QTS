@@ -4,7 +4,7 @@
 
 **Goal:** Tune `NewsReactiveMomentum`'s `(news_signal_weight, belief_half_life, entry_threshold)` for robustness across diverse synthetic FOMC episodes (CVaR-of-excess-vs-hold objective), validated on the held-out real 2023-12-13 day.
 
-**Architecture:** Make simulated episodes tradeable by wiring the market-maker's existing `sentiment_drift_bps` hook from the surprise bucket with lag+noise (a new `SentimentDriftModel`). Pre-generate a frozen bank of 50 episodes with randomised couplings; warm the LLM classification cache once; run 150 Optuna TPE trials, each backtesting the strategy over the whole bank and scoring the 25th-percentile of excess-vs-buy-and-hold. Apply best params to the real day as an n=1 validity check.
+**Architecture:** Make simulated episodes tradeable by marking the simulated market to a drift-adjusted fair price (off a fixed pre-event reference, driven by a new `SentimentDriftModel`), gated so baseline sims are byte-identical. The MM still quotes its spread around the fair. Pre-generate a frozen bank of 50 episodes with randomised couplings; warm the LLM classification cache once; run 150 Optuna TPE trials, each backtesting the strategy over the whole bank and scoring the 25th-percentile of excess-vs-buy-and-hold. Apply best params to the real day as an n=1 validity check.
 
 **Tech Stack:** Python 3.11, Optuna (TPE + MedianPruner, existing `tuner.py`), NautilusTrader backtest via `run_terrain_backtest` (v2.1 `NewsDataPoint` custom-data path), numpy quantiles.
 
@@ -19,7 +19,7 @@
 | File | Action | Responsibility |
 |------|--------|----------------|
 | `src/qts/world/drift_model.py` | create | `SentimentDriftModel`: time-varying bps drift trajectory from an FOMC event (ramp → decay → seeded noise). |
-| `src/qts/world/agent_sim.py` | modify | Optional `drift_model` param; set `mm.sentiment_drift_bps = drift_model.value_at(now)` each tick. |
+| `src/qts/world/agent_sim.py` | modify | Optional `drift_model` param; mark `last_price` + a qty=0 aggregator bar to the drift-adjusted fair each tick (gated; off fixed ref so no compounding). |
 | `src/qts/world/runner.py` | modify | Thread `drift_model` through `run_simulation` into `run_agent_sim`; populate the new `text_events` field. |
 | `src/qts/world/episode.py` | modify | Add `text_events: list[TextEvent]` to `SimulatedEpisode`. |
 | `src/qts/optimisation/episode_bank.py` | create | `CouplingRanges` + `generate_episode_bank` — frozen reproducible bank with per-episode randomised couplings. |
@@ -260,23 +260,37 @@ Expected: FAIL — `run_agent_sim() got an unexpected keyword argument 'drift_mo
 
 - [ ] **Step 3: Add the `drift_model` param and wire it**
 
-First read the head of `src/qts/world/agent_sim.py` to find the exact `run_agent_sim` signature and the `mm` construction. Add `drift_model: SentimentDriftModel | None = None` to the signature (keyword, default None). Add the import:
+Add `drift_model: SentimentDriftModel | None = None` to the `run_agent_sim` signature. Because it is annotation-only under `from __future__ import annotations`, import it under `TYPE_CHECKING` (not top-level) so the ruff hook won't strip it:
 
 ```python
-from qts.world.drift_model import SentimentDriftModel  # near other qts.world imports
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from qts.world.drift_model import SentimentDriftModel  # noqa: F401
 ```
 
-In the tick loop (currently at `for now in clock.iter_ticks():`, agent_sim.py:212), add as the **first** statement inside the loop body, before `mm.on_tick`:
+Add a fixed-reference variable alongside `last_price` (near agent_sim.py:105):
+```python
+    drift_ref_price: float | None = None
+```
+
+**Mark-to-fair** (NOT `mm.sentiment_drift_bps` — that's invisible without flow and compounds with it). As the first statement inside the `for now in clock.iter_ticks():` loop, before `mm.on_tick`:
 
 ```python
     for now in clock.iter_ticks():
-        # 0. Apply news-induced sentiment drift (if coupled) before the MM quotes.
-        if drift_model is not None:
-            mm.sentiment_drift_bps = drift_model.value_at(now)
+        # 0. News-induced drift: mark the market to a drift-adjusted fair off the fixed
+        #    pre-event reference (non-compounding). Empty ticks and the agents' perceived
+        #    last_price track the news move; the MM still quotes its spread around fair.
+        if drift_model is not None and now >= drift_model.event_time:
+            if drift_ref_price is None:
+                drift_ref_price = last_price
+            fair = drift_ref_price * (1.0 + drift_model.value_at(now) / 1e4)
+            last_price = fair
+            aggregator.add_trade(now, price=fair, qty=0.0)
         # 1. MM publishes a quote first so anons have something to hit
         _handle_outputs(mm.on_tick(_ctx_for(mm_rng, now)), mm, now)
         # ... existing steps 2 and 3 unchanged ...
 ```
+Gated on `drift_model is not None` → baseline sims byte-identical (zero regression).
 
 - [ ] **Step 4: Run the test to verify it passes**
 

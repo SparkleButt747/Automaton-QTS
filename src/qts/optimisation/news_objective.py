@@ -61,6 +61,8 @@ def _hold_return(terrain: MarketTerrain) -> float:
 
 
 def _cvar_of_excess(excesses: list[float], quantile: float) -> float:
+    """Lower-quantile of per-episode excess (a CVaR-style robustness proxy, not strict
+    expected-shortfall): the value at `quantile`, e.g. 0.25 == the 25th percentile."""
     if not excesses:
         return 0.0
     return float(np.quantile(excesses, quantile))

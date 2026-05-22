@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import cast
 
 import numpy as np
 
@@ -43,7 +44,7 @@ class GroundTruthWorld:
 
     def substitute_indices(self, event_type: np.ndarray) -> np.ndarray:
         subs = np.array([t.substitute for t in self.triples])
-        return subs[event_type]
+        return cast(np.ndarray, subs[event_type])
 
 
 def _unit(rng: np.random.Generator, d: int) -> np.ndarray:
@@ -97,3 +98,56 @@ def build_world(config: PropagationSimConfig) -> GroundTruthWorld:
         triples=triples,
         regime_signs=regime_signs,
     )
+
+
+@dataclass(frozen=True)
+class EventBatch:
+    named_idx: np.ndarray  # (B,)
+    merit: np.ndarray  # (B,)
+    regime: np.ndarray  # (B,)
+    reactions: np.ndarray  # (B, n_assets)
+    event_type: np.ndarray  # (B,)
+
+    def __len__(self) -> int:
+        return int(self.named_idx.shape[0])
+
+
+def generate_events(
+    world: GroundTruthWorld,
+    n: int,
+    rng: np.random.Generator,
+    allowed_types: tuple[int, ...] | None = None,
+) -> EventBatch:
+    cfg = world.config
+    types = np.arange(cfg.n_event_types) if allowed_types is None else np.array(allowed_types)
+    event_type = rng.choice(types, size=n)
+    regime = rng.integers(0, cfg.n_regimes, size=n)
+    g = rng.normal(0.0, cfg.factor_vol, (n, cfg.n_factors))
+    merit = rng.normal(0.0, cfg.merit_vol, n)
+    eps = rng.normal(0.0, cfg.idiosyncratic_vol, (n, cfg.n_assets))
+
+    reactions = g @ world.loadings.T + eps
+    named = np.array([world.triples[k].named for k in event_type])
+    sub = np.array([world.triples[k].substitute for k in event_type])
+    rows = np.arange(n)
+    reactions[rows, named] += merit
+    reactions[rows, sub] += world.regime_signs[regime] * cfg.propagation_gain * merit
+    return EventBatch(
+        named_idx=named, merit=merit, regime=regime, reactions=reactions, event_type=event_type
+    )
+
+
+def make_splits(
+    world: GroundTruthWorld,
+    rng: np.random.Generator,
+    *,
+    n_train: int = 4000,
+    n_val: int = 1000,
+    n_test: int = 1000,
+    n_transfer: int = 1000,
+) -> tuple[EventBatch, EventBatch, EventBatch, EventBatch]:
+    train = generate_events(world, n_train, rng, allowed_types=(0, 1))
+    val = generate_events(world, n_val, rng, allowed_types=(0, 1))
+    test = generate_events(world, n_test, rng, allowed_types=(0, 1))
+    transfer = generate_events(world, n_transfer, rng, allowed_types=(2,))
+    return train, val, test, transfer

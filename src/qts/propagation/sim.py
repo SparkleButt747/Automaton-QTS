@@ -59,12 +59,13 @@ def _rot90(v: np.ndarray) -> np.ndarray:
 def build_world(config: PropagationSimConfig) -> GroundTruthWorld:
     """Deterministic construction satisfying the confound bounds by design.
 
-    Roles (3 disjoint triples): named={0,1,2}, substitute={3,4,5} (sub of type k is k+3),
-    decoy={6,7,8} (decoy of type k is k+6). Each named asset has a DISTINCT factor direction, so
-    the model cannot memorise routing via factor betas and must learn the sector mechanism — which
-    is the thing that transfers to an unseen pair. Per triple k: substitute = 90deg rotation of
-    named (factor-orthogonal, ~zero corr) sharing named's sector code (cos=1); decoy = named's
-    factor direction + noise (high corr) with a near-zero sector code (no substitution affinity).
+    Roles (``n = n_event_types`` disjoint triples over ``3 * n`` assets): named ``[0:n]``,
+    substitute ``[n:2n]`` (substitute of type k is ``n + k``), decoy ``[2n:3n]`` (decoy of type k is
+    ``2n + k``). Each named asset has a DISTINCT factor direction, so the model cannot memorise
+    routing via factor betas and must learn the sector mechanism — which is the thing that transfers
+    to an unseen pair. Per triple k: substitute = 90deg rotation of named (factor-orthogonal,
+    ~zero corr) sharing named's sector code (cos=1); decoy = named's factor direction + noise
+    (high corr) with a near-zero sector code (no substitution affinity).
     """
     rng = np.random.default_rng(config.seed)
     f = np.zeros((config.n_assets, config.feature_dim))

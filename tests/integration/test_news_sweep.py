@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from pathlib import Path
+
+import pytest
 
 from qts.config import RiskLimits
 from qts.macro.news_signal import NewsSignal
@@ -65,3 +68,31 @@ def test_sweep_runs_end_to_end() -> None:  # T-NEWS-SWEEP-ACCEPT
         "belief_half_life_minutes",
         "entry_threshold",
     }
+
+
+_CURATED_ROOT = Path("data/real/fomc/2023-12-13")
+
+
+def _curated_exists() -> bool:
+    return (_CURATED_ROOT / "bars.csv").exists()
+
+
+@pytest.mark.skipif(not _curated_exists(), reason="curated dataset missing")
+def test_real_day_reaction_inside_coupling_range() -> None:  # T-NEWS-SWEEP-VALIDITY
+    """The real day's post-announcement move should fall inside the default peak_bps
+    range — confirms we aren't training on couplings that can't produce reality."""
+    from qts.data.real_episode import RealEpisode
+    from qts.optimisation.episode_bank import CouplingRanges
+
+    episode = RealEpisode.from_disk(_CURATED_ROOT, symbol="BTCUSDT", source="fomc:2023-12-13")
+    bars = episode.terrain.bars
+    announce = min(e.timestamp for e in episode.text_events)
+    pre = [b.close for b in bars if b.timestamp < announce]
+    post = [b.close for b in bars if b.timestamp >= announce]
+    assert pre and post, "need bars both sides of the announcement"
+
+    move_bps = abs(max(post) - pre[-1]) / pre[-1] * 1e4
+    _lo, hi = CouplingRanges().peak_bps
+    # The realised move should be within an order of magnitude of our peak range —
+    # a loose sanity bound, not a tight fit (we randomise, we don't calibrate).
+    assert move_bps <= hi * 5.0, f"real move {move_bps:.0f}bps far exceeds range top {hi}bps"

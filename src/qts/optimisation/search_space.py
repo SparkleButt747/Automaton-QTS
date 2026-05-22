@@ -6,6 +6,7 @@ Analogous to racing lab's optimize/space.py (sample_mpcc_cfg, sample_rrhc_cfg).
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 import optuna
@@ -81,3 +82,27 @@ def sample_mean_reversion_params(trial: optuna.Trial) -> dict[str, Any]:
         "max_hold_bars": max_hold_bars,
         "position_size": position_size,
     }
+
+
+@dataclass(frozen=True)
+class NewsParams:
+    """Tuned params for NewsReactiveMomentum (the only 3 the sweep searches)."""
+
+    news_signal_weight: float
+    belief_half_life_minutes: float
+    entry_threshold: float
+
+
+def sample_news_params(trial: optuna.Trial) -> NewsParams:
+    """Sample the 3 news params. Ranges grounded in code:
+    - news_signal_weight in [0.1, 0.95]: within the convex-blend hard limit [0,1].
+    - belief_half_life in [15, 240] min (log): 240 == the 4h default.
+    - entry_threshold in [0.02, 0.4]: floor below momentum's 0.05 so small news triggers.
+    """
+    return NewsParams(
+        news_signal_weight=trial.suggest_float("news_signal_weight", 0.1, 0.95),
+        belief_half_life_minutes=trial.suggest_float(
+            "belief_half_life_minutes", 15.0, 240.0, log=True
+        ),
+        entry_threshold=trial.suggest_float("entry_threshold", 0.02, 0.4),
+    )

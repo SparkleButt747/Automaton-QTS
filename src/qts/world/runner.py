@@ -9,7 +9,7 @@ strategy through QTSStrategy.on_text_event.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from qts.models.base import Catalyst, LiquidityLevel, SentimentLevel, Trend, VolLevel
 from qts.models.terrain import MacroRegime, MarketEvent, MarketTerrain
@@ -18,6 +18,9 @@ from qts.world.agent_sim import run_agent_sim
 from qts.world.corpus import PersonaCorpus
 from qts.world.episode import SimulatedEpisode
 from qts.world.scenario import ScenarioConfig
+
+if TYPE_CHECKING:
+    from qts.world.drift_model import SentimentDriftModel  # noqa: F401
 
 # Anchor to the repo root (src/qts/world/runner.py -> ../../../../data/...)
 # so run_simulation works regardless of cwd.
@@ -81,6 +84,7 @@ def run_simulation(
     llm_mode: Literal["corpus", "live_cached"] = "corpus",
     persona_corpus_path: Path | None = None,
     venue_config: VenueConfig | None = None,
+    drift_model: SentimentDriftModel | None = None,
 ) -> SimulatedEpisode:
     """Full Phase 8 v1 pipeline. Returns a SimulatedEpisode.
 
@@ -106,6 +110,7 @@ def run_simulation(
         corpus=corpus,
         seed=seed,
         fomc_actual_rate=fomc_actual_rate,
+        drift_model=drift_model,
     )
 
     surprise_bucket = _surprise_bucket(fomc_actual_rate, scenario.fomc_expected_rate)
@@ -153,6 +158,7 @@ def run_simulation(
         terrain=terrain,
         scenario_name=scenario.name,
         seed=seed,
+        text_events=list(sim.text_events),
         agent_traces=sim.agent_traces,
         # sorted() because set ordering is non-deterministic across runs
         # (CPython hash randomisation); episode reproducibility depends on this.

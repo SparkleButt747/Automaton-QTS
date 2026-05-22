@@ -10,8 +10,12 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from qts.models.terrain import MarketTerrain
+
+if TYPE_CHECKING:
+    from qts.world.events import TextEvent  # noqa: F401
 
 
 @dataclass
@@ -44,6 +48,7 @@ class SimulatedEpisode:
     terrain: MarketTerrain
     scenario_name: str
     seed: int
+    text_events: list[TextEvent] = field(default_factory=list)
     agent_traces: dict[str, AgentTrace] = field(default_factory=dict)
     llm_corpus_refs: list[str] = field(default_factory=list)
     order_log: list[OrderLogEntry] = field(default_factory=list)

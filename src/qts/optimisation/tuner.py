@@ -55,6 +55,31 @@ class TunerResult:
     n_pruned: int = 0
 
 
+def build_study(config: TunerConfig) -> optuna.Study:
+    """Create (or load) an Optuna study with the standard TPE sampler + MedianPruner.
+
+    Shared by run_strategy_study and the news sweep so both use identical
+    sampler/pruner/storage wiring.
+    """
+    sampler = optuna.samplers.TPESampler(seed=config.sampler_seed)
+    pruner = optuna.pruners.MedianPruner(
+        n_startup_trials=config.pruner_n_startup_trials,
+        n_warmup_steps=config.pruner_n_warmup_steps,
+    )
+    storage = None
+    if config.storage_path is not None:
+        config.storage_path.parent.mkdir(parents=True, exist_ok=True)
+        storage = f"sqlite:///{config.storage_path}"
+    return optuna.create_study(
+        study_name=config.study_name,
+        direction=config.direction,
+        sampler=sampler,
+        pruner=pruner,
+        storage=storage,
+        load_if_exists=True,
+    )
+
+
 def run_strategy_study(
     train_terrains: list[MarketTerrain],
     risk_limits: RiskLimits,
@@ -95,27 +120,7 @@ def run_strategy_study(
         primary_metric=cfg.primary_metric,
     )
 
-    # Create sampler and pruner (mirrors racing lab's storage.py)
-    sampler = optuna.samplers.TPESampler(seed=cfg.sampler_seed)
-    pruner = optuna.pruners.MedianPruner(
-        n_startup_trials=cfg.pruner_n_startup_trials,
-        n_warmup_steps=cfg.pruner_n_warmup_steps,
-    )
-
-    # Create or load study
-    storage = None
-    if cfg.storage_path is not None:
-        cfg.storage_path.parent.mkdir(parents=True, exist_ok=True)
-        storage = f"sqlite:///{cfg.storage_path}"
-
-    study = optuna.create_study(
-        study_name=cfg.study_name,
-        direction=cfg.direction,
-        sampler=sampler,
-        pruner=pruner,
-        storage=storage,
-        load_if_exists=True,
-    )
+    study = build_study(cfg)
 
     # Build the objective
     objective = make_objective(context)

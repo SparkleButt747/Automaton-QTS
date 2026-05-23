@@ -193,6 +193,39 @@ def generate_hop_events(
     )
 
 
+def generate_chain_eval(
+    world: GroundTruthWorld,
+    n: int,
+    rng: np.random.Generator,
+    allowed_types: tuple[int, ...] | None = None,
+) -> EventBatch:
+    """Full 2-hop chains with PER-HOP regime signing, so ground truth == iterated 1-hop (spec §3).
+
+    r_B = sign*gain1*merit; r_C = sign*gain2*r_B = gain1*gain2*merit. Used only to score the
+    unroll; does NOT replace ``generate_events`` (which backs the committed multi-hop result).
+    """
+    cfg = world.config
+    types = np.arange(cfg.n_event_types) if allowed_types is None else np.array(allowed_types)
+    event_type = rng.choice(types, size=n)
+    regime = rng.integers(0, cfg.n_regimes, size=n)
+    g = rng.normal(0.0, cfg.factor_vol, (n, cfg.n_factors))
+    merit = rng.normal(0.0, cfg.merit_vol, n)
+    eps = rng.normal(0.0, cfg.idiosyncratic_vol, (n, cfg.n_assets))
+    reactions = g @ world.loadings.T + eps
+    named = np.array([world.chains[k].named for k in event_type])
+    sub = np.array([world.chains[k].substitute for k in event_type])
+    term = np.array([world.chains[k].terminal for k in event_type])
+    rows = np.arange(n)
+    sign = world.regime_signs[regime]
+    r_b = sign * cfg.propagation_gain * merit
+    reactions[rows, named] += merit
+    reactions[rows, sub] += r_b
+    reactions[rows, term] += sign * cfg.propagation_gain2 * r_b  # per-hop sign -> gain1*gain2*merit
+    return EventBatch(
+        named_idx=named, merit=merit, regime=regime, reactions=reactions, event_type=event_type
+    )
+
+
 def make_splits(
     world: GroundTruthWorld,
     rng: np.random.Generator,

@@ -7,6 +7,7 @@ import numpy as np
 from qts.propagation.sim import (
     PropagationSimConfig,
     build_world,
+    generate_chain_eval,
     generate_hop_events,
 )
 
@@ -25,3 +26,16 @@ def test_hop_events_name_only_sources_and_fire_one_edge() -> None:  # T-PROP-UNR
     rows = np.arange(len(batch))
     named_react = batch.reactions[rows, batch.named_idx]
     assert np.corrcoef(named_react, batch.merit)[0, 1] > 0.5
+
+
+def test_chain_eval_terminal_is_iterated_one_hop() -> None:  # T-PROP-UNROLL-2
+    """Per-hop signing => r_C == gain1*gain2*merit (sign cancels), matching the unroll."""
+    world = build_world(PropagationSimConfig(seed=1, idiosyncratic_vol=0.0, factor_vol=0.0))
+    n = world.config.n_event_types
+    rng = np.random.default_rng(1)
+    batch = generate_chain_eval(world, 500, rng)
+    rows = np.arange(len(batch))
+    term_idx = np.array([2 * n + k for k in batch.event_type])
+    r_c = batch.reactions[rows, term_idx]
+    g1, g2 = world.config.propagation_gain, world.config.propagation_gain2
+    np.testing.assert_allclose(r_c, g1 * g2 * batch.merit, atol=1e-6)

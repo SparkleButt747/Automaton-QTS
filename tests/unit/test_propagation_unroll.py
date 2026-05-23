@@ -11,7 +11,7 @@ from qts.propagation.sim import (
     generate_hop_events,
     make_unroll_splits,
 )
-from qts.propagation.unroll import unroll_predict
+from qts.propagation.unroll import UnrollReport, evaluate_unroll_transfer, unroll_predict
 
 
 class _DoublingOperator:
@@ -80,3 +80,37 @@ def test_unroll_splits_hold_out_last_chain() -> None:  # T-PROP-UNROLL-3
     # training is 1-hop (A or B sources only); chain_transfer is a full chain (named is A-role only)
     assert np.all(hop_train.named_idx < 2 * n)
     assert np.all(chain_transfer.named_idx < n)
+
+
+class _OracleOperator:
+    """Stub operator: successor = sign * gain * merit (exact ground truth, per hop)."""
+
+    def __init__(self, world) -> None:  # type: ignore[no-untyped-def]
+        self.world = world
+
+    def predict_np(self, named_idx, merit, regime):  # type: ignore[no-untyped-def]
+        w = self.world
+        cfg = w.config
+        out = np.zeros((len(named_idx), cfg.n_assets))
+        sign = w.regime_signs[regime]
+        nt = cfg.n_event_types
+        named = np.asarray(named_idx)
+        is_a = named < nt
+        succ = np.where(is_a, nt + named % nt, 2 * nt + (named - nt) % nt)
+        gain = np.where(is_a, cfg.propagation_gain, cfg.propagation_gain2)
+        rows = np.arange(len(named))
+        out[rows, succ] = sign * gain * np.asarray(merit, dtype=float)
+        return out
+
+
+def test_evaluate_unroll_transfer_oracle_beats_baseline() -> None:  # T-PROP-UNROLL-5
+    world = build_world(PropagationSimConfig(seed=0))
+    _, _, _, chain_transfer = make_unroll_splits(world, np.random.default_rng(0), n_transfer=500)
+    report = evaluate_unroll_transfer(world, _OracleOperator(world), chain_transfer, seed=0)
+    assert isinstance(report, UnrollReport)
+    # the oracle reproduces the merit-driven bump exactly; it cannot predict factor/idio noise on C
+    # (nobody can — that's the confound), so its MSE floors at the noise variance, but it still
+    # cleanly beats the correlational baseline + no-prop floor on both hops.
+    assert report.terminal_mse_graph < report.terminal_mse_corr
+    assert report.terminal_mse_graph < report.terminal_mse_noprop
+    assert report.transfer_pass and report.hop1_pass

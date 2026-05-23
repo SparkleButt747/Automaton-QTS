@@ -37,10 +37,20 @@ def main() -> None:
         f"  test MSE   graph={report.test_mse_graph:.5f}  "
         f"corr={report.test_mse_corr:.5f}  noprop={report.test_mse_noprop:.5f}"
     )
-    print(f"  subst MSE  graph={report.sub_mse_graph:.5f}  corr={report.sub_mse_corr:.5f}")
     print(
-        f"  transfer   graph={report.transfer_sub_mse_graph:.5f}  "
-        f"corr={report.transfer_sub_mse_corr:.5f}"
+        f"  subst MSE  graph={report.sub_mse_graph:.5f}  corr={report.sub_mse_corr:.5f}  (1-hop B)"
+    )
+    print(
+        f"  term MSE   graph={report.terminal_mse_graph:.5f}  "
+        f"corr={report.terminal_mse_corr:.5f}  (2-hop C)"
+    )
+    print(
+        f"  tfer subst graph={report.transfer_sub_mse_graph:.5f}  "
+        f"corr={report.transfer_sub_mse_corr:.5f}  (unseen 1-hop B)"
+    )
+    print(
+        f"  tfer term  graph={report.transfer_terminal_mse_graph:.5f}  "
+        f"corr={report.transfer_terminal_mse_corr:.5f}  (unseen 2-hop C)"
     )
     print(f"  prediction_pass={report.prediction_pass}  transfer_pass={report.transfer_pass}")
     print(f"  PASSED={report.passed}")

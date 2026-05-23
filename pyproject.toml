@@ -48,6 +48,8 @@ dependencies = [
   "nautilus_trader>=1.200",
   # Optimisation
   "optuna>=3.0",
+  # Neural-ODE (event-propagation graph)
+  "torchdiffeq",
 ]
 
 [project.optional-dependencies]
@@ -106,6 +108,7 @@ module = [
   "hftbacktest.*",
   "optuna.*",
   "yaml.*",
+  "torchdiffeq.*",
 ]
 ignore_missing_imports = true
 

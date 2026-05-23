@@ -1,4 +1,10 @@
-"""Adversarial sim: events as do() interventions with a correlation-misleads confound."""
+"""Adversarial sim: events as do() interventions with a correlation-misleads confound.
+
+v0.1 (multi-hop): each event is a 2-hop chain named(A) -> substitute(B, via relation R1) ->
+terminal(C, via relation R2). B and C are both factor-decorrelated from A (invisible to a
+correlational baseline); the decoy is factor-correlated with A (bait). A->C has no direct feature
+match — it exists only as the composition R1 ∘ R2, so reaching C requires two learned relations.
+"""
 
 from __future__ import annotations
 
@@ -7,17 +13,18 @@ from typing import cast
 
 import numpy as np
 
-N_EVENT_TYPES = 6  # train on the first 5 pairs, hold out the last for the transfer gate
-N_ASSETS = 3 * N_EVENT_TYPES  # named [0:6], substitute [6:12], decoy [12:18]
-N_FACTORS = 2
-FEATURE_DIM = 8  # dims [0:2] = factor loadings, dims [2:8] = 6-dim sector code
+N_EVENT_TYPES = 6  # 5 chains trained, 1 held out for the transfer gate
+N_ASSETS = 4 * N_EVENT_TYPES  # named [0:6], substitute [6:12], terminal [12:18], decoy [18:24]
+N_FACTORS = 3  # 3 so the 2-hop terminal can be factor-orthogonal to BOTH named and substitute
+FEATURE_DIM = 15  # [0:3] factor, [3:9] R1 ("substitution") code, [9:15] R2 ("supply") code
 
 
 @dataclass(frozen=True)
-class EventTriple:
-    named: int
-    substitute: int
-    decoy: int
+class EventChain:
+    named: int  # A
+    substitute: int  # B — 1-hop; shares A's R1-code, factor-orthogonal to A
+    terminal: int  # C — 2-hop; shares B's R2-code, factor-orthogonal to A and B
+    decoy: int  # factor-correlated with A, no causal edge (baseline bait)
 
 
 @dataclass(frozen=True)
@@ -30,7 +37,8 @@ class PropagationSimConfig:
     factor_vol: float = 1.0
     idiosyncratic_vol: float = 0.3
     merit_vol: float = 1.0
-    propagation_gain: float = 1.5
+    propagation_gain: float = 1.5  # hop 1 (A -> B)
+    propagation_gain2: float = 1.0  # hop 2 (B -> C)
     seed: int = 0
 
 
@@ -39,12 +47,16 @@ class GroundTruthWorld:
     config: PropagationSimConfig
     features: np.ndarray  # (n_assets, feature_dim)
     loadings: np.ndarray  # (n_assets, n_factors)
-    triples: tuple[EventTriple, ...]
+    chains: tuple[EventChain, ...]
     regime_signs: np.ndarray  # (n_regimes,)
 
     def substitute_indices(self, event_type: np.ndarray) -> np.ndarray:
-        subs = np.array([t.substitute for t in self.triples])
-        return cast(np.ndarray, subs[event_type])
+        idx = np.array([c.substitute for c in self.chains])
+        return cast(np.ndarray, idx[event_type])
+
+    def terminal_indices(self, event_type: np.ndarray) -> np.ndarray:
+        idx = np.array([c.terminal for c in self.chains])
+        return cast(np.ndarray, idx[event_type])
 
 
 def _unit(rng: np.random.Generator, d: int) -> np.ndarray:
@@ -52,45 +64,57 @@ def _unit(rng: np.random.Generator, d: int) -> np.ndarray:
     return v / np.linalg.norm(v)
 
 
-def _rot90(v: np.ndarray) -> np.ndarray:
-    return np.array([-v[1], v[0]])
+def _orthonormal_basis(rng: np.random.Generator, dim: int, k: int) -> np.ndarray:
+    """``k`` mutually orthonormal row-vectors in ``R^dim`` (via QR of a random matrix)."""
+    q, _ = np.linalg.qr(rng.standard_normal((dim, dim)))
+    rows: np.ndarray = q[:k]
+    return rows
 
 
 def build_world(config: PropagationSimConfig) -> GroundTruthWorld:
-    """Deterministic construction satisfying the confound bounds by design.
+    """Deterministic 2-hop-chain construction satisfying the confound bounds by design.
 
-    Roles (``n = n_event_types`` disjoint triples over ``3 * n`` assets): named ``[0:n]``,
-    substitute ``[n:2n]`` (substitute of type k is ``n + k``), decoy ``[2n:3n]`` (decoy of type k is
-    ``2n + k``). Each named asset has a DISTINCT factor direction, so the model cannot memorise
-    routing via factor betas and must learn the sector mechanism — which is the thing that transfers
-    to an unseen pair. Per triple k: substitute = 90deg rotation of named (factor-orthogonal,
-    ~zero corr) sharing named's sector code (cos=1); decoy = named's factor direction + noise
-    (high corr) with a near-zero sector code (no substitution affinity).
+    Roles (``n = n_event_types`` disjoint chains over ``4 * n`` assets): named ``[0:n]``,
+    substitute ``[n:2n]``, terminal ``[2n:3n]``, decoy ``[3n:4n]`` (asset of role r, chain k is
+    ``r*n + k``). Per chain k: named/substitute/terminal get a random ORTHONORMAL factor triplet
+    (mutually ~zero corr); substitute shares named's R1-code (A->B match); terminal shares
+    substitute's R2-code (B->C match); decoy shares named's factor direction (high corr) with
+    ~zero R1/R2 codes. A->C has no direct R1 or R2 match — only the composition R1 ∘ R2.
     """
     rng = np.random.default_rng(config.seed)
     f = np.zeros((config.n_assets, config.feature_dim))
-    n_types = config.n_event_types
+    n = config.n_event_types
     nf = config.n_factors
-    sector_dim = config.feature_dim - nf
-    for k in range(n_types):
-        u = _unit(rng, nf)  # named k factor direction (distinct per k)
-        s = _unit(rng, sector_dim)  # named/substitute k sector code
-        f[k, :nf] = u
-        f[k, nf:] = s
-        f[n_types + k, :nf] = _rot90(u)  # substitute: factor-orthogonal to named
-        f[n_types + k, nf:] = s  # substitute: sector-matched to named
-        f[2 * n_types + k, :nf] = u + 0.05 * rng.standard_normal(nf)  # decoy: factor-aligned
-        f[2 * n_types + k, nf:] = 0.05 * rng.standard_normal(sector_dim)  # decoy: ~no sector
+    code_dim = config.feature_dim - nf
+    r1_dim = code_dim // 2
+    r1_lo, r1_hi = nf, nf + r1_dim
+    r2_lo = nf + r1_dim
+    r2_dim = config.feature_dim - r2_lo
+    for k in range(n):
+        basis = _orthonormal_basis(rng, nf, 3)  # a_A, a_B, a_C mutually orthogonal
+        r1 = _unit(rng, r1_dim)
+        r2 = _unit(rng, r2_dim)
+        a, b, c, d = k, n + k, 2 * n + k, 3 * n + k
+        f[a, :nf] = basis[0]  # named A
+        f[a, r1_lo:r1_hi] = r1
+        f[b, :nf] = basis[1]  # substitute B: factor ⊥ A
+        f[b, r1_lo:r1_hi] = r1  # ... shares A's R1-code (A->B)
+        f[b, r2_lo:] = r2  # ... is the R2-source for C
+        f[c, :nf] = basis[2]  # terminal C: factor ⊥ A and B
+        f[c, r2_lo:] = r2  # ... shares B's R2-code (B->C)
+        f[d, :nf] = basis[0] + 0.05 * rng.standard_normal(nf)  # decoy: factor ~ A (corr high)
+        f[d, r1_lo:r1_hi] = 0.05 * rng.standard_normal(r1_dim)
+        f[d, r2_lo:] = 0.05 * rng.standard_normal(r2_dim)
 
-    triples = tuple(
-        EventTriple(named=k, substitute=n_types + k, decoy=2 * n_types + k) for k in range(n_types)
+    chains = tuple(
+        EventChain(named=k, substitute=n + k, terminal=2 * n + k, decoy=3 * n + k) for k in range(n)
     )
     regime_signs = np.array([1.0, -1.0])
     return GroundTruthWorld(
         config=config,
         features=f,
         loadings=f[:, : config.n_factors].copy(),
-        triples=triples,
+        chains=chains,
         regime_signs=regime_signs,
     )
 
@@ -122,11 +146,14 @@ def generate_events(
     eps = rng.normal(0.0, cfg.idiosyncratic_vol, (n, cfg.n_assets))
 
     reactions = g @ world.loadings.T + eps
-    named = np.array([world.triples[k].named for k in event_type])
-    sub = np.array([world.triples[k].substitute for k in event_type])
+    named = np.array([world.chains[k].named for k in event_type])
+    sub = np.array([world.chains[k].substitute for k in event_type])
+    term = np.array([world.chains[k].terminal for k in event_type])
     rows = np.arange(n)
+    sign = world.regime_signs[regime]
     reactions[rows, named] += merit
-    reactions[rows, sub] += world.regime_signs[regime] * cfg.propagation_gain * merit
+    reactions[rows, sub] += sign * cfg.propagation_gain * merit  # hop 1: A -> B
+    reactions[rows, term] += sign * cfg.propagation_gain * cfg.propagation_gain2 * merit  # hop 2
     return EventBatch(
         named_idx=named, merit=merit, regime=regime, reactions=reactions, event_type=event_type
     )
@@ -143,7 +170,7 @@ def make_splits(
 ) -> tuple[EventBatch, EventBatch, EventBatch, EventBatch]:
     n = world.config.n_event_types
     train_types = tuple(range(n - 1))  # all event types except the last
-    transfer_types = (n - 1,)  # the held-out pair the model never saw coupled
+    transfer_types = (n - 1,)  # the held-out chain the model never saw coupled
     train = generate_events(world, n_train, rng, allowed_types=train_types)
     val = generate_events(world, n_val, rng, allowed_types=train_types)
     test = generate_events(world, n_test, rng, allowed_types=train_types)

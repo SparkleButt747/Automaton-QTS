@@ -1,4 +1,4 @@
-"""T-PROP-SIM-1..3: adversarial sim — confound, determinism, causal edge."""
+"""T-PROP-SIM-1..3: adversarial 2-hop-chain sim — confound, determinism, causal edges."""
 
 from __future__ import annotations
 
@@ -20,16 +20,26 @@ def _corr_matrix(world) -> np.ndarray:
     return cov / np.outer(d, d)
 
 
+def _cos(u: np.ndarray, v: np.ndarray) -> float:
+    return float(u @ v / (np.linalg.norm(u) * np.linalg.norm(v)))
+
+
 def test_confound_bounds_hold() -> None:  # T-PROP-SIM-1
     world = build_world(PropagationSimConfig(seed=0))
     corr = _corr_matrix(world)
-    for tri in world.triples:
-        assert corr[tri.named, tri.decoy] >= 0.5, "decoy must be correlated with named"
-        assert abs(corr[tri.named, tri.substitute]) <= 0.2, "substitute must be ~uncorrelated"
-        sn = world.features[tri.named, 2:]
-        ss = world.features[tri.substitute, 2:]
-        cos = float(sn @ ss / (np.linalg.norm(sn) * np.linalg.norm(ss)))
-        assert cos >= 0.5, "substitute must share named's sector code"
+    nf = world.config.n_factors
+    r1_dim = (world.config.feature_dim - nf) // 2
+    r1 = slice(nf, nf + r1_dim)
+    r2 = slice(nf + r1_dim, world.config.feature_dim)
+    feats = world.features
+    for c in world.chains:
+        # both unnamed targets are factor-decorrelated from the named entity; the decoy is the bait
+        assert corr[c.named, c.decoy] >= 0.5, "decoy must be correlated with named"
+        assert abs(corr[c.named, c.substitute]) <= 0.2, "1-hop substitute must be ~uncorrelated"
+        assert abs(corr[c.named, c.terminal]) <= 0.2, "2-hop terminal must be ~uncorrelated"
+        # A->B shares the R1 ("substitution") code; B->C shares the R2 ("supply") code
+        assert _cos(feats[c.named, r1], feats[c.substitute, r1]) >= 0.5, "A,B share R1 code"
+        assert _cos(feats[c.substitute, r2], feats[c.terminal, r2]) >= 0.5, "B,C share R2 code"
 
 
 def test_generate_is_seed_deterministic() -> None:  # T-PROP-SIM-2
@@ -42,15 +52,17 @@ def test_generate_is_seed_deterministic() -> None:  # T-PROP-SIM-2
     assert np.allclose(a.reactions, b.reactions)
 
 
-def test_causal_edge_hits_substitute_not_decoy() -> None:  # T-PROP-SIM-3
+def test_two_hop_causal_edges() -> None:  # T-PROP-SIM-3
     world = build_world(PropagationSimConfig(seed=0, idiosyncratic_vol=0.0, factor_vol=0.0))
     batch = generate_events(world, 2000, np.random.default_rng(2), allowed_types=(0,))
-    sub = world.triples[0].substitute
-    decoy = world.triples[0].decoy
+    cfg = world.config
+    chain = world.chains[0]
     sign = world.regime_signs[batch.regime]
-    expected_sub = sign * world.config.propagation_gain * batch.merit
-    assert np.allclose(batch.reactions[:, sub], expected_sub, atol=1e-9)
-    assert np.allclose(batch.reactions[:, decoy], 0.0, atol=1e-9)
+    expected_b = sign * cfg.propagation_gain * batch.merit
+    expected_c = sign * cfg.propagation_gain * cfg.propagation_gain2 * batch.merit
+    assert np.allclose(batch.reactions[:, chain.substitute], expected_b, atol=1e-9)
+    assert np.allclose(batch.reactions[:, chain.terminal], expected_c, atol=1e-9)
+    assert np.allclose(batch.reactions[:, chain.decoy], 0.0, atol=1e-9)
 
 
 def test_splits_partition_event_types() -> None:  # T-PROP-SIM-2b

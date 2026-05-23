@@ -2,9 +2,10 @@
 
 from qts.propagation.baselines import CorrelationalBaseline, no_propagation_predict
 from qts.propagation.model import GatedPropagationGraph
+from qts.propagation.model_ode import GraphNeuralODE
 from qts.propagation.sim import (
     EventBatch,
-    EventTriple,
+    EventChain,
     GroundTruthWorld,
     PropagationSimConfig,
     build_world,
@@ -16,9 +17,10 @@ from qts.propagation.train import FeasibilityReport, evaluate_feasibility, fit_g
 __all__ = [
     "CorrelationalBaseline",
     "EventBatch",
-    "EventTriple",
+    "EventChain",
     "FeasibilityReport",
     "GatedPropagationGraph",
+    "GraphNeuralODE",
     "GroundTruthWorld",
     "PropagationSimConfig",
     "build_world",

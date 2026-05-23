@@ -23,7 +23,7 @@ def test_correlational_chases_decoy_misses_substitute() -> None:  # T-PROP-BASE-
     base = CorrelationalBaseline.from_history(world, n_samples=20000, seed=0)
     batch = generate_events(world, 4000, np.random.default_rng(1), allowed_types=(0,))
     pred = base.predict(batch)
-    sub, decoy = world.triples[0].substitute, world.triples[0].decoy
+    sub, decoy = world.chains[0].substitute, world.chains[0].decoy
     truth = batch.reactions
     mse_sub = float(np.mean((pred[:, sub] - truth[:, sub]) ** 2))
     mse_decoy = float(np.mean((pred[:, decoy] - truth[:, decoy]) ** 2))

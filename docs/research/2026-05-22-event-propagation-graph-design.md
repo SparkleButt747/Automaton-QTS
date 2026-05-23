@@ -251,3 +251,35 @@ unseen asset pair* and beats a strong correlational baseline on the unnamed enti
   and exposed the data-limitation — which the scale-up then resolved honestly.
 - **Next (deferred):** the realism layers in §8/§9 (LLM merit noise, anticipation, sparsity, drift,
   multi-hop) and the neural-ODE upgrade remain the path from "machinery works" toward "money."
+
+## 13. Findings (multi-hop / 2-hop run — 2026-05-23)
+
+Built the 2-hop chain sim (`EventChain`): each event is `named(A) -> substitute(B, via relation R1)
+-> terminal(C, via relation R2)`, with **24 assets (6 disjoint chains, 5 trained + 1 held out),
+3 factors** (so C is factor-orthogonal to *both* A and B), and **disjoint R1/R2 code blocks**. A->C
+has no direct feature match — reaching C requires composing two learned relations. Spec:
+`docs/specs/2026-05-23-propagation-multihop.md`.
+
+**Verdict: in-sample composition works; 2-hop transfer is an open generalisation wall.**
+
+- **In-sample 2-hop is learned.** The graph beats the correlational baseline on *both* the 1-hop
+  substitute (B) and the 2-hop terminal (C) by ≥25% (GATE-2 passes at seed 0; in-sample prediction
+  ~4/5 across seeds). The model genuinely composes R1 ∘ R2 when it has seen the chain.
+- **Transfer does NOT generalise to an unseen chain.** GATE-3 fails (marked `xfail`): on the held-out
+  chain the graph is no better than — sometimes worse than — correlational on B and C. Best result
+  ~2/5 seeds.
+- **Five independent levers leave transfer flat (~1/3–2/5):** data-scaling (E=6→12), model class
+  (linear bilinear → continuous-time neural-ODE via `torchdiffeq`), learning rate, epochs, and edge
+  capacity (1–3 message-passing heads). Adding capacity raises *in-sample* fit (H=2 → prediction 5/5)
+  but not transfer (still 2/5; H=3 overfits worse) — the signature of a **generalisation wall, not a
+  capacity wall**.
+- **Even 1-hop transfer regressed** vs the v0 result (was robust 6/6). The richer 15-dim feature
+  space gives the free bilinear `M` cross-block freedom to fit the 5 training chains with
+  chain-specific solutions that don't transfer. The R1/R2 codes are cleanly disjoint by construction,
+  so this is an inductive-bias / optimisation limit, **not a sim-design flaw**.
+- **Untested lever (deferred, no longer "bounded"):** bias `M` toward a block-structured /
+  similarity-kernel form so generic relation-matching is favoured over memorisation — but this edges
+  toward hard-coding the very structure the model was meant to discover, so it was not pursued.
+- **Status:** the v0 **1-hop** result remains the shipped feasibility claim. The multi-hop machinery
+  (sim + gate + `GraphNeuralODE`) is committed as a **documented negative result**, with the transfer
+  gate `xfail`. Next realism work should build on the proven 1-hop substrate.

@@ -35,7 +35,7 @@ class EconomicLink:
 
 
 class EconomicLinkClassifier:
-    """Classifies a (source, peer, context) co-mention into a typed link; content-addressed cache."""  # noqa: E501
+    """Classify a co-mention (source, peer, context) into a typed link; content-addressed cache."""
 
     def __init__(self, llm: LLMClientProtocol, cache_dir: Path) -> None:
         self._llm = llm

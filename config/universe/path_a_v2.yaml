@@ -1,0 +1,18 @@
+# Path A v2 v0 universe — small S&P-500 subset across sectors with clear economic links.
+# aliases feed Phase-1 ticker extraction (lowercased at load); sector feeds node features.
+tickers:
+  NVDA: {sector: Semiconductors, aliases: [nvidia]}
+  AMD: {sector: Semiconductors, aliases: [advanced micro devices]}
+  INTC: {sector: Semiconductors, aliases: [intel]}
+  TSM: {sector: Semiconductors, aliases: [tsmc, taiwan semiconductor]}
+  AVGO: {sector: Semiconductors, aliases: [broadcom]}
+  QCOM: {sector: Semiconductors, aliases: [qualcomm]}
+  AAPL: {sector: Technology, aliases: [apple]}
+  MSFT: {sector: Technology, aliases: [microsoft]}
+  WMT: {sector: Retail, aliases: [walmart]}
+  TGT: {sector: Retail, aliases: [target]}
+  COST: {sector: Retail, aliases: [costco]}
+  F: {sector: Autos, aliases: [ford]}
+  GM: {sector: Autos, aliases: [general motors]}
+  DAL: {sector: Airlines, aliases: [delta air lines]}
+  UAL: {sector: Airlines, aliases: [united airlines]}

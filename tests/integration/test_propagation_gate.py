@@ -37,11 +37,12 @@ def test_prediction_gate_beats_baselines(seed: int) -> None:  # T-PROP-GATE-2
 
 @pytest.mark.xfail(
     reason=(
-        "2-hop compositional transfer is an open generalisation wall. The graph learns the "
-        "A->B->C chain IN-SAMPLE (GATE-2 passes), but the learned composition does not reliably "
-        "transfer to an unseen chain (~2/5 seeds at best). Invariant to data-scaling (E=6..12), "
-        "model class (linear / neural-ODE), lr, epochs, and edge capacity (1..3 heads). "
-        "See docs/research/2026-05-22-event-propagation-graph-design.md §13."
+        "Fixed-world training cannot transfer the 2-hop composition: a single-world fit_graph "
+        "memorises its relation-directions and fails on an unseen chain (~2/5 seeds at best), "
+        "invariant to data-scaling, model class, lr, epochs, edge capacity (§13/§14). This xfail "
+        "is expected and CORRECT for the single-world fit_graph. The wall is CRACKED by a "
+        "training-objective change — episodic relation-resampling across a pool of worlds "
+        "(train_meta, robust 50/50 transfer); see qts.propagation.meta and design §15."
     ),
     strict=False,
 )

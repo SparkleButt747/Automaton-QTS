@@ -1,6 +1,13 @@
 """Event-propagation graph (sim-only v0 feasibility cut)."""
 
 from qts.propagation.baselines import CorrelationalBaseline, no_propagation_predict
+from qts.propagation.meta import (
+    MetaPropagationGraph,
+    MetaTransferReport,
+    evaluate_meta_transfer,
+    few_shot_adapt,
+    train_meta,
+)
 from qts.propagation.model import GatedPropagationGraph
 from qts.propagation.model_ode import GraphNeuralODE
 from qts.propagation.sim import (
@@ -26,12 +33,17 @@ __all__ = [
     "GatedPropagationGraph",
     "GraphNeuralODE",
     "GroundTruthWorld",
+    "MetaPropagationGraph",
+    "MetaTransferReport",
     "PropagationSimConfig",
     "UnrollReport",
     "build_world",
     "evaluate_feasibility",
+    "evaluate_meta_transfer",
     "evaluate_unroll_transfer",
+    "few_shot_adapt",
     "fit_graph",
+    "train_meta",
     "generate_chain_eval",
     "generate_events",
     "generate_hop_events",

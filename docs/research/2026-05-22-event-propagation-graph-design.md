@@ -388,3 +388,115 @@ inductive-bias regime of the sim** as the bottleneck, not the scorer. Remaining 
 (§14.3) — both are training-objective changes, not architecture swaps, which is the more likely lever
 given three architectures have now failed identically. `model_nbf.py` committed as documented
 exploration.
+
+## 15. Findings — meta-resampling CRACKS n-hop transfer (2026-05-23)
+
+**The §14.5 "banked" verdict is OVERTURNED.** The missing lever was the **training objective, not the
+architecture** — exactly the call §14.6 made. The *same* feature-conditioned bilinear operator that
+"failed" in §13/§14, trained with **MLC-style episodic relation-resampling** (§14.3 lever #2; Lake &
+Baroni, *Nature* 2023), transfers its learned composition **robustly to entirely unseen worlds**. The
+bilinear was never the bottleneck; the fixed-world training regime was. Productionised in
+`src/qts/propagation/meta.py` (`MetaPropagationGraph`, `train_meta`, `few_shot_adapt`,
+`evaluate_meta_transfer`), CLI `scripts/run_propagation_meta.py`, tests `T-PROP-META-*` +
+`T-PROP-META-GATE-1`. The sweep scripts below are throwaway (`/tmp/meta_*.py`); the committed module +
+CLI reproduce the headline.
+
+### 15.1 The mechanism
+
+Resample the world's relations **every training step** from a pool of distinct worlds, with ONE shared
+operator `M` (features passed at forward time, so `M` binds to feature-codes, never entity IDs). Unable
+to memorise per-world directions, it is forced into the generic composable rule. Stability sweet spot:
+`prop_steps=3` (reaches a 2-hop terminal; **`prop_steps=8` diverges** under diverse worlds), gradient
+clipping (1.0), `lr=3e-3`. Eval = held-out worlds with seeds disjoint from the training pool.
+
+### 15.2 Robust zero-shot transfer (2000-world pool, 50 held-out worlds, 6 seeds)
+
+| role | win-rate | graph MSE | corr MSE |
+|------|----------|-----------|----------|
+| SUB (1-hop B) | **50/50** every seed | ~2.15 | ~3.35 |
+| TERM (2-hop C) | **50/50** every seed | ~2.65 | ~3.34 |
+
+Both hops transfer to unseen worlds on every seed — where the single-world `fit_graph` (T-PROP-GATE-3)
+fails. This is the result that cracks the wall.
+
+### 15.3 Diversity, NOT count, is the lever
+
+Two controls isolate the axis. **(a) Count** (fixed world, more chains E, constant per-chain data,
+bilinear, 8 seeds): 1-hop becomes robust (`sub-win 8/8` at E=25) but **2-hop stays a coin-flip**
+(`term-win` 3/8→5/8 across E=6..75; FULL-transfer 2–4/8). More data of the *same* relations does not
+compose. **(b) Diversity-dosage** (pool size 1→2000, **constant 20k steps**, 50 held-out worlds):
+
+| pool size | SUB capture (win) | TERM capture (win) |
+|-----------|-------------------|--------------------|
+| 1 | −536% (4/50) | −507% (3/50) |
+| 3 | −276% (8/50) | −266% (4/50) |
+| **10** | **64% (50/50)** | **42% (49/50)** |
+| 30 | 61% (50/50) | 39% (50/50) |
+| 100 | 55% (50/50) | 32% (50/50) |
+| 2000 | 52% (50/50) | 31% (50/50) |
+
+A **sharp phase change between 3 and 10 worlds**: at pool ≤3 the operator memorises and predicts
+*worse than zero* on held-out worlds; at **pool ≥10 it snaps to robust 50/50** and stays robust.
+Capture is *highest* at pool=10 (an easier averaging job) and eases slightly toward 2000. **The
+diversity floor is ≈10 distinct relations** — real markets (hundreds–thousands of economic links)
+clear it by 1–2 orders of magnitude.
+
+### 15.4 Zero-shot capture decays with depth — a structural ceiling
+
+`capture = (corr_mse − graph_mse) / signal_var` (corr ≈ predicts-zero for the factor-orthogonal roles;
+1.0 = per-world oracle). Zero-shot: **1-hop ~52%, 2-hop ~31%, 3-hop ~3%**. This ceiling is **structural**
+— unmovable by any of:
+
+| lever | effect on capture |
+|-------|-------------------|
+| operator capacity (learned encoder, 32/64-d) | **hurts** (1-hop 52%→30%) |
+| training length (20k→40k) | no change |
+| propagation depth (`prop_steps` 3→5→8→12) | **strictly hurts** (2-hop 31%→21%→15%→12%) |
+
+It is the price of *one* shared operator generalising across all worlds with zero observations. A 3-hop
+world (A→B→C→D) confirms the decay: QUAD wins ~90% of the time but captures only ~3% — winning by a
+hair, near-noise, and not recoverable by deeper propagation.
+
+### 15.5 Few-shot adaptation breaks the ceiling at every depth
+
+Test-time adaptation (`few_shot_adapt`: fine-tune a copy on K support events, L2-anchored to the
+meta-init) recovers most of the signal. 2-hop world (anchored, 30 worlds):
+
+| K-shot | SUB capture | TERM capture |
+|--------|-------------|--------------|
+| 0 | 51% | 30% |
+| 32 | 56% | 37% |
+| 128 | 79% | 67% |
+| 256 | **83%** | **69%** |
+
+3-hop world — **QUAD is rescued** (the decisive result):
+
+| K-shot | SUB | TERM | QUAD |
+|--------|-----|------|------|
+| 0 | 43% | 20% | **3%** |
+| 128 | 81% | 85% | 63% |
+| 512 | 87% | 91% | **72%** |
+
+So **no hop is fundamentally lost** — the 3-hop "structural decay" is a *zero-shot* phenomenon, not
+unlearnability. Deeper hops just need more data. Small-K (<~32) overfits the support set's
+factor/idiosyncratic noise without the anchor (an aggressive un-anchored recipe hit 91%/87% at K=128 on
+2-hop but blew up at K=8/32 — the optimal adaptation strength scales with K).
+
+### 15.6 What this means for real data (Path A)
+
+- **Zero-shot** = a relation never seen fire → still beats correlation, more so for shallow links.
+- **Few-shot** = a relation with some history → recovers most causal signal at *all* depths.
+- Real markets have huge relation diversity (≫ the ~10 floor) and history per relation (the few-shot
+  regime). **Path A is upgradeable** from 1-hop-only to the full n-hop meta-mechanism.
+
+### 15.7 Novelty & honest caveats
+
+- **Core ML not novel** (MLC meta-learning is the established mechanism); the **application + this
+  characterisation** (diversity-not-count, structural zero-shot depth-ceiling, few-shot rescue on
+  event-propagation graphs) is the novel contribution. Closest prior art FinRipple (ACL 2025): fixed
+  KG, no demonstrated multi-hop transfer.
+- **Caveats:** (1) synthetic sim — relation codes are orthogonal *by construction*; real features are
+  noisier and correlated, so the real diversity floor may be higher. (2) Zero-shot capture is *partial*
+  (~52%/31%) — profit on deep/novel links needs the few-shot regime or shallow hops. (3) Only the core
+  mechanism (`meta.py` + CLI + tests) is committed; the capacity/depth/dosage/3-hop sweep scripts are
+  throwaway and live only in the run logs.

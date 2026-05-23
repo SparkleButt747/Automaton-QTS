@@ -357,5 +357,34 @@ feature-conditioned DistMult/RESCAL variant, pre-2017):
 2-hop / n-hop transfer is **banked for now** — no robust transfer with the bilinear model — but it is
 **not a dead end**: there are documented, theoretically-grounded untried levers (§14.3) and a genuinely
 novel application (§14.4). Immediate direction: **Path A** — take the proven 1-hop graph + LLM merit
-extractor to **real events** (where profit is decided). **Prime future research direction:** retry
-n-hop with an **NBFNet-style path-aggregation** operator before concluding it is infeasible.
+extractor to **real events** (where profit is decided). The prime future bet was an **NBFNet-style
+path-aggregation** operator — now **tested, see §14.6 (it did not help)**.
+
+## 14.6 NBFNet-style path aggregation — tested, does NOT crack it (2026-05-23)
+
+Implemented a faithful *minimal* NBFNet-style operator (`src/qts/propagation/model_nbf.py`,
+`NBFPropagation`): per-node **vector** hidden state (d=16), query-conditioned merit seed at the do()
+source, feature-conditioned regime-gated edges (reusing the bilinear `M`, so transfer is via features
+not entity IDs), and **L=3 learnable message-passing layers** with distinct per-hop relation-message +
+self-update weights. Drops into `fit_graph`/`evaluate_feasibility` unchanged.
+
+| lr | E=12 transfer | E=25 transfer | E=25 sub-win (R1) | E=25 terminal-win (R1∘R2) |
+|----|---------------|---------------|-------------------|----------------------------|
+| 3e-3 | 2/6 | 2/6 | 4/6 | 3/6 |
+| 1e-2 | 2/6 | **3/6** | **5/6** | 3/6 |
+
+**Verdict: NO** — path aggregation lands in the *same noisy 2–4/6 band* as the bilinear (best 3/6),
+not robust ≥5/6. The decisive **sub-finding** (consistent across lr): the **1-hop substitute (R1)
+transfers well (4–5/6)** but the **2-hop terminal composition (R1∘R2) does not (3/6)** — on seeds where
+R1 transfers strongly, the terminal actively *diverges*. So the failure is **specifically the
+composition**, now **consistent across all three architectures** (bilinear, neural-ODE, NBFNet
+path-aggregation): richer models improve *in-sample* fit, never *transfer*.
+
+**Caveat:** this is a minimal adaptation (continuous feature-conditioned edges, unnormalised sum
+aggregation) — a full SOTA NBFNet (discrete relation embeddings, PNA/normalised aggregation, more
+depth/width) is untested. But the cross-architecture consistency points to the **few-training-chains /
+inductive-bias regime of the sim** as the bottleneck, not the scorer. Remaining untried levers:
+**MLC-style meta-learning of the composition** and the **ICM meta-transfer sparse-gradient penalty**
+(§14.3) — both are training-objective changes, not architecture swaps, which is the more likely lever
+given three architectures have now failed identically. `model_nbf.py` committed as documented
+exploration.

@@ -48,6 +48,8 @@ dependencies = [
   "nautilus_trader>=1.200",
   # Optimisation
   "optuna>=3.0",
+  # Equity data
+  "yfinance>=0.2.40",
   # Neural-ODE (event-propagation graph)
   "torchdiffeq",
 ]

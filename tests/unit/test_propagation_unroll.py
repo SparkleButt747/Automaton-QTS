@@ -11,6 +11,30 @@ from qts.propagation.sim import (
     generate_hop_events,
     make_unroll_splits,
 )
+from qts.propagation.unroll import unroll_predict
+
+
+class _DoublingOperator:
+    """Stub: predict_np returns array where index (named+1) gets 2x the merit, rest zero."""
+
+    def __init__(self, n_assets: int) -> None:
+        self.n_assets = n_assets
+
+    def predict_np(self, named_idx, merit, regime):  # type: ignore[no-untyped-def]
+        out = np.zeros((len(named_idx), self.n_assets))
+        nxt = (np.asarray(named_idx) + 1) % self.n_assets
+        out[np.arange(len(named_idx)), nxt] = 2.0 * np.asarray(merit, dtype=float)
+        return out
+
+
+def test_unroll_predict_composes_hops() -> None:  # T-PROP-UNROLL-4
+    op = _DoublingOperator(n_assets=5)
+    named = np.array([0, 0])
+    merit = np.array([1.0, 3.0])
+    regime = np.array([0, 0])
+    # hop1 successor index 1 (=2*merit), hop2 successor index 2 (=2*r_b = 4*merit)
+    r_term = unroll_predict(op, named, merit, regime, [np.array([1, 1]), np.array([2, 2])])
+    np.testing.assert_allclose(r_term, 4.0 * merit)
 
 
 def test_hop_events_name_only_sources_and_fire_one_edge() -> None:  # T-PROP-UNROLL-1

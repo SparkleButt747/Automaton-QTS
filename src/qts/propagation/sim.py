@@ -159,6 +159,42 @@ def generate_events(
     )
 
 
+def generate_hop_events(
+    world: GroundTruthWorld,
+    n: int,
+    rng: np.random.Generator,
+    allowed_types: tuple[int, ...] | None = None,
+) -> EventBatch:
+    """1-hop training events: name a relation-bearing source (A or B), supervise its successor.
+
+    Each event fires exactly one edge — A->B (gain1) or B->C (gain2). Naming B is what lets R2 be
+    learned at all; without it the unroll's second hop fires an untrained edge (spec §2).
+    """
+    cfg = world.config
+    nt = cfg.n_event_types
+    types = np.arange(nt) if allowed_types is None else np.array(allowed_types)
+    event_type = rng.choice(types, size=n)
+    hop = rng.integers(0, 2, size=n)  # 0: A->B (gain1), 1: B->C (gain2)
+    regime = rng.integers(0, cfg.n_regimes, size=n)
+    g = rng.normal(0.0, cfg.factor_vol, (n, cfg.n_factors))
+    merit = rng.normal(0.0, cfg.merit_vol, n)
+    eps = rng.normal(0.0, cfg.idiosyncratic_vol, (n, cfg.n_assets))
+    reactions = g @ world.loadings.T + eps
+
+    named = np.where(hop == 0, event_type, nt + event_type)  # A_k or B_k
+    succ = np.where(hop == 0, nt + event_type, 2 * nt + event_type)  # B_k or C_k
+    gain = np.where(hop == 0, cfg.propagation_gain, cfg.propagation_gain2)
+    rows = np.arange(n)
+    sign = world.regime_signs[regime]
+    # cancel factor noise at the named position so merit is the clean causal signal
+    reactions[rows, named] -= (g * world.loadings[named]).sum(axis=1)
+    reactions[rows, named] += merit
+    reactions[rows, succ] += sign * gain * merit
+    return EventBatch(
+        named_idx=named, merit=merit, regime=regime, reactions=reactions, event_type=event_type
+    )
+
+
 def make_splits(
     world: GroundTruthWorld,
     rng: np.random.Generator,

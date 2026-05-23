@@ -114,3 +114,17 @@ def test_evaluate_unroll_transfer_oracle_beats_baseline() -> None:  # T-PROP-UNR
     assert report.terminal_mse_graph < report.terminal_mse_corr
     assert report.terminal_mse_graph < report.terminal_mse_noprop
     assert report.transfer_pass and report.hop1_pass
+
+
+def test_unroll_public_api_exported() -> None:  # T-PROP-UNROLL-6
+    import qts.propagation as p
+
+    for name in (
+        "unroll_predict",
+        "evaluate_unroll_transfer",
+        "UnrollReport",
+        "generate_hop_events",
+        "generate_chain_eval",
+        "make_unroll_splits",
+    ):
+        assert hasattr(p, name), name

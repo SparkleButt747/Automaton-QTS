@@ -9,6 +9,7 @@ from qts.propagation.sim import (
     build_world,
     generate_chain_eval,
     generate_hop_events,
+    make_unroll_splits,
 )
 
 
@@ -39,3 +40,19 @@ def test_chain_eval_terminal_is_iterated_one_hop() -> None:  # T-PROP-UNROLL-2
     r_c = batch.reactions[rows, term_idx]
     g1, g2 = world.config.propagation_gain, world.config.propagation_gain2
     np.testing.assert_allclose(r_c, g1 * g2 * batch.merit, atol=1e-6)
+
+
+def test_unroll_splits_hold_out_last_chain() -> None:  # T-PROP-UNROLL-3
+    world = build_world(PropagationSimConfig(seed=0))
+    n = world.config.n_event_types
+    hop_train, hop_val, chain_test, chain_transfer = make_unroll_splits(
+        world, np.random.default_rng(0), n_train=2000, n_val=500, n_test=500, n_transfer=500
+    )
+    # training/val/in-sample-test never see the held-out chain n-1
+    for b in (hop_train, hop_val, chain_test):
+        assert np.all(b.event_type < n - 1)
+    # transfer is exactly the held-out chain
+    assert np.all(chain_transfer.event_type == n - 1)
+    # training is 1-hop (A or B sources only); chain_transfer is a full chain (named is A-role only)
+    assert np.all(hop_train.named_idx < 2 * n)
+    assert np.all(chain_transfer.named_idx < n)

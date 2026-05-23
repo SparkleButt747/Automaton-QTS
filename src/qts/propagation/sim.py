@@ -226,6 +226,31 @@ def generate_chain_eval(
     )
 
 
+def make_unroll_splits(
+    world: GroundTruthWorld,
+    rng: np.random.Generator,
+    *,
+    n_train: int = 8000,
+    n_val: int = 1000,
+    n_test: int = 1000,
+    n_transfer: int = 1000,
+) -> tuple[EventBatch, EventBatch, EventBatch, EventBatch]:
+    """1-hop training (chains 0..n-2) + per-hop-signed chain eval (in-sample + held-out transfer).
+
+    Returns (hop_train, hop_val, chain_test, chain_transfer). ``hop_*`` are 1-hop events naming A
+    and B; ``chain_*`` are full 2-hop chains for scoring the unroll. n_train defaults higher than
+    the end-to-end splits because there are 2x the (source, relation) combinations to cover.
+    """
+    n = world.config.n_event_types
+    train_types = tuple(range(n - 1))
+    transfer_types = (n - 1,)
+    hop_train = generate_hop_events(world, n_train, rng, allowed_types=train_types)
+    hop_val = generate_hop_events(world, n_val, rng, allowed_types=train_types)
+    chain_test = generate_chain_eval(world, n_test, rng, allowed_types=train_types)
+    chain_transfer = generate_chain_eval(world, n_transfer, rng, allowed_types=transfer_types)
+    return hop_train, hop_val, chain_test, chain_transfer
+
+
 def make_splits(
     world: GroundTruthWorld,
     rng: np.random.Generator,

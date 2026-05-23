@@ -260,7 +260,10 @@ Built the 2-hop chain sim (`EventChain`): each event is `named(A) -> substitute(
 has no direct feature match — reaching C requires composing two learned relations. Spec:
 `docs/specs/2026-05-23-propagation-multihop.md`.
 
-**Verdict: in-sample composition works; 2-hop transfer is an open generalisation wall.**
+**Verdict: in-sample composition works; 2-hop transfer does not robustly generalise.** *(The "hard
+wall / invariant to data-scaling" framing below is partly revised by §14: scaling to E≈25 chains DOES
+lift transfer into a noisy ~2–4/6 band — it is data-limited, not flat. The bottom line — no robust
+≥5/6 transfer by any lever — still stands.)*
 
 - **In-sample 2-hop is learned.** The graph beats the correlational baseline on *both* the 1-hop
   substitute (B) and the 2-hop terminal (C) by ≥25% (GATE-2 passes at seed 0; in-sample prediction
@@ -268,7 +271,8 @@ has no direct feature match — reaching C requires composing two learned relati
 - **Transfer does NOT generalise to an unseen chain.** GATE-3 fails (marked `xfail`): on the held-out
   chain the graph is no better than — sometimes worse than — correlational on B and C. Best result
   ~2/5 seeds.
-- **Five independent levers leave transfer flat (~1/3–2/5):** data-scaling (E=6→12), model class
+- **Levers tried (transfer stays low — but see §14 for the data-scaling revision):** data-scaling
+  (tested only to E=12 *here* — §14 shows E=25 lifts it), model class
   (linear bilinear → continuous-time neural-ODE via `torchdiffeq`), learning rate, epochs, and edge
   capacity (1–3 message-passing heads). Adding capacity raises *in-sample* fit (H=2 → prediction 5/5)
   but not transfer (still 2/5; H=3 overfits worse) — the signature of a **generalisation wall, not a
@@ -283,3 +287,75 @@ has no direct feature match — reaching C requires composing two learned relati
 - **Status:** the v0 **1-hop** result remains the shipped feasibility claim. The multi-hop machinery
   (sim + gate + `GraphNeuralODE`) is committed as a **documented negative result**, with the transfer
   gate `xfail`. Next realism work should build on the proven 1-hop substrate.
+
+## 14. Findings (data-scaling flood + unroll-composition "Path C" + related work — 2026-05-23)
+
+### 14.1 Data-scaling revises §13: data-limited, not a flat wall
+
+Flooding the sim with chains (constant model, end-to-end linear) moves 2-hop transfer:
+
+| chains (E) | end-to-end 2-hop transfer (of 6 seeds) |
+|------------|----------------------------------------|
+| 6–12 | ~1/6 |
+| 25 | **2/6–4/6** (draw-sensitive — same E gave 4/6 under one split RNG, 2/6 under another) |
+| 40 | 1/6–3/6 |
+| 50 | 0/6 (data-*per-chain* starved at fixed total n_train, plus optimiser divergence) |
+
+So §13's "invariant to data-scaling" was wrong (we only tested to E=12): more chains **do** lift
+transfer — into a noisy ~2–4/6 band — but it **plateaus well short of robust ≥5/6**. In most seeds the
+graph is statistically tied with the correlational baseline on the unseen chain. 2-hop transfer is
+**data-responsive but not data-solvable**; the residual gap is an inductive-bias problem.
+
+### 14.2 Unroll-composition (Path C) — dominated by end-to-end
+
+Trained a **1-hop-only** operator (naming both A and B so R1 *and* R2 are learned as local maps; chain
+held out), then composed externally at inference (predict B → re-inject as merit → predict C). Code:
+`src/qts/propagation/{sim.py:generate_hop_events,generate_chain_eval,make_unroll_splits, unroll.py}`,
+tests `T-PROP-UNROLL-*`. Result: unroll transfer **≤2/6**, *worse* than end-to-end — the second hop
+(R2/B→C) fails to fire on an unseen chain (terminal ≈ no-prop floor). `prop_steps=1` did not help.
+Its value was **diagnostic**: it localises the wall to the *second* relation not transferring.
+
+### 14.3 Related work — this is a KNOWN problem with KNOWN (untried) fixes
+
+The failure is textbook on three fronts; we used a *known-weak* scorer (our bilinear `M` is a
+feature-conditioned DistMult/RESCAL variant, pre-2017):
+
+- **Systematic / compositional generalisation** — learn primitives, fail novel compositions. SCAN
+  (Lake & Baroni 2018), COGS (Kim & Linzen 2020), MLC (Lake & Baroni, *Nature* 2023). Hard *without*
+  the right inductive bias, routinely solved *with* it — matches our data plateau exactly.
+- **Inductive KG link prediction** — bilinear/embedding models memorise endpoint statistics and fail
+  multi-hop composition; the stated motivation for path-based GNNs: GraIL (Teru et al., ICML 2020),
+  **NBFNet** (Zhu et al., NeurIPS 2021), A*Net (Zhu et al. 2022), RED-GNN (2022).
+- **Causal mechanism transfer** — ICM (Schölkopf et al. 2021) explains *why* (entangled, non-modular
+  mechanisms don't compose); transportability (Bareinboim & Pearl 2014) gives the identifiability
+  language; the meta-transfer sparse-gradient objective (Bengio et al. 2020) is an actionable
+  modularity penalty.
+
+**Three convergent untried levers** (in rough order of leverage):
+1. **NBFNet-style query-conditioned path aggregation** — threads the composition through the forward
+   pass (relation-typed, entity-agnostic), so multi-hop chains transfer to unseen entities. The most
+   direct fix; our bilinear scorer only scores endpoints and gives no gradient signal for chains.
+2. **MLC meta-learning the composition** — training episodes that reward *inferring* R1∘R2, not fitting
+   it as one more pattern.
+3. **ICM meta-transfer sparse-gradient penalty** — enforce modular, reusable A→B / B→C mechanisms.
+
+### 14.4 Novelty & profit read
+
+- **Core ML: not novel.** It is inductive relational reasoning / compositional generalisation, both
+  with mature literatures and SOTA solutions.
+- **Application: novel.** No single paper combines {LLM-extracted event *merit* + a *learned*
+  propagation graph + multi-hop prediction of *unnamed* entities + adversarial-vs-correlational eval}.
+  Closest prior art is **FinRipple** (ACL Findings 2025) — but its knowledge graph is pre-specified
+  and static-within-window, multi-hop depth is not demonstrated, and it has no propagating "merit"
+  signal. The economic-link alpha itself is well-established: Cohen & Frazzini (2008, *JF* — 2.7%/mo
+  for high-inattention names), Menzly & Ozbas (2010), Hou (2007), Lo & MacKinlay (1990).
+- **Bottom line:** a credible profit *and* publishable story exists — *if* the ML is upgraded
+  (NBFNet-style path aggregation), taken to real data, and positioned explicitly against FinRipple.
+
+### 14.5 Decision
+
+2-hop / n-hop transfer is **banked for now** — no robust transfer with the bilinear model — but it is
+**not a dead end**: there are documented, theoretically-grounded untried levers (§14.3) and a genuinely
+novel application (§14.4). Immediate direction: **Path A** — take the proven 1-hop graph + LLM merit
+extractor to **real events** (where profit is decided). **Prime future research direction:** retry
+n-hop with an **NBFNet-style path-aggregation** operator before concluding it is infeasible.

@@ -46,3 +46,18 @@ def test_public_api_exported() -> None:  # T-PATHA-SAMPLE-3
         "EventSample",
     ):
         assert hasattr(eq, name), name
+
+
+def test_phase3_public_api_exported() -> None:  # T-PATHA-SAMPLE-4
+    import qts.propagation.equity as eq
+
+    for name in (
+        "RelationTypedPropagation",
+        "build_typed_adjacency",
+        "EquityCorrelationalBaseline",
+        "fit_typed_propagation",
+        "evaluate_path_a_gate",
+        "PathAReport",
+        "assemble_event_samples",
+    ):
+        assert hasattr(eq, name), name

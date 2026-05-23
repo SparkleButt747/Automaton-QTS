@@ -1,5 +1,6 @@
-"""Path A v2 — real-equity economic-link graph (Phase 1 + Phase 2)."""
+"""Path A v2 — real-equity economic-link graph (Phase 1 + Phase 2 + Phase 3)."""
 
+from qts.propagation.equity.baseline import EquityCorrelationalBaseline
 from qts.propagation.equity.comention import (
     Article,
     CoMentionEdge,
@@ -8,6 +9,7 @@ from qts.propagation.equity.comention import (
     extract_tickers,
     load_fnspid_articles,
 )
+from qts.propagation.equity.dataset import assemble_event_samples, build_path_a_dataset
 from qts.propagation.equity.earnings import (
     EarningsEvent,
     EarningsRow,
@@ -21,8 +23,10 @@ from qts.propagation.equity.features import (
     node_feature_vector,
     realised_vol,
 )
+from qts.propagation.equity.gate import PathAReport, evaluate_path_a_gate, fit_typed_propagation
 from qts.propagation.equity.graph import LinkGraph
 from qts.propagation.equity.labels import market_model_abnormal_return
+from qts.propagation.equity.model import RELATIONS, RelationTypedPropagation, build_typed_adjacency
 from qts.propagation.equity.samples import EventSample
 from qts.propagation.equity.universe import EquityUniverse, load_universe
 
@@ -33,13 +37,22 @@ __all__ = [
     "EarningsRow",
     "EconomicLink",
     "EconomicLinkClassifier",
+    "EquityCorrelationalBaseline",
     "EquityUniverse",
     "EventSample",
     "LinkGraph",
+    "PathAReport",
+    "RELATIONS",
     "RawArticle",
+    "RelationTypedPropagation",
+    "assemble_event_samples",
     "build_comention_edges",
+    "build_path_a_dataset",
+    "build_typed_adjacency",
     "compute_sue",
+    "evaluate_path_a_gate",
     "extract_tickers",
+    "fit_typed_propagation",
     "load_fnspid_articles",
     "load_universe",
     "market_beta",

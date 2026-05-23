@@ -1,8 +1,12 @@
 # Spec: Path A v0 — Real-Equity Propagation Feasibility Cut
 
-**Status:** spec (design 2026-05-23; awaiting confirmation). First real-data test of the
-event-propagation thesis, on equities. Mirrors the sim feasibility cut (design doc
-`docs/research/2026-05-22-event-propagation-graph-design.md`).
+**Status:** SUPERSEDED (2026-05-23) by `2026-05-23-path-a-v2-nhop-meta-feasibility.md`. This 1-hop-only
+cut pre-dates the n-hop meta-learning breakthrough (design §15); the v2 spec upgrades it to the
+meta-trained operator over an FNSPID co-mention link graph, with 1-hop as the gate and 2-hop as an
+extension. Kept for history.
+
+First real-data test of the event-propagation thesis, on equities. Mirrors the sim feasibility cut
+(design doc `docs/research/2026-05-22-event-propagation-graph-design.md`).
 
 ## 1. Goal
 

@@ -186,8 +186,6 @@ def generate_hop_events(
     gain = np.where(hop == 0, cfg.propagation_gain, cfg.propagation_gain2)
     rows = np.arange(n)
     sign = world.regime_signs[regime]
-    # cancel factor noise at the named position so merit is the clean causal signal
-    reactions[rows, named] -= (g * world.loadings[named]).sum(axis=1)
     reactions[rows, named] += merit
     reactions[rows, succ] += sign * gain * merit
     return EventBatch(

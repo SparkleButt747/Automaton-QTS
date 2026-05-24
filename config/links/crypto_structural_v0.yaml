@@ -1,0 +1,10 @@
+# Curated structural contagion links (verifiable: entity/collateral/oracle/bridge/integration).
+# Confidence default 0.9. Build from contemporaneous integration data, not event post-mortems.
+links:
+  - {source: FTT, peer: SOL, relation: entity_exposure, direction: negative, confidence: 0.95}
+  - {source: FTT, peer: SRM, relation: entity_exposure, direction: negative, confidence: 0.95}
+  - {source: UST, peer: LUNA, relation: collateral_of, direction: negative, confidence: 0.99}
+  - {source: AAVE, peer: LINK, relation: shares_oracle, direction: negative, confidence: 0.8}
+  - {source: COMP, peer: LINK, relation: shares_oracle, direction: negative, confidence: 0.8}
+  - {source: CRV, peer: UNI, relation: competitor, direction: negative, confidence: 0.7}
+  - {source: AAVE, peer: COMP, relation: competitor, direction: negative, confidence: 0.7}

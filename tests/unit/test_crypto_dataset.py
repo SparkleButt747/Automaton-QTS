@@ -7,9 +7,9 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import numpy as np
-from qts.propagation.crypto.dataset import build_crypto_contagion_dataset
 
 from qts.models.base import Bar
+from qts.propagation.crypto.dataset import build_crypto_contagion_dataset
 from qts.propagation.crypto.events import ContagionEvent
 from qts.propagation.crypto.universe import load_crypto_universe
 
@@ -115,3 +115,24 @@ def test_event_outside_panel_is_skipped(tmp_path: Path) -> None:  # T-CRYPTO-DAT
         )
     )
     assert ds.samples == []
+
+
+def test_dataset_carries_price_panel(tmp_path: Path) -> None:  # T-CRYPTO-DATA-3
+    uni = _uni(tmp_path)
+    events = [ContagionEvent("FTT", datetime(2023, 1, 13, 12, tzinfo=UTC), "insolvency", 8e9)]
+    ds = asyncio.run(
+        build_crypto_contagion_dataset(
+            uni,
+            events,
+            bar_adapter=_StubAdapter(),
+            structural_seed_path=_seed(tmp_path),
+            llm=_StubLLM(),
+            cache_dir=tmp_path / "cache",
+            horizon=3,
+            est_window=200,
+            start="2023-01-01",
+            end="2023-01-20",
+        )
+    )
+    assert "BTC" in ds.closes and len(ds.grid) == len(ds.closes["BTC"])
+    assert ds.grid[0] < ds.grid[-1]  # sorted timestamps

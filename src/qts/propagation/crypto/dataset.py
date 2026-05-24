@@ -6,6 +6,7 @@ from __future__ import annotations
 import bisect
 import logging
 from dataclasses import dataclass
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -31,6 +32,8 @@ class ContagionDataset:
     adj_type: np.ndarray
     feature_dim: int
     graph: CryptoLinkGraph
+    grid: list[datetime]
+    closes: dict[str, np.ndarray]
 
 
 async def _classify_pairs(
@@ -124,4 +127,11 @@ async def build_crypto_contagion_dataset(
             )
         )
     feature_dim = samples[0].features.shape[1] if samples else len(universe.unique_clusters) + 5
-    return ContagionDataset(samples=samples, adj_type=adj, feature_dim=feature_dim, graph=graph)
+    return ContagionDataset(
+        samples=samples,
+        adj_type=adj,
+        feature_dim=feature_dim,
+        graph=graph,
+        grid=grid,
+        closes=closes,
+    )

@@ -7,6 +7,7 @@ the CLI computes predictions once via ``model.predict_np``.
 
 from __future__ import annotations
 
+import bisect
 from dataclasses import dataclass
 
 import numpy as np
@@ -129,4 +130,66 @@ def event_study_linked_vs_unlinked(
         mean_unlinked_car=float(np.mean(ua)) if len(ua) else float("nan"),
         mann_whitney_p=p,
         significant=bool(p < 0.05),
+    )
+
+
+@dataclass(frozen=True)
+class BacktestResult:
+    n_trades: int
+    market_neutral_mean: float
+    market_neutral_sharpe: float
+    outright_mean: float
+    outright_sharpe: float
+
+
+def _sharpe(per_event: list[float], periods_per_year: float) -> float:
+    arr = np.array(per_event)
+    if len(arr) < 2 or arr.std(ddof=1) == 0:
+        return 0.0
+    return float(arr.mean() / arr.std(ddof=1) * np.sqrt(periods_per_year))
+
+
+def contagion_backtest(
+    predictions: np.ndarray,
+    dataset: object,
+    *,
+    token_names: tuple[str, ...],
+    top_k: int = 3,
+    cost_bps: float = 7.5,
+    horizon: int = 24,
+    events_per_year: float = 12.0,
+) -> BacktestResult:
+    """Short the top-K predicted-to-drop LINKED peers per event.
+
+    Reports market-neutral (idiosyncratic) and outright (raw) mean P&L + annualised Sharpe,
+    net of round-trip ``cost_bps``.
+    """
+    grid, closes, adj = dataset.grid, dataset.closes, dataset.adj_type  # type: ignore[attr-defined]
+    cost = cost_bps / 1e4
+    mn_per_event, out_per_event, n_trades = [], [], 0
+    for b, s in enumerate(dataset.samples):  # type: ignore[attr-defined]
+        src = s.named_idx
+        peers = [j for j in np.where(adj[src] >= 0)[0] if j != src]
+        if not peers:
+            continue
+        ranked = sorted(peers, key=lambda j: predictions[b, j])[:top_k]
+        e_idx = bisect.bisect_left(grid, s.event_ts)
+        mn_legs, out_legs = [], []
+        for j in ranked:
+            mn_legs.append(-float(s.reactions[j]) - cost)
+            tok = token_names[j]
+            tc = closes.get(tok)
+            if tc is not None and e_idx + horizon < len(tc):
+                raw = tc[e_idx + horizon] / tc[e_idx] - 1.0
+                out_legs.append(-float(raw) - cost)
+        if mn_legs:
+            mn_per_event.append(float(np.mean(mn_legs)))
+            out_per_event.append(float(np.mean(out_legs)) if out_legs else 0.0)
+            n_trades += len(mn_legs)
+    return BacktestResult(
+        n_trades=n_trades,
+        market_neutral_mean=float(np.mean(mn_per_event)) if mn_per_event else 0.0,
+        market_neutral_sharpe=_sharpe(mn_per_event, events_per_year),
+        outright_mean=float(np.mean(out_per_event)) if out_per_event else 0.0,
+        outright_sharpe=_sharpe(out_per_event, events_per_year),
     )

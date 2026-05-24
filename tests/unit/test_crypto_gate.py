@@ -77,3 +77,43 @@ def test_event_study_detects_linked_more_negative() -> None:  # T-CRYPTO-GATE-3
     rep = event_study_linked_vs_unlinked(samples, adj_type=adj)
     assert rep.mean_linked_car < rep.mean_unlinked_car  # linked peers drop more
     assert rep.significant is True and rep.mann_whitney_p < 0.05
+
+
+def test_backtest_pnl_both_legs() -> None:  # T-CRYPTO-GATE-4
+    from datetime import timedelta
+
+    from qts.propagation.crypto.gate import contagion_backtest
+
+    # 4 events; node 1 is the linked peer we short; it drops -10% idiosyncratic each event.
+    n_nodes = 3
+    adj = np.full((n_nodes, n_nodes), -1, dtype=np.int64)
+    adj[0, 1] = CRYPTO_RELATIONS.index("entity_exposure")
+    base = datetime(2023, 1, 1, tzinfo=UTC)
+    grid = [base + timedelta(hours=h) for h in range(50)]
+    closes = {
+        "BTC": np.full(50, 100.0),
+        "SRC": np.full(50, 100.0),
+        "PEER": np.concatenate([np.full(20, 100.0), np.linspace(100, 90, 30)]),
+    }
+    samples, preds = [], []
+    feats = np.zeros((n_nodes, len(CRYPTO_RELATIONS) + 2))
+    for k in range(4):
+        reactions = np.array([-0.10, -0.10, 0.0])  # node1 abnormal -10%
+        samples.append(ContagionSample(0, -0.10, grid[20], feats, reactions))
+        preds.append([0.0, -0.09, 0.0])  # operator predicts node1 drops most
+    from qts.propagation.crypto.dataset import ContagionDataset
+
+    ds = ContagionDataset(
+        samples=samples,
+        adj_type=adj,
+        feature_dim=feats.shape[1],
+        graph=None,
+        grid=grid,
+        closes=closes,
+    )
+    res = contagion_backtest(
+        np.array(preds), ds, token_names=("SRC", "PEER", "BTC"), top_k=1, cost_bps=0.0, horizon=3
+    )
+    assert res.n_trades == 4
+    assert res.market_neutral_mean > 0.09  # shorting a -10% idiosyncratic move earns ~+10%
+    assert res.outright_mean > 0.0  # peer raw price fell over the hold -> short profits

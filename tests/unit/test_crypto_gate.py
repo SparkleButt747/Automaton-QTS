@@ -5,11 +5,11 @@ from __future__ import annotations
 from datetime import UTC, datetime
 
 import numpy as np
+
 from qts.propagation.crypto.gate import (
     evaluate_crypto_gate,
     fit_crypto_propagation,
 )
-
 from qts.propagation.crypto.links import CRYPTO_RELATIONS
 from qts.propagation.crypto.samples import ContagionSample
 
@@ -58,3 +58,22 @@ def test_gate_reports_and_perfect_pred_beats_pairwise() -> None:  # T-CRYPTO-GAT
     assert rep.n_linked_obs == len(samples)  # one linked peer (node 1) per event
     assert rep.graph_mse == 0.0 and rep.beats_pairwise is True
     assert rep.graph_hit == 1.0
+
+
+def test_event_study_detects_linked_more_negative() -> None:  # T-CRYPTO-GATE-3
+    from qts.propagation.crypto.gate import event_study_linked_vs_unlinked
+
+    # node 0 = source; 1 = linked (drops hard); 2 = unlinked (flat). 12 events.
+    rng = np.random.default_rng(1)
+    samples = []
+    adj = np.full((3, 3), -1, dtype=np.int64)
+    adj[0, 1] = CRYPTO_RELATIONS.index("entity_exposure")
+    feats = rng.normal(size=(3, len(CRYPTO_RELATIONS) + 2))
+    for _ in range(12):
+        reactions = np.array([-0.10, -0.08 + rng.normal(0, 0.01), rng.normal(0, 0.01)])
+        samples.append(
+            ContagionSample(0, -0.10, datetime(2023, 1, 1, tzinfo=UTC), feats, reactions)
+        )
+    rep = event_study_linked_vs_unlinked(samples, adj_type=adj)
+    assert rep.mean_linked_car < rep.mean_unlinked_car  # linked peers drop more
+    assert rep.significant is True and rep.mann_whitney_p < 0.05

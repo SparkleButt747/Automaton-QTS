@@ -11,6 +11,7 @@ from dataclasses import dataclass
 
 import numpy as np
 import torch
+from scipy import stats
 
 from qts.propagation.crypto.links import CRYPTO_RELATIONS
 from qts.propagation.crypto.samples import ContagionSample
@@ -90,4 +91,42 @@ def evaluate_crypto_gate(
         graph_hit=float(np.mean(ghit)) if ghit else float("nan"),
         pairwise_hit=float(np.mean(bhit)) if bhit else float("nan"),
         beats_pairwise=gm < bm,
+    )
+
+
+@dataclass(frozen=True)
+class EventStudyReport:
+    n_linked: int
+    n_unlinked: int
+    mean_linked_car: float
+    mean_unlinked_car: float
+    mann_whitney_p: float
+    significant: bool  # linked significantly more negative at p < 0.05
+
+
+def event_study_linked_vs_unlinked(
+    samples: list[ContagionSample], *, adj_type: np.ndarray
+) -> EventStudyReport:
+    """Null A: do graph-linked peers drop significantly more than unlinked tokens? One-sided
+    Mann-Whitney on the pooled (event x peer) abnormal CARs. Excludes the source node itself."""
+    linked, unlinked = [], []
+    for s in samples:
+        src = s.named_idx
+        for j in range(s.n_nodes):
+            if j == src:
+                continue
+            (linked if adj_type[src, j] >= 0 else unlinked).append(float(s.reactions[j]))
+    la, ua = np.array(linked), np.array(unlinked)
+    if len(la) < 3 or len(ua) < 3:
+        p = float("nan")
+    else:
+        # alternative='less': linked CARs stochastically smaller (more negative) than unlinked
+        p = float(stats.mannwhitneyu(la, ua, alternative="less").pvalue)
+    return EventStudyReport(
+        n_linked=len(la),
+        n_unlinked=len(ua),
+        mean_linked_car=float(np.mean(la)) if len(la) else float("nan"),
+        mean_unlinked_car=float(np.mean(ua)) if len(ua) else float("nan"),
+        mann_whitney_p=p,
+        significant=bool(p < 0.05),
     )

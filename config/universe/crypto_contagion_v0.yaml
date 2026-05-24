@@ -1,0 +1,20 @@
+# Crypto contagion v0 universe — DeFi protocols + exchange-token clusters (spec §2.5).
+# BTC/ETH are the market factor (kept in the panel, low link-degree). aliases feed extraction.
+tokens:
+  BTC: {cluster: Major, aliases: [bitcoin]}
+  ETH: {cluster: Major, aliases: [ethereum, ether]}
+  SOL: {cluster: L1, aliases: [solana]}
+  AVAX: {cluster: L1, aliases: [avalanche]}
+  LUNA: {cluster: L1, aliases: [terra, terra luna]}
+  UST: {cluster: Stablecoin, is_stablecoin: true, aliases: [terrausd, terra usd]}
+  DAI: {cluster: Stablecoin, is_stablecoin: true, aliases: [dai]}
+  FTT: {cluster: ExchangeToken, is_exchange_token: true, aliases: [ftx token, ftx]}
+  BNB: {cluster: ExchangeToken, is_exchange_token: true, aliases: [binance coin]}
+  SRM: {cluster: ExchangeEco, aliases: [serum]}
+  AAVE: {cluster: DeFiLending, aliases: [aave]}
+  COMP: {cluster: DeFiLending, aliases: [compound]}
+  MKR: {cluster: DeFiLending, aliases: [maker, makerdao]}
+  CRV: {cluster: DeFiDEX, aliases: [curve, curve finance]}
+  UNI: {cluster: DeFiDEX, aliases: [uniswap]}
+  SNX: {cluster: DeFiDeriv, aliases: [synthetix]}
+  LINK: {cluster: Oracle, aliases: [chainlink]}

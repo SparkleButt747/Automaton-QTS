@@ -41,6 +41,8 @@ async def main() -> None:
     grid, closes = await fetch_price_panel(
         list(uni.tokens), bar_adapter=adapter, start=START, end=END, interval="1h"
     )
+    if "BTC" not in closes:
+        raise ValueError("BTC must be present in the universe (used as the market benchmark)")
     detector = IdiosyncraticDropDetector(
         threshold=0.15, window=24, est_window=EST_WINDOW, cooldown=72
     )
@@ -71,6 +73,7 @@ async def main() -> None:
     model = fit_crypto_propagation(ds.samples, adj_type=adj_train, feature_dim=ds.feature_dim)
     named = np.array([s.named_idx for s in ds.samples])
     merit = np.array([s.merit for s in ds.samples])
+    # pred uses sample[0] features: gate checks structural fit, not per-event accuracy (mirrors v0)
     pred = model.predict_np(ds.samples[0].features, ds.adj_type, named, merit)
 
     es = event_study_linked_vs_unlinked(ds.samples, adj_type=ds.adj_type)

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 import yaml
 
 from qts.propagation.crypto.structural_links import (
@@ -64,7 +65,8 @@ def test_structural_union_dedupes_keeping_higher_confidence(tmp_path: Path) -> N
     )
     out = tmp_path / "crypto_structural_live.yaml"
     links = build_live_structural_links(tmp_path, out)
-    by_pair = {(lnk["source"], lnk["peer"]): lnk for lnk in links}
-    assert by_pair[("FTT", "SOL")]["confidence"] == 0.95  # higher kept
+    by_pair = {(lnk.source, lnk.peer): lnk for lnk in links}
+    assert by_pair[("FTT", "SOL")].confidence == pytest.approx(0.95)  # higher kept
     assert ("LUNA", "UST") in by_pair
+    assert by_pair[("FTT", "SOL")].direction == "negative"
     assert len(load_structural_links(out)) == 2

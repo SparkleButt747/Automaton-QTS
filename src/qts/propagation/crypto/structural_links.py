@@ -12,6 +12,8 @@ import yaml
 
 from qts.propagation.crypto.links import CRYPTO_RELATIONS, CryptoLink
 
+DEFAULT_CONFIDENCE = 0.9
+
 
 def load_structural_links(yaml_path: Path) -> list[CryptoLink]:
     raw = yaml.safe_load(Path(yaml_path).read_text())
@@ -26,13 +28,13 @@ def load_structural_links(yaml_path: Path) -> list[CryptoLink]:
                 peer=str(item["peer"]),
                 relation=relation,  # type: ignore[arg-type]
                 direction=str(item.get("direction", "negative")),  # type: ignore[arg-type]
-                confidence=float(item.get("confidence", 0.9)),
+                confidence=float(item.get("confidence", DEFAULT_CONFIDENCE)),
             )
         )
     return out
 
 
-def build_live_structural_links(src_dir: Path, out_path: Path) -> list[dict]:
+def build_live_structural_links(src_dir: Path, out_path: Path) -> list[CryptoLink]:
     """Merge every ``crypto_structural_*.yaml`` link list in ``src_dir`` into one
     seed written to ``out_path``. De-dupe on (source, peer, relation), keep the
     highest confidence."""
@@ -44,10 +46,9 @@ def build_live_structural_links(src_dir: Path, out_path: Path) -> list[dict]:
         for link in raw.get("links", []):
             key = (str(link["source"]), str(link["peer"]), str(link["relation"]))
             prev = merged.get(key)
-            if prev is None or float(link.get("confidence", 0.9)) > float(
-                prev.get("confidence", 0.9)
+            if prev is None or float(link.get("confidence", DEFAULT_CONFIDENCE)) > float(
+                prev.get("confidence", DEFAULT_CONFIDENCE)
             ):
                 merged[key] = link
-    links = list(merged.values())
-    out_path.write_text(yaml.safe_dump({"links": links}, sort_keys=True))
-    return links
+    out_path.write_text(yaml.safe_dump({"links": list(merged.values())}, sort_keys=True))
+    return load_structural_links(out_path)

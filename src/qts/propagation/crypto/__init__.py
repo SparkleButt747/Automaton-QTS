@@ -1,6 +1,7 @@
 """Crypto contagion propagation (spec docs/specs/2026-05-24-crypto-contagion-propagation-v0.md)."""
 
 from qts.propagation.crypto.dataset import ContagionDataset, build_crypto_contagion_dataset
+from qts.propagation.crypto.detect import IdiosyncraticDropDetector, ShockDetector
 from qts.propagation.crypto.events import ContagionEvent, load_contagion_events
 from qts.propagation.crypto.gate import (
     BacktestResult,
@@ -30,6 +31,8 @@ __all__ = [
     "CryptoLinkGraph",
     "CryptoUniverse",
     "EventStudyReport",
+    "IdiosyncraticDropDetector",
+    "ShockDetector",
     "btc_adjusted_car",
     "build_crypto_contagion_dataset",
     "build_crypto_typed_adjacency",

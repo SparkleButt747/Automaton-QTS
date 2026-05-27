@@ -48,9 +48,11 @@ class IdiosyncraticDropDetector:
             if token == "BTC":  # noqa: S105
                 continue
             last_fire = -self.cooldown - 1
+            # re-estimates OLS over est_window each bar: fine offline, profile before live reuse
             for t in range(first, n):
                 if t - last_fire <= self.cooldown:
                     continue
+                # event started ``window`` bars ago; CAR covers [t-window, t)
                 ar = btc_adjusted_car(
                     token_closes=tc,
                     btc_closes=btc_closes,
@@ -64,6 +66,7 @@ class IdiosyncraticDropDetector:
                             source_token=token,
                             timestamp=grid[t],
                             event_type="drop",
+                            # usd_severity = fractional CAR magnitude (no USD notional offline)
                             usd_severity=float(abs(ar)),
                         )
                     )

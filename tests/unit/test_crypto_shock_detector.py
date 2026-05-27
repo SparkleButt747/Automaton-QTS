@@ -56,3 +56,10 @@ def test_does_not_fire_on_market_wide_dump() -> None:  # T-SHOCK-3
     det = IdiosyncraticDropDetector(threshold=0.15, window=WIN, est_window=EST, cooldown=1)
     events = det.detect(closes, _grid(N), closes["BTC"])
     assert not any(e.source_token == "ALT" for e in events)
+
+
+def test_cooldown_suppresses_repeat_events() -> None:  # T-SHOCK-4
+    closes = _series(idiosyncratic_drop=True, market_drop=False)  # continuous drop over [EST:]
+    det = IdiosyncraticDropDetector(threshold=0.15, window=WIN, est_window=EST, cooldown=100)
+    alt = [e for e in det.detect(closes, _grid(N), closes["BTC"]) if e.source_token == "ALT"]
+    assert len(alt) == 1  # cooldown collapses the continuous drawdown to a single event

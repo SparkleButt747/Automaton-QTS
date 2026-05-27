@@ -1,0 +1,150 @@
+tokens:
+  1INCH:
+    aliases:
+    - 1inch
+    cluster: DeFiDEX
+  AAVE:
+    aliases:
+    - aave
+    cluster: DeFiLending
+  ADA:
+    aliases:
+    - cardano
+    cluster: L1
+  ANC:
+    aliases:
+    - anchor
+    - anchor protocol
+    cluster: DeFiLending
+  AVAX:
+    aliases:
+    - avalanche
+    cluster: L1
+  BAL:
+    aliases:
+    - balancer
+    cluster: DeFiDEX
+  BNB:
+    aliases:
+    - binance coin
+    cluster: ExchangeToken
+    is_exchange_token: true
+  BTC:
+    aliases:
+    - bitcoin
+    cluster: Major
+  COMP:
+    aliases:
+    - compound
+    cluster: DeFiLending
+  CRV:
+    aliases:
+    - curve
+    - curve finance
+    cluster: DeFiDEX
+  CVX:
+    aliases:
+    - convex
+    - convex finance
+    cluster: DeFiDEX
+  DAI:
+    aliases:
+    - dai
+    cluster: Stablecoin
+    is_stablecoin: true
+  DOGE:
+    aliases:
+    - dogecoin
+    cluster: Meme
+  DOT:
+    aliases:
+    - polkadot
+    cluster: L1
+  ETH:
+    aliases:
+    - ethereum
+    cluster: Major
+  FTT:
+    aliases:
+    - ftx token
+    - ftx
+    cluster: ExchangeToken
+    is_exchange_token: true
+  LDO:
+    aliases:
+    - lido
+    cluster: LiquidStaking
+  LINK:
+    aliases:
+    - chainlink
+    cluster: Oracle
+  LTC:
+    aliases:
+    - litecoin
+    cluster: Payments
+  LUNA:
+    aliases:
+    - terra
+    - terra luna
+    - luna classic
+    cluster: L1
+  MATIC:
+    aliases:
+    - polygon
+    cluster: L2
+  MIR:
+    aliases:
+    - mirror
+    - mirror protocol
+    cluster: DeFiDeriv
+  MKR:
+    aliases:
+    - maker
+    - makerdao
+    cluster: DeFiLending
+  SNX:
+    aliases:
+    - synthetix
+    cluster: DeFiDeriv
+  SOL:
+    aliases:
+    - solana
+    cluster: L1
+  SRM:
+    aliases:
+    - serum
+    cluster: ExchangeEco
+  SUSHI:
+    aliases:
+    - sushiswap
+    cluster: DeFiDEX
+  TUSD:
+    aliases:
+    - trueusd
+    cluster: Stablecoin
+    is_stablecoin: true
+  UNI:
+    aliases:
+    - uniswap
+    cluster: DeFiDEX
+  USDC:
+    aliases:
+    - usd coin
+    - circle
+    cluster: Stablecoin
+    is_stablecoin: true
+  UST:
+    aliases:
+    - terrausd
+    - terra usd
+    cluster: Stablecoin
+    is_stablecoin: true
+  XRP:
+    aliases:
+    - ripple
+    cluster: Payments
+  YFI:
+    aliases:
+    - yearn
+    - yearn finance
+    cluster: DeFiYield

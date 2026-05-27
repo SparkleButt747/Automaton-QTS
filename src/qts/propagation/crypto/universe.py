@@ -53,3 +53,17 @@ def load_crypto_universe(yaml_path: Path) -> CryptoUniverse:
         is_exchange_token=exch,
         _aliases=aliases,
     )
+
+
+def build_live_universe(src_dir: Path, out_path: Path) -> dict[str, dict]:
+    """Merge every ``crypto_contagion_*.yaml`` token map in ``src_dir`` into one
+    universe written to ``out_path``. First definition of a token wins."""
+    merged: dict[str, dict] = {}
+    for path in sorted(src_dir.glob("crypto_contagion_*.yaml")):
+        if path.name == out_path.name:
+            continue
+        raw = yaml.safe_load(path.read_text()) or {}
+        for token, meta in raw.get("tokens", {}).items():
+            merged.setdefault(token, meta)
+    out_path.write_text(yaml.safe_dump({"tokens": merged}, sort_keys=True))
+    return merged
